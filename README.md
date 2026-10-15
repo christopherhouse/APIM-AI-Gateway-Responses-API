@@ -2,31 +2,33 @@
 
 **One conversation. One backend. Evidence for every turn.**
 
-A planned hands-on lab exploring conversation-aware routing through Azure API
+A hands-on lab under construction, exploring conversation-aware routing through Azure API
 Management to two Microsoft Foundry backends. It will show why a
 `previous_response_id` chain needs routing continuity, how independent requests
 are distributed, and what happens when a conversation's backend becomes
 unavailable.
 
-> **Design investigation, not the self-service lab.** Bootstrap is merged.
+> **Infrastructure and gateway code, not a live self-service lab.** Bootstrap is merged.
 > Task `001` completed an explicitly authorized
 > [disposable feasibility experiment](experiments/001-affinity/README.md):
 > healthy affinity, native pinned failure, concrete-member identity, recovery,
 > and workspace policy traces were verified. The temporary group is deleted.
 > Task `002` adds the [Bicep infrastructure foundation](infra/README.md) with
-> native `.bicepparam` inputs and resource diagnostics. It has not been deployed.
-> Gateway policies, the `azd` workflow, and .NET harness remain tasks `003`-`008`.
+> native `.bicepparam` inputs and resource diagnostics. Task `003` adds
+> [gateway routing and policy diagnostics](infra/policies/README.md).
+> Both have local checks only; neither has been deployed as the full lab.
+> The `azd` workflow, .NET harness, and end-to-end verification remain tasks `004`-`008`.
 
 ## 🗺️ The planned journey
 
 ```mermaid
 flowchart LR
     Client["Planned .NET 10 harness<br/>Isolated sessions and response IDs"]
-    Gateway["Bicep: APIM Developer<br/>Routing policies planned"]
-    Pool["Planned native backend pool<br/>Cookie affinity and circuit breakers"]
+    Gateway["Bicep: APIM Developer<br/>Responses policy XML"]
+    Pool["Bicep: native backend pool<br/>Cookie affinity and circuit breakers"]
     A["Bicep: Foundry A<br/>Response state A"]
     B["Bicep: Foundry B<br/>Response state B"]
-    Logs["Bicep: Log Analytics<br/>Policy trace configuration planned"]
+    Logs["Bicep: Log Analytics<br/>Native policy trace configuration"]
     Client --> Gateway
     Gateway --> Pool
     Pool --> A
@@ -36,8 +38,8 @@ flowchart LR
     B -.-> Logs
 ```
 
-*Target architecture, not a running deployment.* Bicep-labeled nodes have
-foundation code; the request path and policy traces are still planned.
+*Target architecture, not a running deployment.* Bicep-labeled nodes and gateway
+policies have code; the client harness and complete runtime verification remain planned.
 Solid arrows show requests; dotted arrows show diagnostics. The harness keeps
 routing context, Foundry owns response state, and APIM is not a
 conversation-history database. Native pinning
@@ -80,7 +82,7 @@ harness, `azd` orchestration, an equivalent Azure CLI path, and Log Analytics.
 The experiment has its own guarded probe, not the planned full-lab deployment
 workflow or .NET harness.
 
-## 🧱 Infrastructure foundation
+## 🧱 Infrastructure and gateway configuration
 
 [`infra/main.bicep`](infra/main.bicep) is resource-group-scoped: one Developer
 gateway, two identical Foundry model deployments, scoped managed-identity
@@ -94,11 +96,21 @@ compiler artifacts are ignored. Exact AVM pins, parameter/output contracts,
 diagnostic exclusions, and the local build/test commands are in the
 [infrastructure reference](infra/README.md).
 
-**Not callable yet:** APIs, backend pools, circuit breakers, subscription access,
-and privacy-bounded policy trace configuration are task `003`. Local checks
-do not establish Azure provisioning or all-category log ingestion; those
-assertions remain in task `007`. No new Azure operations were performed for
-the infrastructure implementation.
+Task `003` adds a single HTTPS `POST /openai/v1/responses` operation, two
+TLS-validated backends, the native affinity pool/breakers, API-scoped
+subscription access, and managed-identity authentication. The
+[gateway contract](infra/policies/README.md) explains first/chained/stateless
+requests, lab-only headers, explicit errors, and trustworthy backend evidence.
+
+The gateway returns `X-Lab-Request-Id` and a host-verified
+`X-Lab-Backend-Id` after forwarding. Native policy traces are configured for
+Log Analytics with zero body capture and no credential/cookie header capture.
+The policy never retries a broken chain onto another backend.
+
+**Not live yet:** local Bicep, XML, compiled-expression, and contract checks do
+not establish Azure provisioning, full-lab routing, or diagnostic ingestion.
+Those assertions remain in task `007`. No new Azure operations were performed
+for tasks `002`/`003`; the self-service deployment workflow is still task `004`.
 
 ## 📚 Follow the work
 
@@ -107,6 +119,7 @@ the infrastructure implementation.
 | [Lab plan](docs/PLAN.md) | Agreed requirements and mandatory design gates |
 | [Design and evidence](docs/DESIGN.md) | Verified findings, selected contracts, and resolved gates B1-B2 |
 | [Infrastructure reference](infra/README.md) | Native parameters, pinned modules, diagnostics inventory, outputs, and offline checks |
+| [Gateway contract](infra/policies/README.md) | Request modes, cookies, errors, identity, safe traces, and runtime verification gates |
 | [Task backlog](docs/TASKS.md) | Ordered work and acceptance criteria |
 | [Progress tracker](docs/PROGRESS.md) | Authorization, execution history, and PR state |
 | [Contributor instructions](.github/copilot-instructions.md) | Branch workflow, checks, and README standards |
@@ -138,5 +151,5 @@ group within the three-hour bound. Both deleted Foundry accounts were purged
 and model quota returned to baseline. Azure retains normal APIM/workspace
 soft-delete recovery records; they are not a running gateway or workspace.
 The under-$5 target was an estimate, not a billing cap; the final Azure bill
-is not yet available. Task `002` has separate code-only authorization; later
+is not yet available. Tasks `002`/`003` have separate code-only authorization; later
 deployments still require explicit authorization.

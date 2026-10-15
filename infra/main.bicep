@@ -52,6 +52,12 @@ param modelVersion string = '2026-03-17'
 @maxLength(64)
 param modelDeploymentName string = 'responses-chat'
 
+@description('Native routing cookie name, not its opaque value. Keep clients aligned with this output.')
+@allowed([
+  'APIM-Backend-Affinity'
+])
+param affinityCookieName string = 'APIM-Backend-Affinity'
+
 @description('Selected global deployment SKU. Resource placement remains West US 3.')
 @allowed([
   'GlobalStandard'
@@ -217,6 +223,19 @@ resource accounts 'Microsoft.CognitiveServices/accounts@2025-06-01' existing = [
     dependsOn: [foundries]
   }
 ]
+
+module routing 'gateway.bicep' = {
+  name: 'gateway-routing'
+  params: {
+    apimName: apimName
+    foundryAEndpoint: accounts[0].properties.endpoints['OpenAI Language Model Instance API']
+    foundryBEndpoint: accounts[1].properties.endpoints['OpenAI Language Model Instance API']
+    modelDeploymentName: modelDeploymentName
+    affinityCookieName: affinityCookieName
+  }
+  dependsOn: [apim, foundries]
+}
+
 @description('Existing externally managed deployment group; this template does not create it.')
 output resourceGroupName string = resourceGroup().name
 output apimResourceId string = apim.outputs.resourceId
@@ -229,3 +248,8 @@ output foundryBEndpoint string = accounts[1].properties.endpoints['OpenAI Langua
 output workspaceResourceId string = workspace.outputs.resourceId
 output workspaceCustomerId string = workspace.outputs.logAnalyticsWorkspaceId
 output modelDeploymentName string = modelDeploymentName
+output responsesEndpoint string = '${gateway.properties.gatewayUrl}/${routing.outputs.apiPath}/responses'
+output backendAId string = routing.outputs.backendAId
+output backendBId string = routing.outputs.backendBId
+output apimSubscriptionResourceId string = routing.outputs.apimSubscriptionResourceId
+output affinityCookieName string = affinityCookieName

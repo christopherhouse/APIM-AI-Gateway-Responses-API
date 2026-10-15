@@ -3,7 +3,8 @@
 Task `000` is complete and PR #2 is merged. Task `001` completed the authorized
 disposable feasibility test and cleanup; B1/B2 are resolved in
 [DESIGN.md](DESIGN.md), with evidence in merged PR #3. Task `002` is complete
-as code and local validation in PR #4; it is not deployed. Later tasks remain pending.
+as code and local validation in merged PR #4; it is not deployed. Task `003`
+is in progress with code-only authorization. Tasks `004`-`008` remain pending.
 IDs are stable; do not renumber completed tasks or hide blocked work.
 
 ## Status and dependency rules
@@ -27,7 +28,7 @@ new platform evidence changes an assumption.
 | 000 | Bootstrap repository and contributor workflow | Implementation authorization; base branch established | done |
 | 001 | Validate platform capabilities and finalize design | 000 | done |
 | 002 | Establish Bicep infrastructure and observability foundation | 001 | done |
-| 003 | Implement gateway routing, affinity, and diagnostic policies | 002 | pending |
+| 003 | Implement gateway routing, affinity, and diagnostic policies | 002 | in_progress |
 | 004 | Implement deployment orchestration and Azure CLI parity | 003 | pending |
 | 005 | Implement .NET 10 conversation harness and evidence model | 003 | pending |
 | 006 | Implement controlled failure, breaker, and recovery scenarios | 004, 005 | pending |
@@ -107,7 +108,7 @@ Deliverables and acceptance:
 next task. Work on `feature/002-infrastructure-foundation` covers infrastructure
 code, local checks, documentation, and a PR only; no live Azure operations.
 
-**Result:** Implemented in `infra/` and published in PR #4, left unmerged.
+**Result:** Implemented in `infra/` and published in PR #4, merged on 2026-10-15.
 Bicep build/lint, native `.bicepparam` compilation, and six offline contract
 checks passed. All inventoried parent diagnostic categories are configured.
 Provider-side validation and runtime emission are explicitly unverified and
@@ -129,6 +130,10 @@ Deliverables and acceptance:
   Record anything requiring an actual deployment for task `007`.
 
 ## 003 - Implement gateway routing, affinity, and diagnostic policies
+
+**Authorization:** On 2026-10-15, after merging PR #4, the user requested the
+next work. `feature/003-gateway-routing-policies` covers code, local checks,
+documentation, and PR publication only. No new live Azure operations.
 
 Deliverables and acceptance:
 

@@ -18,15 +18,15 @@ function allTemplates(current) {
     resource.properties?.template ? allTemplates(resource.properties.template) : [])];
 }
 
-test('foundation stays in its existing group and defers API/routing resources', () => {
+test('foundation stays in its existing group and isolates gateway child resources', () => {
   assert.equal(template.$schema, 'https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#');
-  assert.equal(modules.length, 3);
+  assert.equal(modules.length, 4);
   for (const current of allTemplates(template)) {
     for (const resource of Object.values(current.resources ?? {})) {
       assert.notEqual(resource.type, 'Microsoft.Resources/resourceGroups');
     }
   }
-  for (const module of modules) {
+  for (const module of modules.filter(module => module.name !== 'gateway-routing')) {
     assert.equal(module.subscriptionId, undefined);
     assert.equal(module.resourceGroup, undefined);
     assert.equal(value(module, 'location'), "[parameters('location')]");
@@ -133,8 +133,11 @@ test('deployment outputs never expose ordinary keys and endpoint references wait
   for (const name of ['foundryAEndpoint', 'foundryBEndpoint']) {
     assert.match(template.outputs[name].value, /reference\(.*\.endpoints\['OpenAI Language Model Instance API'\]/);
   }
-  for (const deferred of ['responsesEndpoint', 'backendAId', 'backendBId', 'apimSubscriptionResourceId']) {
-    assert.equal(template.outputs[deferred], undefined, `Task 003 output ${deferred} is premature`);
+  assert.ok(template.resources.routing.dependsOn.includes('apim'));
+  assert.ok(template.resources.routing.dependsOn.includes('foundries'));
+  assert.match(template.outputs.responsesEndpoint.value, /reference\('gateway'\)\.gatewayUrl/);
+  for (const output of ['backendAId', 'backendBId', 'apimSubscriptionResourceId']) {
+    assert.equal(template.outputs[output].value, `[reference('routing').outputs.${output}.value]`);
   }
 });
 

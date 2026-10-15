@@ -11,7 +11,9 @@ controlled failure, evidence collection, and cleanup. This exception does not
 authorize tasks `002`-`008` or the complete self-service lab. After merging
 PR #3 on the same date, the user separately authorized task `002` code, local
 validation, documentation, and PR publication. No new live Azure operations
-are authorized by that request.
+are authorized by that request. After PR #4 merged on 2026-10-15, the user
+authorized the next task, `003`, for code, local checks, documentation, and PR
+publication only. No new live Azure operations are authorized.
 
 The lab demonstrates conversation-aware routing through Azure API Management
 (APIM) to two Microsoft Foundry backends. Conversations chain Responses API
@@ -65,9 +67,10 @@ Supported resource diagnostics and gateway evidence --> Log Analytics
 This is a logical design, not an implemented system. [DESIGN.md](DESIGN.md)
 records task `001` source-backed choices and live disposable feasibility
 evidence as of 2026-10-15. B1/B2 are resolved: native pinned-breaker rejection
-and concrete outbound host evidence passed. Task `002` now implements the
-infrastructure foundation on `feature/002-infrastructure-foundation`, based
-on merged PR #3. This is code-only work, not a deployed self-service lab.
+and concrete outbound host evidence passed. Task `002` implements the
+infrastructure foundation in merged PR #4. Task `003` adds gateway routing,
+affinity, and diagnostic policies on `feature/003-gateway-routing-policies`.
+This is code-only work, not a deployed self-service lab.
 The selected trace contract is verified native policy trace records plus
 correlated gateway logs, not full debugger transcripts.
 
@@ -181,7 +184,9 @@ Bootstrap PR #2 was merged at `9efe056` on 2026-10-15. Task `001` then began on
 `chore/001-platform-design`. PR #3 merged at `e1c4ca0` on 2026-10-15 after the
 feasibility experiment and cleanup completed. Task `002` then began on
 `feature/002-infrastructure-foundation` with separate code-only authorization.
-Tasks `003`-`008` remain pending.
+PR #4 merged at `2967f55` on 2026-10-15. Task `003` then began on
+`feature/003-gateway-routing-policies` with code-only authorization.
+Tasks `004`-`008` remain pending.
 
 ## Execution and progress
 
