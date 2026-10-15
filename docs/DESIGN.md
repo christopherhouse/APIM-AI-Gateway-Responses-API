@@ -95,8 +95,9 @@ deployment using the returned metadata; actual service throttling still governs.
 Recheck quota, available capacity, lifecycle, and permissions immediately before
 deployment. `NoAutoUpgrade` is not a retirement exemption.
 
-The mini model passed short marker-based feasibility conversations; the complete
-architecture-expert script and quality evaluation remain task `005`/`007`.
+The mini model passed short marker-based feasibility conversations. Task `005`
+now implements the architecture-expert script; its real answer quality still
+requires task `007` evaluation.
 No price/cost ceiling is claimed. Its reasoning and visible
 output share the output-token budget. An `incomplete` response or missing answer
 must fail the scenario rather than count as a successful turn. S24.
@@ -362,7 +363,7 @@ Names below are the cross-task contract for tasks `002`-`005`. Task `002`
 implements the resource inputs and foundation outputs in `infra/main.bicep`,
 with native `infra/main.bicepparam` inputs. Task `004` adds both orchestration
 drivers using native `infra/deploy.bicepparam` and the same Bicep entry point;
-the harness consumer remains pending.
+task `005` implements the .NET harness consumer with offline validation only.
 
 | Bicep input | Orchestration / harness name | Value or meaning |
 | --- | --- | --- |
@@ -409,7 +410,8 @@ mode-appropriate `store`; chained cookies and nonempty response IDs are
 validated together. A cookie alone on a new request is rejected. Cookie values
 are opaque; transport checks cannot authenticate their age or response-ID
 binding. The client must honor expiry and reject changed/missing backend
-evidence; those assertions remain task `005`. Malformed/non-object JSON
+evidence; task `005` now implements those client assertions, not live proof.
+Malformed/non-object JSON
 uses the gateway expression-error path rather than pretending a successful
 proxy response. No new endpoint is live or advertised as callable.
 
@@ -450,7 +452,8 @@ Both drivers export eleven allow-listed non-secret client values from actual
 deployment outputs. `Run` requires a separate credential-read opt-in, checks
 API-scoped active access, and passes the gateway key only through the trusted
 client process environment, restoring previous values/absence in `finally`.
-It is a client handoff, not task `005` harness implementation. Latest deployment
+Task `005` now supplies that executable; the management/inference handoff
+remains unverified in Azure. Latest deployment
 failure/incompleteness prevents reusing stale successful configuration.
 
 Teardown checks the exact confirmation, group ownership, parent inventory and
@@ -462,6 +465,36 @@ initialization may need the guarded CLI teardown. Neither path purges recovery
 records; retained Foundry quota/name reservations require retention expiry or
 separately authorized purge. No new Azure operation or full-lab live validation
 is claimed for task `004`; both paths still need task `007`.
+
+### Task 005 harness implementation boundary
+
+The [.NET 10 client](../src/ResponsesLab/README.md) uses direct HTTP with
+redirects/automatic cookies disabled and no application retries. Each stateful
+conversation owns a `CookieContainer`, latest successful response ID, original
+member, and UUID; interleaving sessions does not share response or affinity
+state. Stateless requests have new UUIDs, no chain/cookie, and `store=false`.
+Expert instructions are resent on each turn. Only completed assistant text
+with valid response/member/request evidence and usable affinity advances a chain.
+
+The client requires `--allow-requests`; default invocation/help never send
+HTTP. Strict configurable bounds retain the design defaults above, require at
+least two stateful turns, keep ten-second minimum spacing, cap bodies at 1 MiB,
+and enforce per-request/body and whole-run deadlines. Invalid overrides fail
+instead of silently changing bounds; faults remain disabled/unimplemented.
+
+JSON turn records include synthetic prompts/text, safe response IDs, caller
+and gateway request UUIDs, concrete member, outcome/status, and a cookie
+fingerprint only. Raw error bodies/credentials/cookies and reasoning items
+are not printed; known echoed secrets are redacted. A final session table
+counts completed/failed/unattempted work and member sets; scenario aggregates
+separate actual successful stateful/stateless distributions. Missing either
+member, any failed/incomplete work, or cancellation returns a failing exit.
+No arbitrary HTTP failure is treated as an expected fault scenario.
+
+Offline transport/configuration tests cover these invariants. Publish/help/
+no-opt-in checks establish a local executable, not real Responses behavior,
+answer quality, cookie emission, gateway diagnostics, or workspace ingestion.
+Those remain task `007` after the task `006` controlled-fault implementation.
 
 ## 9. Feasibility experiment required to close the gates
 

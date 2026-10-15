@@ -49,7 +49,9 @@ Clients must honor cookie expiry, discard expired session state, and fail a
 chain when the cookie is unavailable. They must also reject missing/changed
 backend evidence even after a 2xx. Never restart a lost chain silently, share
 cookie containers, forge a pin, or use the session UUID to select a member.
-These client assertions belong to task `005`; there is no server-side pin store.
+Task `005` implements these assertions in the
+[.NET harness](../../src/ResponsesLab/README.md), with offline checks only;
+there is no server-side pin store.
 
 ## Native routing and failure
 
@@ -94,7 +96,7 @@ for `https://cognitiveservices.azure.com`, failing explicitly if it cannot.
 Both account-scoped OpenAI User grants come from the foundation. Backend TLS
 chain/name verification stays enabled; Foundry key auth stays disabled.
 The API-scoped `lab-access` subscription disallows subscription-based tracing.
-Key retrieval/process-environment handoff remains task `004`; no keys appear
+Task `004` implements key retrieval/process-environment handoff; no keys appear
 in Bicep outputs or `.bicepparam`.
 
 ## Native workspace traces

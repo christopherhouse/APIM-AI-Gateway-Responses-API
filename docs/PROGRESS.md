@@ -5,21 +5,21 @@
 | Field | Value |
 | --- | --- |
 | Updated | 2026-10-15 |
-| Phase | Task `004` complete as offline-validated code in PR #6; not deployed |
-| Authorization | Task `004` code, offline checks, documentation, and PR approved on 2026-10-15; no new Azure operations |
+| Phase | Task `005` harness in progress; no live inference authorized |
+| Authorization | Task `005` code, offline checks, documentation, and PR approved on 2026-10-15; no new Azure operations |
 | Planning branch | `chore/lab-planning` |
-| Current implementation task | `004` - done on `feature/004-deployment-orchestration` |
-| Next task | User review/merge of #6, then authorize task `005`; tasks `005`-`008` pending |
+| Current implementation task | `005` - in_progress on `feature/005-conversation-harness` |
+| Next task | Implement/offline-validate `005` and publish PR; tasks `006`-`008` pending |
 | Azure deployment | Temporary group deleted and verified absent; Foundry tombstones purged and quota restored; APIM/workspace recovery records retained normally |
-| Solution files | Task `001` experiment, task `002` Bicep, task `003` gateway, and task `004` guarded azd/CLI lifecycle; .NET/fault automation pending |
-| Base branch | `main` at gateway merge `e1ed64a`; initial empty base `846a2cb` preserved |
-| Pull request | #1-#5 merged; #6 open against `main`, left unmerged for user review |
+| Solution files | Task `001` experiment, task `002` Bicep, task `003` gateway, task `004` lifecycle, and task `005` .NET harness; fault automation pending |
+| Base branch | `main` at lifecycle merge `a74ebd2`; initial empty base `846a2cb` preserved |
+| Pull request | #1-#6 merged; task `005` PR pending |
 
 ## Known prerequisites and open decisions
 
 | Item | Owner/action | Effect |
 | --- | --- | --- |
-| Implementation authorization | Task `004` code-only work authorized on 2026-10-15 | No new deployment, faults, teardown, credential retrieval, or live subscription checks; tasks `005`-`008` pending. |
+| Implementation authorization | Task `005` code-only work authorized on 2026-10-15 | No new deployment, faults, teardown, credential retrieval, inference, or live subscription checks; tasks `006`-`008` pending. |
 | Initial base branch | Resolved with explicit user approval on 2026-10-15 | Empty commit `846a2cb` establishes `main`; subsequent work stays on work branches. |
 | Platform feasibility | Task `001`, B1-B2 resolved in `DESIGN.md` | Native original-pin rejection, outbound member evidence, and workspace policy traces verified; no workaround required. |
 | Model and authentication | Task `001` live feasibility passed | `gpt-5.4-mini` / `2026-03-17` / `GlobalStandard` served Responses through API-scoped gateway access and resource-scoped managed identity. |
@@ -600,6 +600,114 @@
   pending. Next: user review/merge of #6, then authorization for task `005`
   harness code. Live deployment/fault/credential/cleanup operations still need
   separate explicit target/action authorization.
+
+### 2026-10-15 - Task 005 started after PR #6 merge
+
+- Confirmed PR #6 merged at `a74ebd2`, fast-forwarded clean local `main`, and
+  created `feature/005-conversation-harness` before harness implementation.
+- Scope is task `005`: .NET 10 console harness, isolated stateful/stateless
+  request modes, response-ID/cookie continuity, gateway-derived turn evidence,
+  bounded execution, summary/failure accounting, offline tests, docs, and PR.
+- No live subscription checks, credentials, inference, deployment, controlled
+  faults, or teardown are authorized. Tasks `006`-`008` remain pending.
+- Installed SDK is `10.0.402`. Reusing the implemented gateway and lifecycle
+  configuration contracts rather than introducing another credential path or
+  model SDK/agent framework.
+- README impact: mark the harness implemented but not live-verified, add build/
+  test/run handoff instructions, explain bounds and evidence/exit semantics,
+  and retain the pending controlled-fault/live-walkthrough boundaries.
+
+### 2026-10-15 - Task 005 harness implementation and local validation
+
+- Added `ResponsesLab.slnx`, the .NET 10 console project and its five C# source
+  files/guide, plus a focused xUnit project/test file. Updated root README,
+  DESIGN, PLAN, TASKS, this tracker, infra/policy/lifecycle READMEs, and the
+  lifecycle client's stale executable-path error message: 19 scoped files.
+- Used built-in HTTP/JSON/cookie libraries, not a model SDK or agent framework.
+  Each session has a distinct UUID, cookie container, latest successful response
+  ID, and original member; rounds interleave without shared history. Stateless
+  calls never send affinity/response history and ignore issued cookies.
+- Added the actual three-turn synthetic developer/architecture-expert script.
+  Requests resend expert instructions, deployment name, explicit store/stream,
+  bounded output/reasoning controls, and separate client request correlation.
+  Only completed assistant text and valid response/gateway/member/cookie
+  evidence advance a chain; no application retry, redirect, or replay fallback.
+- Turn JSON exposes prompt/assistant text, IDs, actual status, outcome, sent
+  flag, and a cookie fingerprint, never raw pins or credentials. Raw HTTP error
+  bodies and reasoning items are not printed; known echoed keys/cookies are
+  redacted and control characters JSON-escaped. Final tables count all planned,
+  failed, incomplete, and unattempted work and separate observed distributions.
+  Missing either member fails without claiming perfect balance.
+- Enforced explicit `--allow-requests`, strict environment overrides, at least
+  two stateful sessions/two turns, ten-second minimum spacing, 1 MiB bodies,
+  headers/body request timeout, overall deadline, and Ctrl+C accounting.
+  Defaults plan 24 requests; maximum configured bounds plan 48 and at most
+  196,608 output tokens. Fault opt-ins are rejected; expected failures remain
+  zero until task `006`.
+- `dotnet build .\ResponsesLab.slnx --configuration Release --no-restore --nologo`:
+  passed with zero warnings/errors.
+- `dotnet test .\ResponsesLab.slnx --configuration Release --no-build --no-restore
+  --nologo`: all 59 cases passed, no skipped tests. Tests use in-memory HTTP,
+  not live sockets. Coverage includes isolation/chaining, expiry/empty/duplicate/
+  wrong-path/domain cookies, missing/changed gateway evidence, non-JSON errors,
+  malformed/refused/incomplete/repeated responses, known-secret redaction,
+  exact body-byte/token bounds, headers/body/run deadlines, actual uneven
+  distribution, and incomplete/cancelled summary accounting.
+- `dotnet format .\ResponsesLab.slnx --no-restore --verbosity quiet` applied
+  repository formatting; `dotnet format .\ResponsesLab.slnx --verify-no-changes
+  --no-restore --verbosity quiet`: passed.
+- `dotnet publish .\src\ResponsesLab\ResponsesLab.csproj --configuration Release
+  --no-build --no-restore --output .\artifacts\publish\ResponsesLab --nologo`:
+  passed, producing an ignored Windows executable. No-argument invocation
+  returned usage exit 2 without configuration/HTTP; `--help` returned exit 0.
+- `pwsh -NoProfile -File .\scripts\lifecycle.test.ps1`: all 28 offline cases
+  passed, including process-only credential handoff/restoration. The only
+  real CLI command inside those tests compiles native parameters locally.
+- Initial test compilation caught xUnit's predicate-overload analyzer;
+  corrected the assertion without disabling warnings/analyzers. Generated
+  console source differed from the expected template line; only that failed
+  patch hunk was replaced, then build/tests succeeded.
+- README impact: root diagram/client status now distinguish implemented from
+  live. The harness guide documents SDK/build/test/publish, actual PowerShell 7
+  wrapper/argument-array invocation, all bounds, evidence/privacy/exit semantics,
+  and runtime limits; the other guides no longer claim the harness is absent.
+- No Bicep/policy resources changed; their prior validation is not reinterpreted
+  as new live evidence. No Azure reads, real key retrieval, inference, faults,
+  deployment, workspace queries, teardown, or purge were performed.
+- Remaining at this point: final documentation/ignore/text/staged scope checks,
+  commit/push, templated task-linked PR, and completion/status record after the
+  PR exists.
+
+### 2026-10-15 - Task 005 publication checks
+
+- Normalized the 19 scoped source/document files to UTF-8 without a BOM and LF
+  endings. Relative Markdown links/heading anchors and fence parity passed;
+  ordered task states and current branch/authorization records agree.
+- Confirmed the README diagram has six declared nodes and seven edges, and
+  solution/project references target the two intended .NET projects.
+- `git check-ignore --quiet -- <path>` passed all eight generated/local-state
+  fixtures, including project bin/obj, test results, published executable,
+  Azure local state, private native parameters, and generated evidence.
+  Native parameter source and sanitized sample paths remain versionable.
+- `dotnet format .\ResponsesLab.slnx --verify-no-changes --no-restore
+  --verbosity quiet`: passed again after line-ending normalization.
+- Repeated the final published executable's offline guards:
+  `.\artifacts\publish\ResponsesLab\ResponsesLab.exe` returned exit 2, and
+  `.\artifacts\publish\ResponsesLab\ResponsesLab.exe --help` returned exit 0.
+  Neither invocation opted into requests or accessed Azure.
+- `git diff --check`: passed. Remaining: staged scope/secrets inspection,
+  commit/push, PR creation, and completion records after the PR exists.
+- The staged text check then caught a missing final newline in the test project,
+  and Git warned that the new `.slnx` extension lacked an explicit LF checkout
+  rule. Added the newline and the matching `.gitattributes` rule. Final scope
+  is 20 files, including this directly related formatting rule.
+- Repeated staged UTF-8/LF/final-newline and credential-pattern checks: passed
+  for all 20 files. Inspected the staged harness and integration documentation;
+  tests use only synthetic keys/cookies and an in-memory HTTP handler.
+  No generated environment state, credentials, or raw traces are staged.
+- `git diff --cached --check` and the final `dotnet format` verification passed.
+  `git check-attr text eol -- ResponsesLab.slnx` reports `text: set`, `eol: lf`.
+  Remaining: commit/push, publish the templated PR, then record task completion.
 
 ## Update protocol
 
