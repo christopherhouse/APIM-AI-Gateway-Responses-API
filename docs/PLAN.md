@@ -186,6 +186,8 @@ feasibility experiment and cleanup completed. Task `002` then began on
 `feature/002-infrastructure-foundation` with separate code-only authorization.
 PR #4 merged at `2967f55` on 2026-10-15. Task `003` then began on
 `feature/003-gateway-routing-policies` with code-only authorization.
+Its implementation and local validation are complete in open PR #5; the full
+lab has not been deployed or live-verified.
 Tasks `004`-`008` remain pending.
 
 ## Execution and progress

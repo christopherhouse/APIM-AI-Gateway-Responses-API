@@ -5,15 +5,15 @@
 | Field | Value |
 | --- | --- |
 | Updated | 2026-10-15 |
-| Phase | Task `003` gateway routing/policies locally validated; PR pending; not deployed |
+| Phase | Task `003` gateway routing/policies complete in PR #5; not deployed |
 | Authorization | Task `003` code, local validation, documentation, and PR approved on 2026-10-15; no new Azure operations |
 | Planning branch | `chore/lab-planning` |
-| Current implementation task | `003` - in_progress on `feature/003-gateway-routing-policies` |
-| Next task | Publish task `003` PR and record completion; tasks `004`-`008` pending |
+| Current implementation task | `003` - done on `feature/003-gateway-routing-policies` |
+| Next task | User review/merge of PR #5, then authorization for `004`; tasks `004`-`008` pending |
 | Azure deployment | Temporary group deleted and verified absent; Foundry tombstones purged and quota restored; APIM/workspace recovery records retained normally |
 | Solution files | Task `001` experiment, task `002` Bicep foundation, and task `003` gateway code; orchestration/.NET projects pending |
 | Base branch | `main` at infrastructure merge `2967f55`; initial empty base `846a2cb` preserved |
-| Pull request | #1-#4 merged; task `003` PR pending |
+| Pull request | #1-#4 merged; #5 - gateway routing/affinity policies, open and intentionally unmerged |
 
 ## Known prerequisites and open decisions
 
@@ -466,6 +466,21 @@
   are authorized. Exact expanded-policy runtime assertions remain task `007`.
 - Remaining task `003` acceptance: scoped staged review, commit/push, create a
   task-linked PR using the repository template, then record it and leave open.
+
+### 2026-10-15 - Task 003 published in PR #5
+
+- Reviewed/staged exactly 13 scoped files and checked the full changed-file
+  list, routing/policy diff, existing-file integration, whitespace, and
+  credential-shaped content. No generated artifacts, private settings, keys,
+  JSON parameter source files, or raw traces were committed.
+- Committed as `0ed1f57`, pushed `feature/003-gateway-routing-policies`, and
+  created PR #5 against `main` with the repository template, task ID, exact
+  validation commands/results, README impact, and runtime limits.
+- Confirmed PR #5 is open with the correct head/base before marking task `003`
+  done. This follow-up records the PR and completion; no PR was merged.
+- Tasks `004`-`008` remain pending. Next: user review/merge of #5, then
+  authorization for task `004` deployment orchestration code. New live Azure
+  checks/deployments/faults/cleanup still require explicit target/action approval.
 
 ## Update protocol
 

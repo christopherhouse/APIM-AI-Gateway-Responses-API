@@ -4,7 +4,7 @@ Task `000` is complete and PR #2 is merged. Task `001` completed the authorized
 disposable feasibility test and cleanup; B1/B2 are resolved in
 [DESIGN.md](DESIGN.md), with evidence in merged PR #3. Task `002` is complete
 as code and local validation in merged PR #4; it is not deployed. Task `003`
-is in progress with code-only authorization. Tasks `004`-`008` remain pending.
+is complete as code and local validation in open PR #5. Tasks `004`-`008` remain pending.
 IDs are stable; do not renumber completed tasks or hide blocked work.
 
 ## Status and dependency rules
@@ -28,7 +28,7 @@ new platform evidence changes an assumption.
 | 000 | Bootstrap repository and contributor workflow | Implementation authorization; base branch established | done |
 | 001 | Validate platform capabilities and finalize design | 000 | done |
 | 002 | Establish Bicep infrastructure and observability foundation | 001 | done |
-| 003 | Implement gateway routing, affinity, and diagnostic policies | 002 | in_progress |
+| 003 | Implement gateway routing, affinity, and diagnostic policies | 002 | done |
 | 004 | Implement deployment orchestration and Azure CLI parity | 003 | pending |
 | 005 | Implement .NET 10 conversation harness and evidence model | 003 | pending |
 | 006 | Implement controlled failure, breaker, and recovery scenarios | 004, 005 | pending |
@@ -134,6 +134,13 @@ Deliverables and acceptance:
 **Authorization:** On 2026-10-15, after merging PR #4, the user requested the
 next work. `feature/003-gateway-routing-policies` covers code, local checks,
 documentation, and PR publication only. No new live Azure operations.
+
+**Result:** Implemented in PR #5, left open for user review/merge. Bicep build/
+lint and native parameter compilation passed; 11 compiled contract tests,
+all 18 C# 7 policy expressions, 39 input/host fixtures, and XML/auth/forward/
+trace checks passed locally. New policy runtime, cookie expiry/binding limits,
+native failure behavior, and diagnostic ingestion/privacy remain explicitly
+documented task `005`/`007` responsibilities, not inferred live successes.
 
 Deliverables and acceptance:
 
