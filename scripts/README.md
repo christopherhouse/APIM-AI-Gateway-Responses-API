@@ -1,8 +1,9 @@
 # Deployment lifecycle - task 004
 
 **Implemented and offline-tested; not deployed or live-verified.** These scripts
-operate on a new, dedicated lab group only. The .NET harness, fault scenarios,
-and clean-environment Azure walkthrough remain tasks `005`-`008`.
+operate on a new, dedicated lab group only. Task `005` now provides the
+[.NET harness](../src/ResponsesLab/README.md); fault scenarios and the
+clean-environment Azure walkthrough remain tasks `006`-`008`.
 Do not run the live examples without explicit target/action authorization.
 
 ## Prerequisites and target
@@ -164,13 +165,23 @@ The key is never placed in arguments, output files, Bicep outputs, or
 `azd env set`. Do not enable CLI debug/HTTP tracing, transcripts, or use an
 untrusted client that could disclose inherited credentials.
 
-The .NET client and its actual command are **not implemented yet** (task `005`).
-This interface is a handoff contract, not a claim that a harness runs today:
+Task `005` implements the .NET 10 client. Publish locally, then use its
+additional request opt-in **only after real inference is separately approved**:
 
 ```powershell
-# Use a trusted, existing client executable after it has been implemented.
-pwsh -NoProfile -File .\scripts\Invoke-Lab.ps1 -Action Run -EnvironmentName $environment -SubscriptionId $subscription -ResourceGroupName $group -AllowAzure -AllowCredentialRead -ClientPath 'C:\REPLACE\WITH\CLIENT.exe'
+dotnet publish .\src\ResponsesLab\ResponsesLab.csproj --configuration Release --output .\artifacts\publish\ResponsesLab
+$client = (Resolve-Path .\artifacts\publish\ResponsesLab\ResponsesLab.exe).Path
+# PowerShell 7, approved existing lab, same target variables as above.
+& .\scripts\Invoke-Lab.ps1 -Action Run -EnvironmentName $environment -SubscriptionId $subscription -ResourceGroupName $group -AllowAzure -AllowCredentialRead -ClientPath $client -ClientArguments @('--allow-requests')
 ```
+
+Invoke the script directly in PowerShell 7 for `-ClientArguments` arrays,
+rather than a nested `pwsh -File` call. The client accepts
+`--scenario both|stateful|stateless`, defaults to both, and exits nonzero for
+request/evidence/affinity/distribution failures. The
+[harness guide](../src/ResponsesLab/README.md) defines bounds and evidence.
+Publishing/help and mocked tests passed locally; this end-to-end management
+key handoff and inference have **not** been exercised against Azure.
 
 ## Scoped teardown
 

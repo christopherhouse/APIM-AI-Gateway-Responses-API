@@ -398,7 +398,7 @@ function Remove-LabDeployment($Context, [ValidateSet('Azd', 'Cli')][string]$Driv
 }
 
 function Invoke-LabClient($Context, [string]$ClientPath, [string[]]$ClientArguments) {
-    Assert-Lab (Test-Path -LiteralPath $ClientPath -PathType Leaf) 'Supply the existing client executable path; the .NET harness is task005.'
+    Assert-Lab (Test-Path -LiteralPath $ClientPath -PathType Leaf) 'Supply the published client executable path; see src\ResponsesLab\README.md.'
     Assert-Lab ($null -ne (Get-Command $ClientPath -CommandType Application -ErrorAction SilentlyContinue)) 'ClientPath must be an executable, not a shell script.'
     $runtime = Export-LabRuntime $Context
     $access = Get-LabRest "$($runtime.LAB_APIM_SUBSCRIPTION_RESOURCE_ID)?api-version=2024-05-01"

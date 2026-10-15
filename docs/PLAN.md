@@ -17,6 +17,9 @@ publication only. No new live Azure operations are authorized.
 After PR #5 merged on the same date, the user authorized task `004` deployment
 orchestration code, offline checks, documentation, and PR publication only.
 This does not authorize running that orchestration against Azure.
+After PR #6 merged, the user authorized task `005` harness code, offline
+validation, documentation, and PR publication only. No live Azure operations,
+including inference or credential retrieval, are authorized.
 
 The lab demonstrates conversation-aware routing through Azure API Management
 (APIM) to two Microsoft Foundry backends. Conversations chain Responses API
@@ -76,6 +79,8 @@ affinity, and diagnostic policies on `feature/003-gateway-routing-policies`.
 Task `004` implements guarded azd/CLI orchestration for those templates;
 both drivers share native `deploy.bicepparam` inputs and external group
 ownership. This is offline-validated code, not a deployed self-service lab.
+Task `005` adds the bounded .NET 10 client, isolated response chains, and
+per-turn/session evidence; its HTTP transport tests are offline only.
 The selected trace contract is verified native policy trace records plus
 correlated gateway logs, not full debugger transcripts.
 
@@ -194,8 +199,11 @@ PR #4 merged at `2967f55` on 2026-10-15. Task `003` then began on
 Its implementation and local validation are complete in PR #5, merged at
 `e1ed64a` on 2026-10-15. Task `004` began on
 `feature/004-deployment-orchestration` with code-only authorization.
-Its implementation and offline validation are complete in open PR #6; the full
-lab has not been deployed or live-verified. Tasks `005`-`008` remain pending.
+Its implementation and offline validation are complete in PR #6, merged at
+`a74ebd2` on 2026-10-15. Task `005` began on
+`feature/005-conversation-harness` with code-only authorization.
+Its implementation and offline validation are complete in open PR #7; the full
+lab has not been deployed or live-verified. Tasks `006`-`008` remain pending.
 
 ## Execution and progress
 

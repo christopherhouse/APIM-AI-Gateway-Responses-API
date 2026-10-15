@@ -8,7 +8,7 @@ Management to two Microsoft Foundry backends. It will show why a
 are distributed, and what happens when a conversation's backend becomes
 unavailable.
 
-> **Infrastructure and gateway code, not a live self-service lab.** Bootstrap is merged.
+> **Implemented lab components, not a live self-service lab.** Bootstrap is merged.
 > Task `001` completed an explicitly authorized
 > [disposable feasibility experiment](experiments/001-affinity/README.md):
 > healthy affinity, native pinned failure, concrete-member identity, recovery,
@@ -17,14 +17,15 @@ unavailable.
 > native `.bicepparam` inputs and resource diagnostics. Task `003` adds
 > [gateway routing and policy diagnostics](infra/policies/README.md).
 > Task `004` adds [guarded azd and Azure CLI lifecycle scripts](scripts/README.md).
-> All three have local checks only; none has been deployed as the full lab.
-> The .NET harness, fault automation, and end-to-end verification remain tasks `005`-`008`.
+> Task `005` adds the [bounded .NET 10 conversation harness](src/ResponsesLab/README.md).
+> Tasks `002`-`005` have local checks only; none has been run as the full live lab.
+> Fault automation and end-to-end verification remain tasks `006`-`008`.
 
-## 🗺️ The planned journey
+## 🗺️ Architecture in code
 
 ```mermaid
 flowchart LR
-    Client["Planned .NET 10 harness<br/>Isolated sessions and response IDs"]
+    Client[".NET 10 harness<br/>Isolated sessions and response IDs"]
     Gateway["Bicep: APIM Developer<br/>Responses policy XML"]
     Pool["Bicep: native backend pool<br/>Cookie affinity and circuit breakers"]
     A["Bicep: Foundry A<br/>Response state A"]
@@ -39,13 +40,14 @@ flowchart LR
     B -.-> Logs
 ```
 
-*Target architecture, not a running deployment.* Bicep-labeled nodes and gateway
-policies have code; the client harness and complete runtime verification remain planned.
+*Implemented components, not a running deployment.* Bicep-labeled nodes,
+gateway policies, lifecycle scripts, and the client have code; controlled-fault
+automation and complete runtime verification remain planned.
 Solid arrows show requests; dotted arrows show diagnostics. The harness keeps
 routing context, Foundry owns response state, and APIM is not a
 conversation-history database. Native pinning
 during the tested breaker-open window was verified in the disposable experiment;
-the complete self-service workflow is still planned.
+the complete self-service walkthrough is still pending.
 
 ## 🔎 What we know so far
 
@@ -79,9 +81,10 @@ location does not imply West US 3-only processing.
 | Recovery and evidence | The backend is restored, recovery is observed, and gateway/policy records correlate with the run |
 
 The lab now has Bicep and APIM policy XML, `azd` orchestration, an equivalent
-Azure CLI path, and Log Analytics configuration. The .NET 10 console harness
-and complete scenario verification remain planned. The experiment has its own
-guarded probe, separate from the full-lab lifecycle and future .NET harness.
+Azure CLI path, Log Analytics configuration, and the .NET 10 console harness.
+Controlled-fault automation and complete scenario verification remain planned.
+The experiment has its own guarded probe, separate from the full-lab lifecycle
+and .NET client.
 
 ## 🧱 Infrastructure and gateway configuration
 
@@ -112,7 +115,7 @@ The policy never retries a broken chain onto another backend.
 **Not live yet:** local Bicep, XML, compiled-expression, and contract checks do
 not establish Azure provisioning, full-lab routing, or diagnostic ingestion.
 Those assertions remain in task `007`. No new Azure operations were performed
-for tasks `002`-`004`; running the lifecycle scripts still requires separate
+for tasks `002`-`005`; running the lifecycle scripts or inference still requires separate
 target/action authorization.
 
 ## 🚦 Guarded deployment lifecycle
@@ -127,7 +130,7 @@ what-if before deployment. Neither silently changes subscription or region.
 | --- | --- |
 | `Preflight` / `Export` | `-AllowAzure`, including read-only subscription checks |
 | `Provision` | `-AllowAzure -AllowDeploy`; new or provably owned dedicated group only |
-| `Run` | `-AllowAzure -AllowCredentialRead`; trusted client executable, key in process environment only |
+| `Run` | `-AllowAzure -AllowCredentialRead`, plus client `--allow-requests`; key in process environment only |
 | `Down` | `-AllowAzure -AllowDelete -ConfirmResourceGroup <exact-name>`; inventory-checked group deletion, no permanent purge |
 
 Use **PowerShell 7**, Azure CLI 2.83.0+ with Bicep, and azd 1.36.0+ for the
@@ -137,9 +140,33 @@ client handoff, reruns, failure handling, costs, and scoped teardown.
 Use its wrapper rather than bare `azd` commands.
 
 **Offline-tested, not a live walkthrough:** no Azure operations were performed
-for task `004`. `Run` is an executable handoff interface, not the still-pending
-.NET harness. Clean-environment provisioning, real key handoff, reruns,
+for tasks `004`/`005`. `Run` hands configuration/credentials to the published
+.NET client. Clean-environment provisioning, real key handoff, reruns,
 diagnostic ingestion, and deletion/recovery behavior remain task `007` gates.
+
+## 💬 Conversation harness
+
+Task `005` adds a .NET 10 console app with no model SDK or agent framework.
+It interleaves independent multi-turn sessions, separately runs stateless
+calls, and emits each turn's prompt/assistant text, response-chain IDs, actual
+gateway request UUID, concrete member, safe cookie fingerprint, and outcome.
+The final session table and separate distributions include failed and
+unattempted work; a missing member is a failed observation, not a promised 50/50.
+
+```powershell
+# No Azure sign-in or inference: build, tests, and formatting checks.
+dotnet build .\ResponsesLab.slnx --configuration Release
+dotnet test .\ResponsesLab.slnx --configuration Release --no-restore
+dotnet format .\ResponsesLab.slnx --verify-no-changes --no-restore
+```
+
+Defaults cap the script at 24 requests, 2,048 output tokens per request,
+one request at a time, ten-second spacing, and a ten-minute overall deadline.
+The client stops a broken chain; it never retries, restarts history, or accepts
+a changed/missing member. The [harness guide](src/ResponsesLab/README.md)
+documents publishing, the exact guarded run command, configuration bounds,
+evidence fields, privacy, and exit codes. No live response sample or
+workspace-ingestion claim is made by these offline checks.
 
 ## 📚 Follow the work
 
@@ -150,6 +177,7 @@ diagnostic ingestion, and deletion/recovery behavior remain task `007` gates.
 | [Infrastructure reference](infra/README.md) | Native parameters, pinned modules, diagnostics inventory, outputs, and offline checks |
 | [Gateway contract](infra/policies/README.md) | Request modes, cookies, errors, identity, safe traces, and runtime verification gates |
 | [Deployment lifecycle](scripts/README.md) | azd/CLI commands, prerequisites, explicit opt-ins, local state, credential handoff, and teardown |
+| [Conversation harness](src/ResponsesLab/README.md) | .NET build/test/publish, bounded runs, isolated chains, turn evidence, and failure accounting |
 | [Task backlog](docs/TASKS.md) | Ordered work and acceptance criteria |
 | [Progress tracker](docs/PROGRESS.md) | Authorization, execution history, and PR state |
 | [Contributor instructions](.github/copilot-instructions.md) | Branch workflow, checks, and README standards |
@@ -164,8 +192,8 @@ dependency or an explicitly documented dependency branch.
 For documentation/bootstrap changes, run `git diff --check`, verify relative
 links and relevant ignore behavior, and inspect the diff for scope and secrets.
 Infrastructure build/test commands are in the
-[infrastructure reference](infra/README.md); application commands and solution
-CI remain pending their project files.
+[infrastructure reference](infra/README.md); application commands are in the
+[harness guide](src/ResponsesLab/README.md). Solution CI is not added by this task.
 Text formatting is defined by `.editorconfig` and `.gitattributes`.
 
 Never commit credentials or private environment settings. `.env.example` and
@@ -181,5 +209,5 @@ group within the three-hour bound. Both deleted Foundry accounts were purged
 and model quota returned to baseline. Azure retains normal APIM/workspace
 soft-delete recovery records; they are not a running gateway or workspace.
 The under-$5 target was an estimate, not a billing cap; the final Azure bill
-is not yet available. Tasks `002`-`004` have separate code-only authorization; later
+is not yet available. Tasks `002`-`005` have separate code-only authorization; later
 deployments still require explicit authorization.

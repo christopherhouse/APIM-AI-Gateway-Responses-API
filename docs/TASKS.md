@@ -5,7 +5,8 @@ disposable feasibility test and cleanup; B1/B2 are resolved in
 [DESIGN.md](DESIGN.md), with evidence in merged PR #3. Task `002` is complete
 as code and local validation in merged PR #4; it is not deployed. Task `003`
 is complete as code and local validation in merged PR #5. Task `004` is complete
-as offline-validated code in open PR #6; tasks `005`-`008` remain pending.
+as offline-validated code in merged PR #6. Task `005` is complete as code and
+offline validation in open PR #7; tasks `006`-`008` remain pending.
 IDs are stable; do not renumber completed tasks or hide blocked work.
 
 ## Status and dependency rules
@@ -31,7 +32,7 @@ new platform evidence changes an assumption.
 | 002 | Establish Bicep infrastructure and observability foundation | 001 | done |
 | 003 | Implement gateway routing, affinity, and diagnostic policies | 002 | done |
 | 004 | Implement deployment orchestration and Azure CLI parity | 003 | done |
-| 005 | Implement .NET 10 conversation harness and evidence model | 003 | pending |
+| 005 | Implement .NET 10 conversation harness and evidence model | 003 | done |
 | 006 | Implement controlled failure, breaker, and recovery scenarios | 004, 005 | pending |
 | 007 | Verify end-to-end scenarios and diagnostic evidence in Azure | 006 | pending |
 | 008 | Complete self-service documentation and clean-environment walkthrough | 007 | pending |
@@ -166,7 +167,7 @@ documentation, and PR publication only. No live Azure checks, deployment,
 resource changes, inference, faults, teardown, or credential retrieval.
 
 **Result:** Both lifecycle drivers and four azd hooks are implemented in PR #6,
-left open for user review/merge.
+merged on 2026-10-15.
 Bicep/native parameter compilation, 11 foundation/gateway contracts, all 18
 policy expressions/39 fixtures, 28 offline lifecycle cases, PowerShell syntax,
 and YAML hook/configuration checks passed. No live Azure checks were run;
@@ -189,6 +190,19 @@ Deliverables and acceptance:
 - Validate configuration and script syntax; record deployed-path checks for `007`.
 
 ## 005 - Implement .NET 10 conversation harness and evidence model
+
+**Authorization:** On 2026-10-15, after merging PR #6, the user requested the
+next task. `feature/005-conversation-harness` covers harness code, offline
+checks, documentation, and PR publication only. No Azure checks, real inference,
+credential retrieval, resource changes, controlled faults, or teardown.
+
+**Local result:** Implemented the .NET 10 console client, session/evidence model,
+interleaved stateful and independent stateless scenarios, strict bounds and
+failure summaries. Release build passed with no warnings/errors; 59 focused
+transport/configuration tests, formatting verification, publish, offline CLI
+guards, and 28 lifecycle regression cases passed. Real inference, model answer
+quality, native routing, and trace ingestion remain task `007` assertions.
+Published in PR #7, left open for user review and merging.
 
 Deliverables and acceptance:
 

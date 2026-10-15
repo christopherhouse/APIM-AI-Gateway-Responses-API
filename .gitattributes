@@ -11,6 +11,7 @@
 *.bicepparam text eol=lf
 *.cs text eol=lf
 *.csproj text eol=lf
+*.slnx text eol=lf
 *.props text eol=lf
 *.targets text eol=lf
 *.ps1 text eol=lf
