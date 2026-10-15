@@ -1,7 +1,8 @@
 # Task execution order
 
-Task `000` is complete in PR #2, left unmerged for user review. Later tasks
-remain pending and require authorization before execution.
+Task `000` is complete and PR #2 is merged. Task `001` has recorded research but
+is blocked on design decisions B1-B3 in [DESIGN.md](DESIGN.md); later tasks
+remain pending.
 IDs are stable; do not renumber completed tasks or hide blocked work.
 
 ## Status and dependency rules
@@ -23,7 +24,7 @@ new platform evidence changes an assumption.
 | ID | Task | Depends on | Status |
 | --- | --- | --- | --- |
 | 000 | Bootstrap repository and contributor workflow | Implementation authorization; base branch established | done |
-| 001 | Validate platform capabilities and finalize design | 000 | pending |
+| 001 | Validate platform capabilities and finalize design | 000 | blocked |
 | 002 | Establish Bicep infrastructure and observability foundation | 001 | pending |
 | 003 | Implement gateway routing, affinity, and diagnostic policies | 002 | pending |
 | 004 | Implement deployment orchestration and Azure CLI parity | 003 | pending |
@@ -66,6 +67,14 @@ Deliverables and acceptance:
 ## 001 - Validate platform capabilities and finalize design
 
 **Scope:** Evidence-backed design; no Azure deployment yet.
+
+**Current blocker:** [DESIGN.md](DESIGN.md) records source-backed findings and
+successful read-only region/model/quota/capacity checks. B1 needs the native
+cookie-plus-breaker contract, B2 needs concrete pool-member evidence, and B3
+needs confirmation of policy traces versus full debugger transcripts.
+Close these through authoritative confirmation/explicitly authorized feasibility
+work or an approved design change before starting `002`. A research PR does
+not complete this task.
 
 Deliverables and acceptance:
 

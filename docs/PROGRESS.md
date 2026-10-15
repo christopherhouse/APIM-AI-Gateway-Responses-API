@@ -5,24 +5,24 @@
 | Field | Value |
 | --- | --- |
 | Updated | 2026-10-15 |
-| Phase | Repository bootstrap complete; awaiting user PR review/merge |
-| Authorization | Task `000` authorized on 2026-10-15; later tasks and Azure operations not authorized |
+| Phase | Platform research recorded; final design blocked on B1-B3 |
+| Authorization | Task `001` authorized on 2026-10-15, including its read-only checks; no Azure mutations or deployment |
 | Planning branch | `chore/lab-planning` |
-| Current implementation task | `000` - done on `chore/000-repository-bootstrap` |
-| Next task | `001` - platform validation/design, after authorization and merge of #2 (or documented dependency branch use) |
+| Current implementation task | `001` - blocked on `chore/001-platform-design`; evidence in `docs/DESIGN.md` |
+| Next task | Publish research PR; obtain the B1-B3 decisions/authorized feasibility evidence before `002` |
 | Azure deployment | Not attempted |
 | Solution files | Not created |
-| Base branch | `main` at planning merge `f5bae67`; initial empty base `846a2cb` preserved |
-| Pull request | #1 merged; #2 - bootstrap, open and intentionally unmerged |
+| Base branch | `main` at bootstrap merge `9efe056`; initial empty base `846a2cb` preserved |
+| Pull request | #1 and #2 merged; task `001` PR not yet created |
 
 ## Known prerequisites and open decisions
 
 | Item | Owner/action | Effect |
 | --- | --- | --- |
-| Implementation authorization | Task `000` authorized on 2026-10-15 | Bootstrap only; later task authorization remains outstanding. |
+| Implementation authorization | Task `001` authorized on 2026-10-15 | Evidence-backed design/read-only checks only; no infrastructure implementation or live mutations. |
 | Initial base branch | Resolved with explicit user approval on 2026-10-15 | Empty commit `846a2cb` establishes `main`; subsequent work stays on work branches. |
-| Platform feasibility | Task `001` | Verify Developer SKU, West US 3 model availability, recommended affinity, pinned-backend failure semantics, and diagnostic/trace delivery. |
-| Model and authentication | Task `001` | Choose based on verified support, cost suitability, quota, and least-privilege access. |
+| Platform feasibility | Task `001`, blockers B1-B3 in `DESIGN.md` | Confirm cookie/breaker interaction, concrete member identity, and trace interpretation before `002`. |
+| Model and authentication | Task `001` research recorded | User requested GPT-5-family or newer: `gpt-5.4-mini` / `2026-03-17` / `GlobalStandard` selected; gateway identity/API subscription design; runtime untested. |
 | Live Azure operations | Explicit deployment/fault authorization before task `007` or any earlier live run | Planning or implementation authorization is not blanket deployment approval. |
 
 ## Execution log
@@ -115,6 +115,78 @@
 - No README content change is needed for this instructions-only follow-up:
   the root README already links the contributor workflow; lab capabilities,
   status, commands, and architecture have not changed.
+
+### 2026-10-15 - Task 001 started
+
+- User confirmed PR #2 merged and authorized the next batch. Followed the
+  ordered backlog with task `001`, including read-only platform checks.
+- Confirmed PR #2 merged, fetched origin, and fast-forwarded `main` to
+  `9efe056`. Created `chore/001-platform-design` before edits.
+- No deployment, resource changes, subscription switching, or fault injection
+  are authorized or performed in this batch.
+
+### 2026-10-15 - Task 001 evidence and blocked design handoff
+
+- Added `docs/DESIGN.md` with eight gate results, official sources/dates,
+  pinned API versions, model/authentication choices, state/routing/evidence
+  contracts, category inventory, shared configuration, ownership/teardown
+  requirements, and a proposed reversible fault/observation procedure.
+- Active AzureCloud subscription was enabled. Successful read-only commands:
+  `az account show`, `az version`, `az provider show` for APIM/CognitiveServices/
+  OperationalInsights, `az cognitiveservices model list --location westus3`,
+  `az cognitiveservices usage list --location westus3`, and `az rest --method get`
+  against Model Capacities List API `2025-06-01`.
+- Selected catalog candidate `AIServices` / `gpt-4.1-mini` / `2025-04-14` /
+  `Standard`: Responses capability true, quota `OpenAI.Standard.gpt4.1-mini`
+  current 0 / limit 5000, available West US 3 capacity 5000. Proposed capacity
+  is 10 per backend. Metadata is a snapshot, not a deployment reservation.
+- Corrected local CLI quoting and model-to-quota identifier filtering during
+  investigation; successful results, not failed guesses, informed the design.
+  No credentials or private subscription settings are committed.
+- Verified the native policy-trace table path separately from full debugger
+  traces. Inspected official sample and versioned azd teardown source; do not
+  assume `azd down` preserves an externally created resource group.
+- Blocked task `001`, not marked done: B1 cookie/breaker behavior, B2 concrete
+  member evidence, and B3 trace interpretation need the decisions/evidence
+  documented in `DESIGN.md`. Did not invent a cache or strict-pinning workaround.
+- Updated README with an explicitly planned Mermaid architecture, engaging
+  navigation, findings, and limitations. Kept PLAN/TASKS/PROGRESS consistent.
+- No infrastructure, policy implementation, deployment scripts, harness code,
+  resource mutations, faults, or inference calls were created/performed.
+- Documentation checks and the research PR are the remaining handoff work.
+
+### 2026-10-15 - GPT-5 model requirement
+
+- User requested at least a GPT-5-family model during design. Superseded the
+  initial GPT-4.1 mini candidate with `gpt-5.4-mini`, version `2026-03-17`,
+  `GlobalStandard`, proposed capacity 20 per backend (40 total).
+- Catalog evidence reports `GenerallyAvailable` and Responses support. The
+  West US 3 usage entry `OpenAI.GlobalStandard.gpt-5.4-mini` reports current 50,
+  limit 1000, available 950; the successful Model Capacities List GET also
+  returned 950 for West US 3 / GlobalStandard.
+- Kept resource placement in West US 3 and explicitly documented that global
+  inference processing is not a region-only residency guarantee.
+- Updated README, PLAN, and DESIGN for the selected GPT-5 model and bounded
+  reasoning/output budget. No inference call or resource modification occurred.
+
+### 2026-10-15 - Task 001 documentation validation
+
+- `git diff --check` and `git diff --cached --check` passed after normalizing
+  the newly created DESIGN document from CRLF to the declared LF convention.
+- PowerShell assertions passed for five changed text files, 16 relative
+  Markdown links, balanced fences, 24 sequential source IDs (25 official
+  source URLs), all eight design gates, the GPT-5.4 mini contract, and the
+  blocked task `001` / pending tasks `002`-`008` state.
+- Checked the README Mermaid source's six declared nodes and seven valid
+  edges, and reviewed its labels/caption as explicitly planned architecture.
+  GitHub-rendered visual presentation was not verified; no Mermaid renderer
+  was used. No claim of runtime diagram rendering or Azure behavior is made.
+- Reviewed the staged five-file documentation scope and checked that private
+  subscription identifiers/settings are absent. No solution build/tests or
+  live scenario/log-ingestion checks were run: there are no solution projects
+  and feasibility deployment/fault execution is not authorized.
+- Remaining handoff: publish the research PR and record its number; task `001`
+  remains blocked on B1-B3 regardless of PR publication.
 
 ## Update protocol
 
