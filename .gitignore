@@ -1,0 +1,56 @@
+# .NET build and test output
+[Bb]in/
+[Oo]bj/
+[Tt]est[Rr]esults/
+*.trx
+*.coverage
+*.coveragexml
+
+# IDE-local settings and caches; allow intentionally shared VS Code config
+.vs/
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+*.user
+*.suo
+*.sln.docstates
+*.code-workspace
+
+# Azure CLI/azd environment state and local emulator output
+.azure/
+.azd/
+.azurite/
+__azurite_db*
+*.bicepparam.local
+*.parameters.local.json
+
+# Local configuration and secrets; keep placeholder samples versionable
+.env
+.env.*
+!.env.example
+!.env.sample
+!.env.*.example
+!.env.*.sample
+appsettings.Local.json
+appsettings.*.Local.json
+secrets.json
+*.pfx
+*.p12
+*.pem
+*.key
+
+# Generated lab output; sanitized examples are intentionally versionable
+/artifacts/
+/evidence/*
+!/evidence/samples/
+
+# OS and editor temporary files
+.DS_Store
+Thumbs.db
+Desktop.ini
+*~
+*.swp
+*.swo
