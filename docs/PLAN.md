@@ -1,0 +1,171 @@
+# Stateful Responses API gateway lab plan
+
+## Scope and authorization
+
+This is the agreed implementation plan, not an implemented solution.
+The current authorization covers these planning documents only. Do not start
+task `000` or deploy resources until implementation is explicitly authorized.
+
+The lab demonstrates conversation-aware routing through Azure API Management
+(APIM) to two Microsoft Foundry backends. Conversations chain Responses API
+calls using `previous_response_id`; the demonstration must prove that their
+requests stay on the appropriate backend.
+
+"Stateful APIM" describes the routing experience, not a promise that APIM stores
+the model's conversation history. The design must explain separately where
+response state lives, how affinity is established, and how the client preserves
+the required routing information.
+
+## Agreed requirements
+
+| Area | Requirement |
+| --- | --- |
+| Azure context | Use the active Azure CLI subscription; display and record the resolved subscription before deployment. |
+| Resource group | Create a new dedicated lab resource group through orchestration or Azure CLI, outside Bicep ownership. |
+| Region | West US 3 (`westus3`) for all regional resources. Do not silently substitute another region. |
+| Gateway | New Developer SKU APIM instance. |
+| Model backends | Two new Foundry resources, each with its own deployment of the same model and version. |
+| Model choice | Choose a reasonable lower-cost model after verifying regional availability, Responses support, and quota. No model is selected yet. |
+| Networking | Public network access enabled; authentication remains required. No existing application resources are reused. |
+| Infrastructure | Bicep plus APIM policy XML where needed. |
+| Routing | Backend load-balancing pool, per-backend circuit breakers, and the documented session-affinity mechanism verified during design. |
+| Stateless traffic | Demonstrate distribution across both identical model deployments without conversation chaining. |
+| Stateful traffic | Multiple independent conversations, each chaining with `previous_response_id` and retaining affinity. |
+| Failure behavior | A conversation pinned to an unavailable backend fails explicitly; new conversations use a healthy backend once the breaker detects the failure. |
+| Harness | .NET 10 console application; scripted multi-turn loops, not an agent framework or tool-calling system. |
+| Conversation script | A developer asks an Azure architecture expert about making APIM routing stateful for Responses. |
+| Console evidence | Model output plus session ID, backend identity, and trace/correlation identifiers for every turn. |
+| Summary evidence | Each session's backend set, turn counts, outcomes, affinity violations, and aggregate backend distribution. |
+| Observability | Bicep-deployed Log Analytics workspace; diagnostics from every resource that supports them; APIM tracing evidence queryable there. |
+| Delivery | Self-service lab with a thorough README, `azd` deployment orchestration, equivalent Azure CLI instructions, and teardown. |
+
+## Intended architecture
+
+```text
+.NET 10 console harness
+  | independent sessions + previous_response_id + affinity information
+  v
+APIM Developer
+  | inbound/outbound policies and diagnostic correlation
+  v
+Backend load-balancing pool
+  +-- Backend A + circuit breaker --> Foundry A / model deployment
+  +-- Backend B + circuit breaker --> Foundry B / same model deployment
+
+Supported resource diagnostics and gateway evidence --> Log Analytics
+```
+
+This is a logical design. Exact resource types, APIs, policy expressions,
+session transport, diagnostic destinations, and authentication are not yet
+validated or chosen.
+
+## Mandatory design gates
+
+Task `001` must resolve these points with current official documentation and
+subscription evidence before implementation proceeds:
+
+1. Verify Developer SKU support for the chosen backend pool, affinity, circuit
+   breaker, policy, and diagnostic features. Record any limitations.
+2. Verify the Foundry resource type, Responses endpoint and API version, model,
+   deployment type, availability in West US 3, quota, and access requirements.
+3. Establish the recommended affinity contract: how a new session selects a
+   backend, how the gateway returns affinity information, and how the harness
+   carries it forward. Do not invent a response-ID mapping/cache unless the
+   verified design requires one and its additional scope is approved.
+4. Establish the routing contract when an affinity-bound backend is unhealthy.
+   Do not assume the pool preserves a pin after breaker activation. If the
+   native behavior conflicts with explicit failure, document the gap and
+   obtain a decision before implementing a workaround.
+5. Distinguish gateway access/resource logs, policy-generated trace records,
+   and per-request APIM debug traces. Verify which can reach Log Analytics
+   natively and whether an additional supported component is required. Do not
+   describe correlation IDs or access logs alone as full APIM traces.
+6. Inventory diagnostic support by deployed resource type. Route every supported
+   category to the workspace; document resources that cannot emit diagnostic
+   settings and any gaps against the requested tracing experience.
+7. Select and document local/deployment/runtime authentication, least-privilege
+   role assignments, secret handling, and APIM subscription access. Public
+   endpoints must not become anonymous endpoints.
+8. Verify how `azd` creates or uses the resource group without Bicep managing its
+   lifecycle, and ensure the Azure CLI path uses the same Bicep and parameters.
+
+A failed gate is a documented blocker, not permission to change the requested
+region, SKU, failure semantics, or diagnostic requirements silently.
+
+## Harness and evidence contract
+
+- Assign a harness session ID before each conversation and keep it separate
+  from response IDs and any gateway-native affinity token.
+- Retain only that session's latest response ID and routing context. Never
+  share response IDs or affinity state across sessions.
+- Print each turn's prompt/response, backend identity, session ID, response ID,
+  previous response ID, request correlation, and outcome. Redact credentials
+  and sensitive affinity material; use a safe identifier or fingerprint.
+- Derive backend evidence from gateway routing, not model-generated claims.
+- Treat an unexpected backend switch in a chained conversation as a failed
+  assertion, even if the HTTP request succeeds.
+- Run sufficient independent sessions to observe both backends. Do not promise
+  a perfectly even split from a small sample or depend on undocumented
+  round-robin behavior.
+- Report stateless distribution separately from stateful conversation affinity.
+- Produce a final per-session table and aggregate statistics, including failed
+  requests and incomplete conversations. Return a failing exit status when
+  expected routing or failure assertions are violated.
+- Make expected scenario failures distinguishable from test failures. A
+  deliberately unavailable pinned backend is a successful failure scenario only
+  when the expected error and new-session behavior are both demonstrated.
+
+## Failure demonstration
+
+Establish successful sessions first, identify one pinned backend, then introduce
+a controlled and reversible failure using a mechanism selected in task `001`.
+Observe the documented breaker detection/convergence window rather than
+assuming immediate activation.
+
+The pinned conversation must fail explicitly, without silently restarting its
+history or continuing on the other backend. After the breaker has detected the
+failure, fresh sessions must reach the healthy backend. Capture the evidence,
+restore the backend, and demonstrate recovery. Put guardrails around the
+dedicated lab resources so the fault procedure cannot target unrelated resources.
+
+## Delivery and lifecycle
+
+The README must explain the state boundary, affinity contract, load balancing,
+circuit breakers, failure behavior, observability, authentication, prerequisites,
+cost drivers, deployment duration expectations, and known limitations.
+
+Both deployment paths must include prerequisite checks, subscription
+confirmation, resource-group creation outside Bicep, configuration, deployment,
+harness execution, evidence queries, troubleshooting, and scoped teardown.
+Document whether `azd down` removes the externally created group or whether
+explicit group deletion is required; avoid orphaned resources.
+
+Keep workloads and token budgets small and configurable. Do not claim a price
+or cost ceiling without current pricing evidence. Developer SKU does not by
+itself guarantee a low-cost lab.
+
+## Repository workflow
+
+Task `000` must codify the following in `.github\copilot-instructions.md`:
+
+- No work directly on `main`.
+- Use descriptive `feature/*`, `chore/*`, `bugfix/*`, or other suitable work branches.
+- Keep each branch focused on a coherent task or documented group of tasks.
+- Update task/progress records with the implementation branch.
+- Complete relevant checks and create a pull request when branch work is done.
+- Do not merge pull requests; leave review and merging to the user.
+- Do not build or deploy beyond the current authorization.
+- Never commit credentials, generated secrets, or private environment settings.
+
+The repository's initial base was created with explicit user approval on
+2026-10-15: `main` points to the empty initialization commit `846a2cb`.
+Planning documents remain on `chore/lab-planning` for pull-request review.
+This one-time initialization does not authorize implementation work on `main`
+or completion of the remaining task `000` bootstrap deliverables.
+
+## Execution and progress
+
+Use [TASKS.md](TASKS.md) as the authoritative task order and acceptance checklist.
+Use [PROGRESS.md](PROGRESS.md) as the current handoff and append-only execution
+log. Task `000` is the first implementation task; planning preparation does not
+count as completing bootstrap.
