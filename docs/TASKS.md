@@ -2,7 +2,8 @@
 
 Task `000` is complete and PR #2 is merged. Task `001` completed the authorized
 disposable feasibility test and cleanup; B1/B2 are resolved in
-[DESIGN.md](DESIGN.md), with evidence in PR #3. Later tasks remain pending.
+[DESIGN.md](DESIGN.md), with evidence in merged PR #3. Task `002` is authorized
+for code and local validation; later tasks remain pending.
 IDs are stable; do not renumber completed tasks or hide blocked work.
 
 ## Status and dependency rules
@@ -25,7 +26,7 @@ new platform evidence changes an assumption.
 | --- | --- | --- | --- |
 | 000 | Bootstrap repository and contributor workflow | Implementation authorization; base branch established | done |
 | 001 | Validate platform capabilities and finalize design | 000 | done |
-| 002 | Establish Bicep infrastructure and observability foundation | 001 | pending |
+| 002 | Establish Bicep infrastructure and observability foundation | 001 | in_progress |
 | 003 | Implement gateway routing, affinity, and diagnostic policies | 002 | pending |
 | 004 | Implement deployment orchestration and Azure CLI parity | 003 | pending |
 | 005 | Implement .NET 10 conversation harness and evidence model | 003 | pending |
@@ -78,8 +79,9 @@ The exact owned group was deleted; both Foundry recovery records were purged
 to release model quota. APIM/workspace recovery records retain their normal
 Azure soft-delete periods. Selected native policy traces were ingested and
 correlated. See [DESIGN.md](DESIGN.md) and
-[sanitized evidence](../evidence/samples/task001-feasibility.json). PR #3 remains
-unmerged; tasks `002`-`008` are neither implemented nor authorized by this work.
+[sanitized evidence](../evidence/samples/task001-feasibility.json). PR #3 merged
+on 2026-10-15; its feasibility approval did not authorize later tasks. Task `002`
+has separate code-only authorization below.
 
 Deliverables and acceptance:
 
@@ -100,6 +102,10 @@ Deliverables and acceptance:
   semantics cannot be supported. Obtain decisions before changing requirements.
 
 ## 002 - Establish Bicep infrastructure and observability foundation
+
+**Authorization:** On 2026-10-15, after merging PR #3, the user requested the
+next task. Work on `feature/002-infrastructure-foundation` covers infrastructure
+code, local checks, documentation, and a PR only; no live Azure operations.
 
 Deliverables and acceptance:
 

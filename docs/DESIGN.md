@@ -3,8 +3,8 @@
 **Verified:** 2026-10-15. **Task:** `001`.
 **Status:** Task `001` complete; disposable feasibility evidence resolves
 **B1 and B2**, and cleanup is verified. This document specifies contracts for
-later tasks; it is not the complete self-service lab or authorization to start
-tasks `002`-`008`.
+later tasks; it is not the complete self-service lab. Task `002` subsequently
+received separate code-only authorization after PR #3 merged.
 
 ## 1. Gate results and remaining decisions
 
@@ -29,9 +29,9 @@ means documentation/schema evidence, not a successful live gateway test.
 | B1 | Cookie plus open-breaker interaction was unverified. | Native behavior met the requested explicit pinned failure in this test: 503, `CircuitBreakerIsOpen`, selected A, no backend execution. Keep native affinity; no pin cache/token workaround. |
 | B2 | Same-region labels and a pool context ID cannot prove A/B. | Map outbound `context.Request.Url.Host` against generated allow-listed account hosts. Cross-check actual debug forwarding URLs and workspace member fields. Do not use `context.Backend.Id` as the concrete-member response header. |
 
-Task `002` still requires user authorization and an appropriate dependency
-branch/merge decision. No custom pin token, response-ID lookup cache, or extra
-trace collector is needed. The separate task `001` deployment/fault/cleanup
+PR #3 is merged and task `002` has separate code-only authorization. No custom
+pin token, response-ID lookup cache, or extra trace collector is needed.
+The separate task `001` deployment/fault/cleanup
 approval did not authorize later tasks.
 
 For the agreed APIM trace-record requirement, select policy-generated traces
@@ -119,7 +119,7 @@ Implementation tasks must build/lint against them and revisit documented changes
 | APIM service, APIs, operations, policies, subscriptions, loggers, API/service diagnostics | `2024-05-01` | Stable APIM control-plane baseline; S9, S19, S26 |
 | APIM backend entities and pool | `2025-03-01-preview` | S3 includes `pool.sessionAffinity`, source **`cookie`**. The stable `2024-05-01` backend schema lacks that property; do not copy the uppercase source in older illustrative snippets. |
 | Foundry accounts and model deployments | `2025-06-01` | Account/deployment schemas; S5-S6 |
-| Log Analytics workspace | `2023-09-01`, `PerGB2018`, retention intent 30 days | S20 |
+| Log Analytics workspace | Probe: `2023-09-01`; task `002`: `2025-07-01`, `PerGB2018`, retention intent 30 days | S20; pinned AVM rationale below |
 | Azure Monitor diagnostic settings | `2021-05-01-preview` | Workspace destinations, log categories and resource-specific mode; S15 |
 | Role assignments | `2022-04-01` | Resource-scoped role assignments; S21 |
 | Model data plane | `POST /openai/v1/responses`, no dated `api-version` query | Responses v1; S4 |
@@ -131,6 +131,18 @@ Insights, or trace ingestion service is currently required by the proposed
 policy-trace design. Public access is not anonymous access. Deployment preflight
 must check organizational policy; do not bypass a policy or change network
 requirements silently.
+
+### Task 002 implementation pins
+
+The RG-scoped foundation uses AVM resource modules: APIM `0.15.0`, Cognitive
+Services account `0.13.2`, and workspace `0.16.1`. The workspace API deliberately
+advances to `2025-07-01` because the older module preserving `2023-09-01`
+exposes shared keys as ordinary nested deployment outputs. The selected
+workspace module marks them secure; the root exports no credentials. APIM,
+Foundry accounts/model deployments, diagnostics, and RBAC retain the table's
+other pins. The compiled templates pass local checks; these new module choices
+have **not** been deployed. Exact module sources and validation boundaries are
+in the [infrastructure reference](../infra/README.md).
 
 ## 4. Routing, state, and per-turn evidence
 
@@ -324,8 +336,10 @@ authorized, should use workload identity rather than committed credentials.
 
 ## 8. Shared configuration and deployment ownership
 
-Names below are the proposed contract for tasks `002`-`005`, not files or
-commands available today.
+Names below are the cross-task contract for tasks `002`-`005`. Task `002`
+implements the resource inputs and foundation outputs in `infra/main.bicep`,
+with native `infra/main.bicepparam` inputs; orchestration and harness consumers
+remain pending.
 
 | Bicep input | Orchestration / harness name | Value or meaning |
 | --- | --- | --- |
@@ -362,6 +376,12 @@ The gateway frontend contract is `/openai/v1/responses`; derive its fully
 qualified URL from APIM output. Derive each backend OpenAI endpoint from the
 account's returned endpoint properties/custom subdomain, not a manually guessed
 suffix. Configuration export must omit secrets.
+
+Task `002` returns the gateway URL, gateway principal, both Foundry IDs/OpenAI
+endpoints, workspace ID/customer ID, group name, and model deployment name.
+The API endpoint, backend IDs, API-scoped subscription ID, and cookie input
+belong to task `003`; they are intentionally absent until those resources
+exist. Do not publish guessed IDs or advertise the foundation as callable.
 
 ### Group lifecycle for both deployment paths
 

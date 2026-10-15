@@ -5,21 +5,21 @@
 | Field | Value |
 | --- | --- |
 | Updated | 2026-10-15 |
-| Phase | Task `001` completed; B1-B2 resolved with live evidence and verified cleanup |
-| Authorization | Task `001` research plus temporary billable deployment, controlled failure, evidence, and cleanup explicitly approved on 2026-10-15 |
+| Phase | Task `002` infrastructure preparation in progress; task `001` merged |
+| Authorization | Task `002` code, local validation, documentation, and PR approved on 2026-10-15; no new Azure operations |
 | Planning branch | `chore/lab-planning` |
-| Current implementation task | `001` - done on `chore/001-platform-design`; later tasks pending |
-| Next task | User review/merge of PR #3, then explicit authorization for `002` |
+| Current implementation task | `002` - in progress on `feature/002-infrastructure-foundation` |
+| Next task | Complete task `002` and publish its PR; tasks `003`-`008` pending |
 | Azure deployment | Temporary group deleted and verified absent; Foundry tombstones purged and quota restored; APIM/workspace recovery records retained normally |
-| Solution files | Task `001` experiment only; complete lab and .NET projects not created |
-| Base branch | `main` at bootstrap merge `9efe056`; initial empty base `846a2cb` preserved |
-| Pull request | #1 and #2 merged; #3 - platform design and verified feasibility, open and intentionally unmerged |
+| Solution files | Task `001` experiment plus task `002` Bicep foundation; gateway policies/orchestration/.NET projects pending |
+| Base branch | `main` at design merge `e1c4ca0`; initial empty base `846a2cb` preserved |
+| Pull request | #1, #2, and #3 merged; task `002` PR not created yet |
 
 ## Known prerequisites and open decisions
 
 | Item | Owner/action | Effect |
 | --- | --- | --- |
-| Implementation authorization | Task `001` feasibility exception authorized on 2026-10-15 | Disposable experiment only; tasks `002`-`008` remain pending. |
+| Implementation authorization | Task `002` code-only work authorized on 2026-10-15 | No new deployment, faults, teardown, or live subscription checks; tasks `003`-`008` pending. |
 | Initial base branch | Resolved with explicit user approval on 2026-10-15 | Empty commit `846a2cb` establishes `main`; subsequent work stays on work branches. |
 | Platform feasibility | Task `001`, B1-B2 resolved in `DESIGN.md` | Native original-pin rejection, outbound member evidence, and workspace policy traces verified; no workaround required. |
 | Model and authentication | Task `001` live feasibility passed | `gpt-5.4-mini` / `2026-03-17` / `GlobalStandard` served Responses through API-scoped gateway access and resource-scoped managed identity. |
@@ -327,6 +327,64 @@
 - Publish these results on the existing `chore/001-platform-design` / PR #3;
   preserve its template, document the failed iterations and soft-delete
   recovery records, and leave it open/unmerged for the user.
+
+### 2026-10-15 - Task 002 infrastructure foundation
+
+- User confirmed PR #3 merged and requested the next task. Verified the merge
+  at `e1c4ca0`, fast-forwarded `main`, and created
+  `feature/002-infrastructure-foundation` before implementation.
+- Authorization covers code, local validation, documentation, and a PR only.
+  No new live subscription checks, resource-group creation, deployment,
+  inference, controlled faults, restoration, or teardown were performed.
+- Added `infra/main.bicep`, `infra/main.bicepparam`,
+  `infra/diagnostic-categories.json`, `infra/foundation.test.mjs`, and
+  `infra/README.md`. Updated the root README, PLAN/TASKS/DESIGN, this tracker,
+  contributor instructions, and local parameter-file ignore rules.
+- User required native `.bicepparam` inputs during implementation. Removed
+  the initial uncommitted JSON parameter source, replaced it with a native
+  file, and codified the convention. Only generated compiler JSON belongs in
+  ignored artifacts; the diagnostic category inventory is not a parameter file.
+- Selected exact AVM pins after reviewing pattern/resource module fit:
+  APIM `0.15.0`, Cognitive Services account `0.13.2`, workspace `0.16.1`.
+  The workspace deliberately uses API `2025-07-01` to obtain secure nested
+  shared-key outputs rather than the older module's ordinary key outputs.
+  The root exports no keys. Other resource API pins preserve the design.
+- Foundation code defines Developer APIM one unit, two identical bounded
+  GPT-5.4 mini deployments, resource-scoped gateway OpenAI User assignments,
+  and a 30-day/1 GB-per-day workspace. All 13 inventoried parent log categories
+  and each parent's `AllMetrics` are wired to that workspace. Child/control-plane
+  exclusions, privacy boundaries, and table-retention caveats are explicit.
+- Preserved AVM cipher hardening while disabling gateway/backend TLS 1.0/1.1.
+  Used returned endpoint properties with explicit module dependencies instead
+  of guessing DNS suffixes or publishing nonexistent API/backend identifiers.
+- The first build exposed a runtime-dependent existing-resource name, an
+  overlong nested deployment name, and a closed AVM endpoint type. Corrected
+  references/dependencies, indexed deployment names, and read service endpoint
+  dictionaries through existing resource symbols. Rebuild passed without
+  Bicep build/lint findings.
+- `az bicep format --file .\infra\main.bicep` and
+  `az bicep format --file .\infra\main.bicepparam`: passed.
+- `az bicep build --file .\infra\main.bicep --outfile
+  .\artifacts\002-template.json`: passed.
+- `az bicep build-params --file .\infra\main.bicepparam --outfile
+  .\artifacts\002-parameters.json`: passed.
+- `node --test .\infra\foundation.test.mjs`: passed all six offline compiled
+  contract checks after correcting initial test assumptions about AVM's
+  optional templates, variable aliases, account scopes, and lowercase
+  `securestring` output representation.
+- `git diff --check`: passed. Document assertions passed for 30 relative
+  links, seven Markdown files' fences, nine task states, six Mermaid nodes and
+  seven edges, and 12 scoped text files' LF/final-newline/whitespace rules.
+  Ten ignore fixtures passed, including native parameter source versus ignored
+  local `.bicepparam` files and generated compiler output. GitHub-rendered
+  Mermaid appearance was not checked.
+- ARM provider validation/what-if were not run: no live Azure operations are
+  authorized and no new dedicated group exists. These local checks do not
+  establish provisioning, quota, RBAC propagation, diagnostic ingestion,
+  retention/privacy, or inference. The runtime gates remain task `007`.
+- Task `003` owns backend/pool/breaker/API/subscription resources, the explicit
+  Monitor logger, privacy-bounded diagnostic sampling, and native policy traces.
+  They are not silently included or claimed complete in this foundation.
 
 ## Update protocol
 

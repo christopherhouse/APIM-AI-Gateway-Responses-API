@@ -13,19 +13,20 @@ unavailable.
 > [disposable feasibility experiment](experiments/001-affinity/README.md):
 > healthy affinity, native pinned failure, concrete-member identity, recovery,
 > and workspace policy traces were verified. The temporary group is deleted.
-> The complete Bicep,
-> `azd` workflow, and .NET harness remain tasks `002`-`008`.
+> Task `002` adds the [Bicep infrastructure foundation](infra/README.md) with
+> native `.bicepparam` inputs and resource diagnostics. It has not been deployed.
+> Gateway policies, the `azd` workflow, and .NET harness remain tasks `003`-`008`.
 
 ## 🗺️ The planned journey
 
 ```mermaid
 flowchart LR
     Client["Planned .NET 10 harness<br/>Isolated sessions and response IDs"]
-    Gateway["Planned APIM Developer<br/>Routing and correlation"]
+    Gateway["Bicep: APIM Developer<br/>Routing policies planned"]
     Pool["Planned native backend pool<br/>Cookie affinity and circuit breakers"]
-    A["Planned Foundry A<br/>Response state A"]
-    B["Planned Foundry B<br/>Response state B"]
-    Logs["Planned Log Analytics<br/>Gateway logs and policy trace records"]
+    A["Bicep: Foundry A<br/>Response state A"]
+    B["Bicep: Foundry B<br/>Response state B"]
+    Logs["Bicep: Log Analytics<br/>Policy trace configuration planned"]
     Client --> Gateway
     Gateway --> Pool
     Pool --> A
@@ -35,9 +36,11 @@ flowchart LR
     B -.-> Logs
 ```
 
-*Conceptual architecture only.* Solid arrows show requests; dotted arrows show
-the proposed diagnostics flow. The harness keeps routing context, Foundry owns
-response state, and APIM is not a conversation-history database. Native pinning
+*Target architecture, not a running deployment.* Bicep-labeled nodes have
+foundation code; the request path and policy traces are still planned.
+Solid arrows show requests; dotted arrows show diagnostics. The harness keeps
+routing context, Foundry owns response state, and APIM is not a
+conversation-history database. Native pinning
 during the tested breaker-open window was verified in the disposable experiment;
 the complete self-service workflow is still planned.
 
@@ -77,12 +80,33 @@ harness, `azd` orchestration, an equivalent Azure CLI path, and Log Analytics.
 The experiment has its own guarded probe, not the planned full-lab deployment
 workflow or .NET harness.
 
+## 🧱 Infrastructure foundation
+
+[`infra/main.bicep`](infra/main.bicep) is resource-group-scoped: one Developer
+gateway, two identical Foundry model deployments, scoped managed-identity
+permissions, and Log Analytics. It enables every inventoried parent log
+category and `AllMetrics`, including workspace diagnostics. The group remains
+externally owned; the template neither creates it nor selects a subscription.
+
+Use native [`main.bicepparam`](infra/main.bicepparam) deployment inputs.
+Publisher values are placeholders; local `*.local.bicepparam` overrides and
+compiler artifacts are ignored. Exact AVM pins, parameter/output contracts,
+diagnostic exclusions, and the local build/test commands are in the
+[infrastructure reference](infra/README.md).
+
+**Not callable yet:** APIs, backend pools, circuit breakers, subscription access,
+and privacy-bounded policy trace configuration are task `003`. Local checks
+do not establish Azure provisioning or all-category log ingestion; those
+assertions remain in task `007`. No new Azure operations were performed for
+the infrastructure implementation.
+
 ## 📚 Follow the work
 
 | Document | Purpose |
 | --- | --- |
 | [Lab plan](docs/PLAN.md) | Agreed requirements and mandatory design gates |
 | [Design and evidence](docs/DESIGN.md) | Verified findings, selected contracts, and resolved gates B1-B2 |
+| [Infrastructure reference](infra/README.md) | Native parameters, pinned modules, diagnostics inventory, outputs, and offline checks |
 | [Task backlog](docs/TASKS.md) | Ordered work and acceptance criteria |
 | [Progress tracker](docs/PROGRESS.md) | Authorization, execution history, and PR state |
 | [Contributor instructions](.github/copilot-instructions.md) | Branch workflow, checks, and README standards |
@@ -96,7 +120,9 @@ dependency or an explicitly documented dependency branch.
 
 For documentation/bootstrap changes, run `git diff --check`, verify relative
 links and relevant ignore behavior, and inspect the diff for scope and secrets.
-Build/test commands and solution CI will be added when actual projects exist.
+Infrastructure build/test commands are in the
+[infrastructure reference](infra/README.md); application commands and solution
+CI remain pending their project files.
 Text formatting is defined by `.editorconfig` and `.gitattributes`.
 
 Never commit credentials or private environment settings. `.env.example` and
@@ -104,12 +130,13 @@ Never commit credentials or private environment settings. `.env.example` and
 ignored `artifacts/` or `evidence/`; intentionally sanitized examples may be
 versioned under `evidence/samples/`. Azure/azd local state is not versioned.
 
-Current task `001` has explicit authorization for the temporary billable
+Completed task `001` had explicit authorization for the temporary billable
 deployment, reversible fault, evidence, and cleanup in its dedicated group.
-This does not authorize tasks `002`-`008` or operations against other resources.
+That exception did not authorize later tasks or operations against other resources.
 The experiment used 59 of its 64-request allowance and deleted the dedicated
 group within the three-hour bound. Both deleted Foundry accounts were purged
 and model quota returned to baseline. Azure retains normal APIM/workspace
 soft-delete recovery records; they are not a running gateway or workspace.
 The under-$5 target was an estimate, not a billing cap; the final Azure bill
-is not yet available. Later deployments still require explicit authorization.
+is not yet available. Task `002` has separate code-only authorization; later
+deployments still require explicit authorization.

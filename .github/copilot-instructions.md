@@ -75,6 +75,8 @@
   environment configuration, or raw sensitive request/response traces.
 - Keep local secrets in the design-approved credential mechanism, not source
   code, ordinary deployment outputs, command logs, or PR descriptions.
+- Maintain deployment parameters as native `.bicepparam` files. Do not add
+  JSON parameter source files; generated compiler output stays in `artifacts/`.
 - Commit only placeholder values in sample configuration. Keep versioned
   templates and sanitized examples separate from generated environment state.
 - Use `artifacts/` or `evidence/` for generated output; only intentionally

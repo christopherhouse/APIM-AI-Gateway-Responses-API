@@ -25,6 +25,7 @@
 .azurite/
 __azurite_db*
 *.bicepparam.local
+*.local.bicepparam
 *.parameters.local.json
 
 # Local configuration and secrets; keep placeholder samples versionable
