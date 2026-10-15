@@ -360,8 +360,9 @@ authorized, should use workload identity rather than committed credentials.
 
 Names below are the cross-task contract for tasks `002`-`005`. Task `002`
 implements the resource inputs and foundation outputs in `infra/main.bicep`,
-with native `infra/main.bicepparam` inputs; orchestration and harness consumers
-remain pending.
+with native `infra/main.bicepparam` inputs. Task `004` adds both orchestration
+drivers using native `infra/deploy.bicepparam` and the same Bicep entry point;
+the harness consumer remains pending.
 
 | Bicep input | Orchestration / harness name | Value or meaning |
 | --- | --- | --- |
@@ -369,10 +370,10 @@ remain pending.
 | Deployment scope, not group resource | `AZURE_SUBSCRIPTION_ID`, `AZURE_RESOURCE_GROUP` | Confirmed active subscription and new dedicated group |
 | `location` | `AZURE_LOCATION` | `westus3`; reject silent fallback |
 | `apimName`, `foundryAName`, `foundryBName`, `workspaceName` | Non-secret environment parameters | New lab resource names; validate global uniqueness when relevant |
-| `publisherName`, `publisherEmail` | Local operator inputs | Required APIM metadata; never commit personal values |
+| `publisherName`, `publisherEmail` | `LAB_PUBLISHER_NAME`, `LAB_PUBLISHER_EMAIL` | Required local APIM metadata; never commit personal values |
 | `modelName`, `modelVersion`, `modelDeploymentName` | `LAB_MODEL_NAME`, `LAB_MODEL_VERSION`, `LAB_MODEL_DEPLOYMENT` | `gpt-5.4-mini`, `2026-03-17`, `responses-chat` |
 | `modelDeploymentSku`, `modelCapacity` | `LAB_MODEL_SKU`, `LAB_MODEL_CAPACITY` | `GlobalStandard`, `20` per backend |
-| `logRetentionDays` | `LAB_LOG_RETENTION_DAYS` | `30` |
+| `logRetentionDays` | Fixed orchestration default; future `LAB_LOG_RETENTION_DAYS` | `30`; not an exposed task `004` override |
 | `affinityCookieName` | `LAB_AFFINITY_COOKIE_NAME` | `APIM-Backend-Affinity`, not its secret value |
 
 Non-secret outputs: `apimGatewayUrl`, `responsesEndpoint`, `apimResourceId`,
@@ -429,6 +430,38 @@ proxy response. No new endpoint is live or advertised as callable.
   evidence before teardown; account for soft-deleted resources.
 - Test both `azd` and Azure CLI on clean environments in task `007`. Source
   inspection is not proof of an installed `azd` release's runtime behavior.
+
+Task `004` implements this lifecycle in [`scripts/`](../scripts/README.md)
+and [`azure.yaml`](../azure.yaml), with PowerShell 7, Azure CLI 2.83.0+, and
+azd 1.36.0+ for that driver. The wrapper requires explicit action/target opt-ins,
+compares the active subscription, checks model/quota/capacity/providers and
+permissions, and runs Provider-level validation/what-if before provisioning.
+The group is created before azd provider initialization, whose inspected
+1.36.0 source can otherwise prompt for a missing resource group before hooks.
+
+Ignored local state binds the subscription/group/West US 3 target, random owner
+tag, compiled parameter hash, successful inventory, and retirement marker.
+Reruns cannot retarget/adopt unrelated groups or silently change inputs.
+The azd identity must match Azure CLI; supported azd input values are set from
+the same compiled native parameters, including defaults. A lock serializes
+wrapper operations per environment, not external Azure writers.
+
+Both drivers export eleven allow-listed non-secret client values from actual
+deployment outputs. `Run` requires a separate credential-read opt-in, checks
+API-scoped active access, and passes the gateway key only through the trusted
+client process environment, restoring previous values/absence in `finally`.
+It is a client handoff, not task `005` harness implementation. Latest deployment
+failure/incompleteness prevents reusing stale successful configuration.
+
+Teardown checks the exact confirmation, group ownership, parent inventory and
+saved output IDs. azd local target/owner/identity checks precede `azd down`;
+the wrapper supplies `--force --purge=false --no-prompt` after confirmation so
+the provider cannot offer an extra purge decision. CLI deletes the same owned
+group. Both require actual absence before retirement. Partial/failed azd
+initialization may need the guarded CLI teardown. Neither path purges recovery
+records; retained Foundry quota/name reservations require retention expiry or
+separately authorized purge. No new Azure operation or full-lab live validation
+is claimed for task `004`; both paths still need task `007`.
 
 ## 9. Feasibility experiment required to close the gates
 

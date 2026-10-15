@@ -1,9 +1,10 @@
-# Infrastructure and gateway configuration - tasks 002/003
+# Infrastructure and gateway configuration - tasks 002/003/004
 
 This is infrastructure code, **not a deployed or callable lab**. It creates
 resources inside an existing dedicated resource group; it never creates or
 selects that group. No Azure deployment or live validation was performed for
-tasks `002`/`003`. The disposable task `001` experiment is separate.
+tasks `002`-`004`. Task `004` adds the external group lifecycle in
+[`scripts/`](../scripts/README.md). The disposable task `001` experiment is separate.
 
 ## Resources and module pins
 
@@ -46,9 +47,13 @@ evidence-reader permissions, and it does not retrieve gateway subscription keys.
 
 Maintain deployment inputs as **`.bicepparam` files**, not JSON parameter files.
 [`main.bicepparam`](main.bicepparam) uses the entry point and contains placeholder
-publisher metadata only. For a future authorized deployment, copy it to ignored
-`infra\main.local.bicepparam` and supply real operator metadata locally.
-Never add credentials to either file.
+publisher metadata only. The supported lifecycle drivers both use
+[`deploy.bicepparam`](deploy.bicepparam): it targets the same Bicep and reads
+local non-secret metadata/model inputs from the process environment.
+The wrapper fixes target/region/ownership inputs and checks an immutable
+compiled-input hash. For direct lower-level experimentation only, a copy of
+the placeholder file can live at ignored `infra\main.local.bicepparam`;
+it is not consumed by the wrappers. Never put credentials in parameters.
 
 | Input | Default / constraint |
 | --- | --- |
@@ -74,8 +79,9 @@ guarantees.
 
 Resource names are stable for the same group and environment. Changing the
 environment or explicit names can create additional billable resources on a
-rerun; incremental deployment does not remove the old resources. The externally
-created group's ownership tags must be checked by the later orchestration.
+rerun; incremental deployment does not remove the old resources. The task `004`
+wrappers reject changed inputs/targets and verify the externally
+created group's ownership tags and parent inventory before reuse or deletion.
 Workspace caps can overshoot and are not billing caps.
 
 ## Diagnostics inventory and privacy
@@ -140,13 +146,16 @@ From the repository root, use Azure CLI with Bicep installed, Node.js 24, and
 PowerShell 7 (`pwsh`, including its bundled Newtonsoft for expression tests).
 The verified local Bicep version is `0.47.16`. Initial compilation downloads
 the exact public AVM modules into the local Bicep cache; it creates no Azure
-resources. Keep the generated JSON compiler output under ignored `artifacts`.
+resources. Lifecycle checks also need azd 1.36.0+ installed for executable
+discovery, but mock its commands. Keep generated JSON compiler output under
+ignored `artifacts`.
 
 ```powershell
 az bicep build --file .\infra\main.bicep --outfile .\artifacts\002-template.json
 az bicep build-params --file .\infra\main.bicepparam --outfile .\artifacts\002-parameters.json
 node --test .\infra\foundation.test.mjs .\infra\gateway.test.mjs
 pwsh -NoProfile -File .\infra\policy.test.ps1
+pwsh -NoProfile -File .\scripts\lifecycle.test.ps1
 git diff --check
 ```
 
@@ -165,7 +174,7 @@ warning is suppressed without suppressing compilation errors.
 These are local structural/expression checks, **not an APIM runtime emulator,
 ARM expression interpreter, or provider-side validation**.
 
-ARM `validate`/`what-if` are not run: tasks `002`/`003` have no authorization for live
+ARM `validate`/`what-if` are not run: tasks `002`-`004` have no authorization for live
 subscription checks and no dedicated deployed group. Do not create a group to
 run them under this task's code-only approval. Before any future deployment,
 obtain authorization and use the actual dedicated group and local
@@ -176,8 +185,10 @@ Task `007` must verify actual provisioning, RBAC propagation, public endpoint
 authentication, all supported diagnostic settings, event/table emission,
 privacy/retention, model availability and capacity, output endpoint properties,
 and the exact expanded policy's routing/error behavior and trace ingestion.
-`azd`, CLI lifecycle orchestration, fault automation, and the .NET harness are
-not implemented here. New policy rejection/error paths also require live
+Task `004` implements azd/CLI lifecycle orchestration using this entry point;
+its offline checks do not establish real provisioning or teardown.
+Fault automation and the .NET harness remain pending. New policy rejection/error
+paths also require live
 correlation checks; do not count the old experiment as their verification.
 
 ## Official implementation sources (inspected 2026-10-15)
