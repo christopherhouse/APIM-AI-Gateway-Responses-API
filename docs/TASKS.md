@@ -274,8 +274,9 @@ Resume after exact provisioning/inference/fault/restoration/deletion approval.
 catalog minimum/step and default plain-text `azd auth token` output. All 33
 offline lifecycle cases and the real read-only model/provider/capacity preflight
 passed. The supported isolated azd-to-CLI delegated identity was verified in
-memory. Provider validation/what-if remains unrun until an empty owned group
-is authorized; these results are not deployment or scenario evidence.
+memory. Preparation fixes are published in draft PR #9, not a completed
+task `007` delivery. Provider validation/what-if remains unrun until an empty
+owned group is authorized; these results are not deployment or scenario evidence.
 
 Deliverables and acceptance:
 

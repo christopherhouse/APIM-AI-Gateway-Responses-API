@@ -13,7 +13,7 @@
 | Azure deployment | Temporary group deleted and verified absent; Foundry tombstones purged and quota restored; APIM/workspace recovery records retained normally |
 | Solution files | Task `001` experiment, task `002` Bicep, task `003` gateway, task `004` lifecycle, task `005` harness, and task `006` fault/recovery automation; full live verification pending |
 | Base branch | `main` at fault/recovery merge `721d299`; initial empty base `846a2cb` preserved |
-| Pull request | #1-#8 merged; task `007` PR pending |
+| Pull request | #1-#8 merged; #9 is a draft preparation/blocked-verification PR for task `007` |
 
 ## Known prerequisites and open decisions
 
@@ -948,6 +948,22 @@
   Inspected the focused lifecycle diff and repository PR template; final staged
   scope/secrets review and a draft handoff PR follow. This is not completion of
   the live-verification acceptance criteria.
+
+### 2026-10-15 - Task 007 preparation preserved in draft PR #9
+
+- Reviewed/staged exactly seven preparation/lifecycle/documentation files.
+  Staged UTF-8/LF/whitespace, branch/scope, credential-shaped-content and
+  private/generated-state checks passed. No credentials, private publisher
+  metadata, local ownership/configuration, or raw traces were staged.
+- Committed as `9653f75`, pushed `feature/007-live-verification`, and created
+  draft PR #9 against `main` using the repository template. Verified open/draft
+  state, correct head/base, and the implementation head. No PR was merged.
+- Recorded the draft and blocker in PLAN/TASKS/PROGRESS without marking task
+  `007` done. These are preparation fixes only; all actual deployment/scenario/
+  workspace/rerun/teardown acceptance remains outstanding.
+- Resume from the exact-target confirmation gate. azd can use the verified
+  isolated delegated CLI identity, so the user does not need to run `azd up`
+  or sign in again for that supported configuration.
 
 ## Update protocol
 

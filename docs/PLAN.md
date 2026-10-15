@@ -219,7 +219,8 @@ Its implementation and offline validation are complete in PR #8, merged at
 `721d299` on 2026-10-15. Task `007` began on
 `feature/007-live-verification` after approval to start live verification.
 Read-only preparation found and corrected two lifecycle contract defects;
-live execution is blocked pending exact target/action confirmation.
+draft PR #9 preserves those fixes. Live execution is blocked pending exact
+target/action confirmation; the draft is not task `007` completion.
 The full lab has not yet been deployed or live-verified; task `008` is pending.
 
 ## Execution and progress
