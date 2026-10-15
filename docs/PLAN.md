@@ -3,8 +3,9 @@
 ## Scope and authorization
 
 This is the agreed implementation plan, not an implemented solution.
-The current authorization covers these planning documents only. Do not start
-task `000` or deploy resources until implementation is explicitly authorized.
+On 2026-10-15, the user authorized task `000` after planning PR #1 was merged.
+Authorization covers repository bootstrap only; later implementation tasks and
+Azure operations are not yet authorized.
 
 The lab demonstrates conversation-aware routing through Azure API Management
 (APIM) to two Microsoft Foundry backends. Conversations chain Responses API
@@ -158,10 +159,10 @@ Task `000` must codify the following in `.github\copilot-instructions.md`:
 - Never commit credentials, generated secrets, or private environment settings.
 
 The repository's initial base was created with explicit user approval on
-2026-10-15: `main` points to the empty initialization commit `846a2cb`.
-Planning documents remain on `chore/lab-planning` for pull-request review.
-This one-time initialization does not authorize implementation work on `main`
-or completion of the remaining task `000` bootstrap deliverables.
+2026-10-15 at empty initialization commit `846a2cb`. Planning PR #1 was merged
+into `main` at `f5bae67` on the same date. Task `000` was then explicitly
+authorized on `chore/000-repository-bootstrap`; no implementation work is
+permitted directly on `main`.
 
 ## Execution and progress
 

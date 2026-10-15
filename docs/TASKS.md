@@ -1,6 +1,7 @@
 # Task execution order
 
-No implementation task has started. Execute only after explicit authorization.
+Task `000` is authorized and in progress. Later tasks remain pending and require
+authorization before execution.
 IDs are stable; do not renumber completed tasks or hide blocked work.
 
 ## Status and dependency rules
@@ -21,7 +22,7 @@ new platform evidence changes an assumption.
 
 | ID | Task | Depends on | Status |
 | --- | --- | --- | --- |
-| 000 | Bootstrap repository and contributor workflow | Implementation authorization; base branch established | pending |
+| 000 | Bootstrap repository and contributor workflow | Implementation authorization; base branch established | in_progress |
 | 001 | Validate platform capabilities and finalize design | 000 | pending |
 | 002 | Establish Bicep infrastructure and observability foundation | 001 | pending |
 | 003 | Implement gateway routing, affinity, and diagnostic policies | 002 | pending |

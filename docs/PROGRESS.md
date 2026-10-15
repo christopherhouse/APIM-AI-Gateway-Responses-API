@@ -5,21 +5,21 @@
 | Field | Value |
 | --- | --- |
 | Updated | 2026-10-15 |
-| Phase | Planning documentation only |
-| Authorization | Planning documents and initial base-branch creation; no remaining bootstrap or solution implementation yet |
+| Phase | Repository bootstrap in progress |
+| Authorization | Task `000` authorized on 2026-10-15; later tasks and Azure operations not authorized |
 | Planning branch | `chore/lab-planning` |
-| Current implementation task | None started |
-| Next task | `000` - repository bootstrap, after implementation authorization |
+| Current implementation task | `000` - in_progress on `chore/000-repository-bootstrap` |
+| Next task | Finish `000` checks and create its PR; `001` remains pending |
 | Azure deployment | Not attempted |
 | Solution files | Not created |
-| Base branch | `main` at empty initialization commit `846a2cb`, pushed to origin |
-| Pull request | #1 - planning documents, open and unmerged on `chore/lab-planning` |
+| Base branch | `main` at planning merge `f5bae67`; initial empty base `846a2cb` preserved |
+| Pull request | #1 merged; bootstrap PR not yet created |
 
 ## Known prerequisites and open decisions
 
 | Item | Owner/action | Effect |
 | --- | --- | --- |
-| Implementation authorization | User authorizes starting task `000` | All implementation tasks remain pending until then. |
+| Implementation authorization | Task `000` authorized on 2026-10-15 | Bootstrap only; later task authorization remains outstanding. |
 | Initial base branch | Resolved with explicit user approval on 2026-10-15 | Empty commit `846a2cb` establishes `main`; subsequent work stays on work branches. |
 | Platform feasibility | Task `001` | Verify Developer SKU, West US 3 model availability, recommended affinity, pinned-backend failure semantics, and diagnostic/trace delivery. |
 | Model and authentication | Task `001` | Choose based on verified support, cost suitability, quota, and least-privilege access. |
@@ -54,6 +54,40 @@
 - Verified that remote `main` matches the empty initialization commit and is
   the repository default branch; checked document links and whitespace.
 - Remaining task `000` bootstrap deliverables are still pending authorization.
+
+### 2026-10-15 - Task 000 bootstrap started
+
+- User authorized reviewing the backlog and completing task `000` after the
+  planning PR merged. Confirmed PR #1 is merged and fast-forwarded local `main`
+  to `f5bae67` with a clean worktree.
+- Created `chore/000-repository-bootstrap` before making implementation changes.
+- Added `.github/copilot-instructions.md`, `.github/pull_request_template.md`,
+  `.gitignore`, `.editorconfig`, `.gitattributes`, and the root `README.md`.
+- Updated `docs/PLAN.md`, `docs/TASKS.md`, and `docs/PROGRESS.md` to reflect
+  current authorization, planning merge, and bootstrap scope.
+- Defined generated output locations and placeholder sample exceptions without
+  creating unused solution tooling or CI.
+- At this checkpoint, local checks and bootstrap PR creation were pending.
+  No solution application, infrastructure, deployment scripts, policies, or
+  Azure resources were created.
+
+### 2026-10-15 - Task 000 local validation
+
+- `git diff --check` and `git diff --cached --check` passed. Reviewed the
+  staged diff and changed-file list: nine bootstrap/documentation files only;
+  no credentials or private configuration were added.
+- PowerShell checks passed for all nine files' LF endings, final newlines, and
+  absence of trailing whitespace, and for all ten relative Markdown links.
+- `git check-ignore --no-index -q` passed 39 path fixtures: 22 generated/local
+  paths ignored and 17 intended templates, shared configuration, placeholder
+  samples, and sanitized evidence example paths remained versionable.
+- Verified the ordered task IDs `000`-`008`, task `000` as `in_progress`, and
+  all eight later tasks still `pending`.
+- `.editorconfig` and `.gitattributes` agree on LF text and CRLF for future
+  Windows `.bat`/`.cmd` scripts.
+- No build, application tests, solution CI, or live Azure checks were run:
+  there are no solution projects and those operations are outside task `000`.
+- Remaining acceptance item: publish the bootstrap PR and record it.
 
 ## Update protocol
 
