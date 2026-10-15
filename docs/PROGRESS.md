@@ -5,15 +5,15 @@
 | Field | Value |
 | --- | --- |
 | Updated | 2026-10-15 |
-| Phase | Repository bootstrap in progress |
+| Phase | Repository bootstrap complete; awaiting user PR review/merge |
 | Authorization | Task `000` authorized on 2026-10-15; later tasks and Azure operations not authorized |
 | Planning branch | `chore/lab-planning` |
-| Current implementation task | `000` - in_progress on `chore/000-repository-bootstrap` |
-| Next task | Finish `000` checks and create its PR; `001` remains pending |
+| Current implementation task | `000` - done on `chore/000-repository-bootstrap` |
+| Next task | `001` - platform validation/design, after authorization and merge of #2 (or documented dependency branch use) |
 | Azure deployment | Not attempted |
 | Solution files | Not created |
 | Base branch | `main` at planning merge `f5bae67`; initial empty base `846a2cb` preserved |
-| Pull request | #1 merged; bootstrap PR not yet created |
+| Pull request | #1 merged; #2 - bootstrap, open and intentionally unmerged |
 
 ## Known prerequisites and open decisions
 
@@ -88,6 +88,20 @@
 - No build, application tests, solution CI, or live Azure checks were run:
   there are no solution projects and those operations are outside task `000`.
 - Remaining acceptance item: publish the bootstrap PR and record it.
+
+### 2026-10-15 - Task 000 completed in PR #2
+
+- Committed bootstrap changes as `904a598`, pushed
+  `chore/000-repository-bootstrap`, and created PR #2 against `main`.
+  Confirmed the PR is open with the correct head/base; did not merge it.
+- Checked Git attributes for Markdown, configuration, PowerShell, and Windows
+  command-script paths: LF and CRLF assignments match the formatting rules.
+- Updated the root README, task `000` status, and current progress checkpoint
+  after PR creation. The branch contains all nine files enumerated above.
+- Task `000` acceptance criteria are satisfied with local evidence and a PR;
+  no solution implementation or Azure operations were performed.
+- Next: user review/merge of PR #2, then authorization for task `001`.
+  An open PR is not a merged dependency; later tasks remain pending.
 
 ## Update protocol
 

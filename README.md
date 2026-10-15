@@ -6,7 +6,9 @@ will chain Responses API requests with `previous_response_id` while retaining
 backend affinity; separate scenarios will demonstrate stateless distribution,
 explicit pinned-session failure, and recovery.
 
-**Status:** Repository bootstrap (task `000`). The design is not yet validated.
+**Status:** Repository bootstrap implemented (task `000`); see the
+[progress tracker](docs/PROGRESS.md) for PR review and merge status.
+The design is not yet validated.
 There is no deployable infrastructure, APIM policy, .NET harness, deployment
 command, or live Azure evidence in this repository. No Azure resources have
 been created by this work.
