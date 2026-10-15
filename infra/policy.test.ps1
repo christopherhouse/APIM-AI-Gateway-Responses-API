@@ -11,6 +11,7 @@ function Assert-Contract($Condition, [string]$Message) {
 
 $validation = $policy.SelectSingleNode('//inbound/set-variable[@name="labValidationError"]').value
 $member = $policy.SelectSingleNode('//outbound/set-variable[@name="labMember"]').value
+$breaker = $policy.SelectSingleNode('/policies/on-error/choose/when[set-header[@name="X-Lab-Error-Reason"]]').condition
 $source = @'
 using System;
 using System.Collections.Generic;
@@ -56,10 +57,12 @@ public class PolicyContext {
 public static class PolicyExpressions {
     public static string Validate(PolicyContext context) __VALIDATION__
     public static string Member(PolicyContext context) __MEMBER__
+    public static bool Breaker(PolicyContext context) { return __BREAKER__; }
     __EXPRESSIONS__
 }
 '@
 $source = $source.Replace('__VALIDATION__', $validation.Substring(1)).Replace('__MEMBER__', $member.Substring(1))
+$source = $source.Replace('__BREAKER__', $breaker.Substring(1))
 $expressionNodes = $policy.SelectNodes('//@*[starts-with(., "@")] | //message[starts-with(., "@")] | //set-body[starts-with(., "@")] | //value[starts-with(., "@")]')
 $methods = for ($i = 0; $i -lt $expressionNodes.Count; $i++) {
     $node = $expressionNodes[$i]
@@ -208,6 +211,16 @@ foreach ($section in @('outbound', 'on-error')) {
     Assert-Contract ($null -ne $policy.SelectSingleNode("/policies/$section/set-header[@name='X-Lab-Request-Id' and @exists-action='override']")) "Correlate $section"
 }
 Assert-Contract ($null -ne $policy.SelectSingleNode("/policies/on-error/set-header[@name='X-Lab-Backend-Id' and @exists-action='delete']")) 'Never invent an executed backend on a gateway failure'
+foreach ($section in @('inbound', 'outbound', 'on-error')) {
+    Assert-Contract ($null -ne $policy.SelectSingleNode("/policies/$section/set-header[@name='X-Lab-Error-Reason' and @exists-action='delete']")) "Discard caller/backend error-reason spoofing in $section"
+}
+foreach ($case in @(@('CircuitBreakerIsOpen', $true), @('BackendConnectionFailure', $false), @('OtherReason', $false))) {
+    $context = New-Request
+    $context.LastError.Reason = $case[0]
+    Assert-Contract ([PolicyExpressions]::Breaker($context) -eq $case[1]) 'Only actual gateway CircuitBreakerIsOpen may set the error-reason header'
+    $script:cases++
+}
+Assert-Contract ($policy.SelectSingleNode('/policies/on-error/choose/when/set-header[@name="X-Lab-Error-Reason"]/value').InnerText -ceq 'CircuitBreakerIsOpen') 'Expose only the fixed safe breaker reason, never raw error messages'
 Assert-Contract ($policy.SelectSingleNode('/policies/outbound/choose/when/return-response/set-status').code -eq '502') 'Unknown host must fail explicitly'
 foreach ($trace in $policy.SelectNodes('//trace')) {
     Assert-Contract ($trace.source -eq 'responses-lab') 'Use the lab trace source'

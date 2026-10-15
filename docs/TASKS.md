@@ -6,7 +6,8 @@ disposable feasibility test and cleanup; B1/B2 are resolved in
 as code and local validation in merged PR #4; it is not deployed. Task `003`
 is complete as code and local validation in merged PR #5. Task `004` is complete
 as offline-validated code in merged PR #6. Task `005` is complete as code and
-offline validation in open PR #7; tasks `006`-`008` remain pending.
+offline validation in merged PR #7. Task `006` is in progress with code-only
+authorization; tasks `007`-`008` remain pending.
 IDs are stable; do not renumber completed tasks or hide blocked work.
 
 ## Status and dependency rules
@@ -33,7 +34,7 @@ new platform evidence changes an assumption.
 | 003 | Implement gateway routing, affinity, and diagnostic policies | 002 | done |
 | 004 | Implement deployment orchestration and Azure CLI parity | 003 | done |
 | 005 | Implement .NET 10 conversation harness and evidence model | 003 | done |
-| 006 | Implement controlled failure, breaker, and recovery scenarios | 004, 005 | pending |
+| 006 | Implement controlled failure, breaker, and recovery scenarios | 004, 005 | in_progress |
 | 007 | Verify end-to-end scenarios and diagnostic evidence in Azure | 006 | pending |
 | 008 | Complete self-service documentation and clean-environment walkthrough | 007 | pending |
 
@@ -202,7 +203,7 @@ failure summaries. Release build passed with no warnings/errors; 59 focused
 transport/configuration tests, formatting verification, publish, offline CLI
 guards, and 28 lifecycle regression cases passed. Real inference, model answer
 quality, native routing, and trace ingestion remain task `007` assertions.
-Published in PR #7, left open for user review and merging.
+Published in PR #7, merged on 2026-10-15.
 
 Deliverables and acceptance:
 
@@ -224,6 +225,20 @@ Deliverables and acceptance:
 - Build and run focused tests without requiring live Azure for those tests.
 
 ## 006 - Implement controlled failure, breaker, and recovery scenarios
+
+**Authorization:** On 2026-10-15, after merging PR #7, the user requested the
+next task. `feature/006-controlled-failure-recovery` covers code, offline
+checks, documentation, and PR publication only. No live Azure reads, credential
+retrieval, inference, backend changes, controlled faults, or teardown.
+
+**Local result:** Implemented the separately gated failure workflow, exact
+resource/ownership/ETag checks, journal-before-write URL-only fault/restoration,
+conservative breaker-window assertions, and original-chain recovery. Release
+build, 113 offline .NET cases, formatting, publish, 30 lifecycle cases, Bicep
+compilation, 11 foundation/gateway contracts, and 19 compiled policy expressions
+with 42 cases passed. Published CLI guards, 24-file text/scope checks, 67
+relative links/anchors, and nine ignore fixtures passed; PR publication remains.
+No live Azure operation was performed; task `007` must verify this exact path.
 
 Deliverables and acceptance:
 

@@ -2,8 +2,9 @@
 
 **Implemented and offline-tested; not deployed or live-verified.** These scripts
 operate on a new, dedicated lab group only. Task `005` now provides the
-[.NET harness](../src/ResponsesLab/README.md); fault scenarios and the
-clean-environment Azure walkthrough remain tasks `006`-`008`.
+[.NET harness](../src/ResponsesLab/README.md); task `006` adds guarded
+fault/recovery automation. The clean-environment Azure walkthrough remains
+tasks `007`-`008`.
 Do not run the live examples without explicit target/action authorization.
 
 ## Prerequisites and target
@@ -182,6 +183,31 @@ request/evidence/affinity/distribution failures. The
 [harness guide](../src/ResponsesLab/README.md) defines bounds and evidence.
 Publishing/help and mocked tests passed locally; this end-to-end management
 key handoff and inference have **not** been exercised against Azure.
+
+### Separately authorized fault run
+
+Task `006` adds the `failure` scenario with **both** wrapper and client fault
+opt-ins and the exact group confirmation:
+
+```powershell
+& .\scripts\Invoke-Lab.ps1 -Action Run -EnvironmentName $environment -SubscriptionId $subscription -ResourceGroupName $group -AllowAzure -AllowCredentialRead -AllowFaults -ConfirmResourceGroup $group -ClientPath $client -ClientArguments @('--allow-requests', '--scenario', 'failure', '--allow-faults', '--confirm-resource-group', $group)
+```
+
+Do not execute this under code-only authorization. It conditionally changes only
+one owned APIM backend's URL path on its same Foundry host, observes the pinned
+failure/healthy fresh sessions, restores, and checks original-chain recovery.
+The wrapper holds its operation lock and checks backend read/write permissions;
+the client independently verifies ownership, endpoints, pool/breakers, and ETags.
+ARM authentication uses the current Azure CLI identity in process memory.
+No subscription or resource target is silently changed.
+
+The [fault guide](../src/ResponsesLab/README.md#controlled-failure-and-recovery)
+defines conservative timing, request/token bounds, expected-error rules,
+independent cleanup timeout, and hard-stop limitations. An ignored
+`artifacts\lab\<environment>\fault-recovery.json` is written before mutation
+and removed only after verified restoration. An unresolved journal blocks a new
+failure run; follow the guide's manual reconciliation rather than deleting it
+or overwriting concurrent configuration. This workflow is offline-tested only.
 
 ## Scoped teardown
 

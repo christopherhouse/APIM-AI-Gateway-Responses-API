@@ -27,6 +27,8 @@ internal sealed record TurnEvidence(
     string? PreviousResponseId,
     Guid ClientRequestId)
 {
+    public DateTimeOffset StartedAt { get; init; } = DateTimeOffset.UtcNow;
+    public DateTimeOffset FinishedAt { get; init; }
     public string? ResponseId { get; init; }
     public string? BackendId { get; init; }
     public string? GatewayRequestId { get; init; }
@@ -35,8 +37,15 @@ internal sealed record TurnEvidence(
     public string? ResponseStatus { get; init; }
     public string? OutputText { get; init; }
     public string? ErrorCode { get; init; }
+    public string? GatewayErrorReason { get; init; }
+    public double? RetryAfterSeconds { get; init; }
     public TurnOutcome Outcome { get; init; }
     public bool Sent { get; init; }
+
+    internal bool IsControlledFault(string? member) =>
+        Outcome == TurnOutcome.HttpError && Sent && GatewayRequestId is not null &&
+        ((HttpStatus == 404 && BackendId == member && member is not null && GatewayErrorReason is null) ||
+         (HttpStatus == 503 && BackendId is null && GatewayErrorReason == "CircuitBreakerIsOpen"));
 }
 
 internal sealed class Conversation(string scenario, int plannedTurns)

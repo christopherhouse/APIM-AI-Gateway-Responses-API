@@ -11,6 +11,7 @@ param(
     [switch]$AllowDeploy,
     [switch]$AllowDelete,
     [switch]$AllowCredentialRead,
+    [switch]$AllowFaults,
     [string]$ConfirmResourceGroup,
     [string]$ClientPath,
     [string[]]$ClientArguments = @()
@@ -24,6 +25,10 @@ if ($Action -eq 'Down') {
     Assert-Lab ($AllowDelete -and $ConfirmResourceGroup -ceq $ResourceGroupName) 'Down requires -AllowDelete and the exact -ConfirmResourceGroup.'
 }
 if ($Action -eq 'Run') { Assert-Lab $AllowCredentialRead 'Run requires -AllowCredentialRead for management-plane key access.' }
+if ($AllowFaults -or '--allow-faults' -in $ClientArguments -or 'failure' -in $ClientArguments) {
+    Assert-Lab ($Action -eq 'Run' -and $AllowFaults -and $ConfirmResourceGroup -ceq $ResourceGroupName) 'Failure run requires -AllowFaults and the exact -ConfirmResourceGroup.'
+    Assert-Lab (($ClientArguments -join '|') -ceq "--allow-requests|--scenario|failure|--allow-faults|--confirm-resource-group|$ResourceGroupName") 'Failure run requires the documented exact client argument sequence.'
+}
 Assert-Lab ($null -ne (Get-Command az -ErrorAction SilentlyContinue)) 'Azure CLI is required.'
 Assert-Lab ($env:AZURE_LOCATION -in @($null, '', 'westus3')) 'AZURE_LOCATION must be westus3; no region substitution.'
 
@@ -50,7 +55,7 @@ try {
         Preflight { Invoke-LabPreflight $context }
         Provision { Invoke-LabProvision $context $Driver }
         Export { $null = Export-LabRuntime $context }
-        Run { Invoke-LabClient $context $ClientPath $ClientArguments }
+        Run { Invoke-LabClient $context $ClientPath $ClientArguments -AllowFaults:$AllowFaults }
         Down { Remove-LabDeployment $context $Driver $ConfirmResourceGroup }
     }
 } finally {

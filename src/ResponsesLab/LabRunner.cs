@@ -37,7 +37,7 @@ internal sealed class RunReport(IReadOnlyList<Conversation> sessions, bool cance
                 $"incomplete sessions={group.Count(session => !session.Complete)}; " +
                 $"distribution={(distribution.Count == 2 ? "observed-both" : "FAILED-missing-member")} (no 50/50 assertion)");
         }
-        writer.WriteLine($"Run: {(ExitCode == 0 ? "PASS" : "FAIL")}; cancelled/deadline={Cancelled}; expected-failure scenarios=0 (task 006 not implemented).");
+        writer.WriteLine($"Run: {(ExitCode == 0 ? "PASS" : "FAIL")}; cancelled/deadline={Cancelled}; expected-failure scenarios=0 (healthy run).");
     }
 }
 

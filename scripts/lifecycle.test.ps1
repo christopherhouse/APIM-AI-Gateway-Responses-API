@@ -364,7 +364,39 @@ try {
         Test-Fails { & $entry -Action Provision -EnvironmentName offline -SubscriptionId '11111111-1111-4111-8111-111111111111' -AllowAzure } 'requires -AllowDeploy'
         Test-Fails { & $entry -Action Down -EnvironmentName offline -SubscriptionId '11111111-1111-4111-8111-111111111111' -AllowAzure } 'requires -AllowDelete'
         Test-Fails { & $entry -Action Run -EnvironmentName offline -SubscriptionId '11111111-1111-4111-8111-111111111111' -AllowAzure } 'requires -AllowCredentialRead'
+        Test-Fails { & $entry -Action Run -EnvironmentName offline -SubscriptionId '11111111-1111-4111-8111-111111111111' -AllowAzure -AllowCredentialRead -ClientArguments @('--allow-requests', '--scenario', 'failure') } 'requires -AllowFaults'
+        Test-Fails { & $entry -Action Run -EnvironmentName offline -SubscriptionId '11111111-1111-4111-8111-111111111111' -AllowAzure -AllowCredentialRead -AllowFaults -ConfirmResourceGroup other-group } 'requires -AllowFaults'
+        Test-Fails { & $entry -Action Run -EnvironmentName offline -SubscriptionId '11111111-1111-4111-8111-111111111111' -AllowAzure -AllowCredentialRead -AllowFaults -ConfirmResourceGroup rg-responses-offline -ClientArguments @('--allow-requests') } 'exact client argument sequence'
         Test-Fails { & (Join-Path $PSScriptRoot 'Azd-Hook.ps1') -Stage PreProvision } 'bare azd commands are not authorized'
+    }
+    Test-Case 'failure helper refuses missing authorization before reads or credential retrieval' {
+        Test-Fails { & $module { Invoke-LabClient $script:Context missing @('--allow-requests', '--scenario', 'failure') } } 'separate -AllowFaults'
+        Test-Fails { & $module { Invoke-LabClient $script:Context missing @() -AllowFaults } } 'live authorization and exact group confirmation'
+        Test-Assert ((& $module { $script:Calls.Count }) -eq 0) 'Failure helper read Azure before authorization'
+    }
+    Test-Case 'failure handoff restores opt-in journal path and credentials on client failure' {
+        $previous = @{}
+        foreach ($key in @('LAB_ALLOW_AZURE', 'LAB_CONFIRM_RESOURCE_GROUP', 'LAB_ENABLE_FAULTS', 'LAB_FAULT_RECOVERY_PATH')) {
+            $previous[$key] = [Environment]::GetEnvironmentVariable($key, 'Process')
+        }
+        try {
+            $env:LAB_ALLOW_AZURE = 'true'
+            $env:LAB_CONFIRM_RESOURCE_GROUP = 'rg-responses-offline'
+            $env:LAB_ENABLE_FAULTS = 'prior-fault-setting'
+            $env:LAB_FAULT_RECOVERY_PATH = 'prior-journal-setting'
+            & $module { Set-OwnedFixture }
+            $client = (Get-Command pwsh -CommandType Application).Source
+            Test-Fails { & $module {
+                param($Client)
+                Invoke-LabClient $script:Context $Client @('-NoProfile', '-Command',
+                    'if ($env:LAB_ENABLE_FAULTS -ne "true" -or -not $env:LAB_FAULT_RECOVERY_PATH.EndsWith("fault-recovery.json") -or $env:LAB_APIM_SUBSCRIPTION_KEY -ne "synthetic-key-not-real") { exit 8 }; exit 9') -AllowFaults
+            } $client } 'Client returned a failing'
+            Test-Assert ($env:LAB_ENABLE_FAULTS -ceq 'prior-fault-setting' -and $env:LAB_FAULT_RECOVERY_PATH -ceq 'prior-journal-setting') 'Fault handoff environment was not restored'
+            $permissionCalls = @(& $module { $script:Calls | Where-Object { ($_.Arguments -join ' ') -match '/backends/backend-[ab]/providers/Microsoft.Authorization/permissions' } })
+            Test-Assert ($permissionCalls.Count -eq 2) 'Both exact backend permissions were not checked'
+        } finally {
+            Restore-LabProcessEnvironment $previous
+        }
     }
     Write-Output "Passed $script:passed offline lifecycle cases. No live Azure operation or real credential retrieval was performed."
 } finally {

@@ -237,7 +237,7 @@ an endpoint-misconfiguration simulation, not a physical Azure outage.
   `PT30S`, `acceptRetryAfter=true`, status ranges `404`, `429`, and `500-599`.
   Count-based detection is approximate and local to gateway instances. A
   `Retry-After` can extend the nominal pause. S1, S3.
-- Proposed injection: after establishing a successful pinned session, change
+- Selected injection: after establishing a successful pinned session, change
   only that lab backend entity's URL path to a reserved nonexistent path on
   its **same** Foundry host. This tests an unavailable/misconfigured endpoint,
   not a physical service outage. It is expected to elicit a real backend 404;
@@ -267,6 +267,13 @@ normalize all of them to "successful failover." The verified pinned-open
 response was a non-JSON 503, with policy reason `CircuitBreakerIsOpen`, selected
 `BackendId=backend-a`, empty `BackendUrl`, and no backend response/forwarding
 step. Never invent an executed-member header for that rejection.
+
+Task `006` implements this workflow with offline tests. Unlike the disposable
+probe's full-property PUT, its controller uses URL-only PATCH with concrete
+`If-Match` and the same pinned `2025-03-01-preview` backend API. The official
+preview REST specification includes that conditional operation; its behavior
+with this exact deployment still requires task `007`. No new live fault or
+provider acceptance is inferred from source/schema checks.
 
 ## 6. Diagnostics, trace destinations, and retention
 
@@ -359,7 +366,7 @@ authorized, should use workload identity rather than committed credentials.
 
 ## 8. Shared configuration and deployment ownership
 
-Names below are the cross-task contract for tasks `002`-`005`. Task `002`
+Names below are the cross-task contract for tasks `002`-`006`. Task `002`
 implements the resource inputs and foundation outputs in `infra/main.bicep`,
 with native `infra/main.bicepparam` inputs. Task `004` adds both orchestration
 drivers using native `infra/deploy.bicepparam` and the same Bicep entry point;
@@ -395,6 +402,9 @@ plus original-cookie checks inside the 30-second open window, rather than
 reusing the ten-second baseline interval. Fault execution defaults to
 `LAB_ENABLE_FAULTS=false` and requires
 separate authorization in addition to an explicit opt-in.
+Task `006` additionally requires the exact group confirmation in both the
+wrapper and client arguments; only that wrapper invocation supplies the
+process-local fault opt-in and recovery-journal path.
 
 The gateway frontend contract is `/openai/v1/responses`; derive its fully
 qualified URL from APIM output. Derive each backend OpenAI endpoint from the
@@ -480,7 +490,8 @@ The client requires `--allow-requests`; default invocation/help never send
 HTTP. Strict configurable bounds retain the design defaults above, require at
 least two stateful turns, keep ten-second minimum spacing, cap bodies at 1 MiB,
 and enforce per-request/body and whole-run deadlines. Invalid overrides fail
-instead of silently changing bounds; faults remain disabled/unimplemented.
+instead of silently changing bounds; healthy invocations keep faults disabled.
+Task `006` adds only the separately guarded workflow below.
 
 JSON turn records include synthetic prompts/text, safe response IDs, caller
 and gateway request UUIDs, concrete member, outcome/status, and a cookie
@@ -494,7 +505,55 @@ No arbitrary HTTP failure is treated as an expected fault scenario.
 Offline transport/configuration tests cover these invariants. Publish/help/
 no-opt-in checks establish a local executable, not real Responses behavior,
 answer quality, cookie emission, gateway diagnostics, or workspace ingestion.
-Those remain task `007` after the task `006` controlled-fault implementation.
+Those remain task `007`, including verification of task `006` below.
+
+### Task 006 controlled-fault implementation boundary
+
+The guarded `failure` scenario validates the active CLI subscription, local
+target confirmation, exact owned group/APIM/Foundry resource IDs/tags/region,
+Developer SKU/one unit, actual returned endpoints, TLS/authentication settings,
+both member breakers, and the native affinity pool. Before the one selected
+backend mutation, it rechecks original member/pool configuration and ETags.
+The only mutation is a conditional URL-path PATCH on the same verified host.
+ARM tokens use the current Azure CLI sign-in in process memory; CLI children
+do not inherit the gateway key, and no raw management error bodies are printed.
+
+Setup must observe both healthy members within the configured session bound.
+At most eight 15-second-spaced observations may await propagation, advancing
+only successful turns. The first controlled error must be a real forwarded 404
+on the original member with gateway correlation. Three consecutive fresh
+healthy-member sessions and the same original cookie/response-ID chain's
+native breaker 503 must finish inside a conservative 30-second window anchored
+to the 404 request's start. Checks use two-second spacing; expired windows fail
+rather than manufacturing instant/indefinite failover.
+
+The policy strips caller/backend `X-Lab-Error-Reason` and emits only the fixed
+`CircuitBreakerIsOpen` value for that actual `context.LastError.Reason`.
+The client requires that reason, 503, a real gateway UUID, and no executed
+member for the pinned rejection. Arbitrary errors do not count as expected.
+Only this explicit probe path may continue after validated controlled
+404/breaker-503 observations; normal failed chains remain terminal.
+
+A non-secret `fault-recovery.json` is flushed before the attempted write.
+Restoration runs in `finally` with an independent 180-second deadline even
+when the scenario is cancelled. It refuses concurrent changes, conditionally
+restores only the URL, and rereads full properties before deleting the journal.
+Lost write responses still trigger a reconciliation/restoration attempt.
+An old-looking unchanged GET after an ambiguous write does not prove that no
+mutation remains pending; retain the journal and fail cleanup verification
+unless a definite conditional rejection or actual fault/restoration is observed.
+A hard kill, lost permission, or conflicting edit can defeat cleanup: retained
+journals block a new fault run and require explicitly authorized manual review,
+not an unconditional overwrite. Scenario and restore failures remain separate.
+
+After a verified restore, the same preserved chain must recover on its original
+member. Recovery waits at least the nominal pause or a longer observed
+`Retry-After` up to 120 seconds, then permits at most eight observations within
+the original run deadline. Phase/session summaries retain all HTTP errors and
+timestamps. Default maximum is 24 calls; maximum configuration is 28 calls and
+114,688 requested output tokens, not a price cap. Offline HTTP/ARM, timing,
+conditional-write, and lifecycle tests establish implementation only, not
+task `007` live routing, provider behavior, model quality, or workspace traces.
 
 ## 9. Feasibility experiment required to close the gates
 
