@@ -33,6 +33,29 @@
 - Never merge PRs automatically. An open PR is not a merged dependency: wait
   for the user to merge it or explicitly document use of its dependency branch.
 
+## README maintenance and presentation
+
+- Treat `README.md` as a living entry point, not end-of-project documentation.
+  For each user ask, assess README impact and update it on the same branch when
+  capabilities, status, architecture, prerequisites, configuration, commands,
+  limitations, or the user workflow change. If no update is needed, state why
+  in the PR; do not make cosmetic edits just to satisfy this rule.
+- Keep instructions and examples aligned with what actually works. Clearly
+  distinguish planned, implemented, and live-verified behavior; remove stale
+  claims as work progresses. Link detailed design and progress documents
+  rather than duplicating their full contents.
+- Make the README beautiful, engaging, and easy to scan: use a clear narrative,
+  strong heading hierarchy, purposeful emojis, concise tables, and well-chosen
+  examples. Avoid walls of text, decorative clutter, and unsupported badges.
+- Use Mermaid diagrams or repository-owned SVG illustrations where they help
+  explain architecture, request flow, state ownership, or deployment lifecycle.
+  Keep diagrams synchronized with the text, label planned elements explicitly,
+  and provide descriptive captions or alt text. Never rely on color or emojis
+  alone to convey meaning.
+- Before opening or updating a PR, review affected README instructions,
+  relative links, images, and diagrams for accuracy and readable GitHub
+  presentation. Record anything that could not be verified.
+
 ## Required checks
 
 - For every change, run `git diff --check` and inspect the changed-file list.

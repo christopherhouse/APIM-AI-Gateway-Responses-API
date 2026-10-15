@@ -103,6 +103,19 @@
 - Next: user review/merge of PR #2, then authorization for task `001`.
   An open PR is not a merged dependency; later tasks remain pending.
 
+### 2026-10-15 - README standards follow-up for task 000
+
+- User requested ongoing README maintenance and a beautiful, engaging visual
+  style. Added a dedicated section to `.github/copilot-instructions.md` on the
+  existing `chore/000-repository-bootstrap` branch for PR #2.
+- Require a README impact assessment for each ask, same-branch updates when
+  relevant, and an explanation in the PR when no README update is necessary.
+- Require a skimmable narrative, purposeful emojis, useful Mermaid/SVG
+  diagrams, accessible descriptions, and accurate implementation-status labels.
+- No README content change is needed for this instructions-only follow-up:
+  the root README already links the contributor workflow; lab capabilities,
+  status, commands, and architecture have not changed.
+
 ## Update protocol
 
 For each execution step, append a dated log entry and update the current
