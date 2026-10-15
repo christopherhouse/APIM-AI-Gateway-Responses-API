@@ -2,8 +2,8 @@
 
 Task `000` is complete and PR #2 is merged. Task `001` completed the authorized
 disposable feasibility test and cleanup; B1/B2 are resolved in
-[DESIGN.md](DESIGN.md), with evidence in merged PR #3. Task `002` is authorized
-for code and local validation; later tasks remain pending.
+[DESIGN.md](DESIGN.md), with evidence in merged PR #3. Task `002` is complete
+as code and local validation in PR #4; it is not deployed. Later tasks remain pending.
 IDs are stable; do not renumber completed tasks or hide blocked work.
 
 ## Status and dependency rules
@@ -26,7 +26,7 @@ new platform evidence changes an assumption.
 | --- | --- | --- | --- |
 | 000 | Bootstrap repository and contributor workflow | Implementation authorization; base branch established | done |
 | 001 | Validate platform capabilities and finalize design | 000 | done |
-| 002 | Establish Bicep infrastructure and observability foundation | 001 | in_progress |
+| 002 | Establish Bicep infrastructure and observability foundation | 001 | done |
 | 003 | Implement gateway routing, affinity, and diagnostic policies | 002 | pending |
 | 004 | Implement deployment orchestration and Azure CLI parity | 003 | pending |
 | 005 | Implement .NET 10 conversation harness and evidence model | 003 | pending |
@@ -106,6 +106,12 @@ Deliverables and acceptance:
 **Authorization:** On 2026-10-15, after merging PR #3, the user requested the
 next task. Work on `feature/002-infrastructure-foundation` covers infrastructure
 code, local checks, documentation, and a PR only; no live Azure operations.
+
+**Result:** Implemented in `infra/` and published in PR #4, left unmerged.
+Bicep build/lint, native `.bicepparam` compilation, and six offline contract
+checks passed. All inventoried parent diagnostic categories are configured.
+Provider-side validation and runtime emission are explicitly unverified and
+remain deployment/task `007` gates, not inferred successes.
 
 Deliverables and acceptance:
 

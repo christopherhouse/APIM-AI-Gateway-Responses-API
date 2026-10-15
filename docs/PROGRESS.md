@@ -5,15 +5,15 @@
 | Field | Value |
 | --- | --- |
 | Updated | 2026-10-15 |
-| Phase | Task `002` infrastructure preparation in progress; task `001` merged |
+| Phase | Task `002` infrastructure foundation complete in PR #4; not deployed |
 | Authorization | Task `002` code, local validation, documentation, and PR approved on 2026-10-15; no new Azure operations |
 | Planning branch | `chore/lab-planning` |
-| Current implementation task | `002` - in progress on `feature/002-infrastructure-foundation` |
-| Next task | Complete task `002` and publish its PR; tasks `003`-`008` pending |
+| Current implementation task | `002` - done on `feature/002-infrastructure-foundation` |
+| Next task | User review/merge of PR #4, then explicit authorization for `003`; tasks `003`-`008` pending |
 | Azure deployment | Temporary group deleted and verified absent; Foundry tombstones purged and quota restored; APIM/workspace recovery records retained normally |
 | Solution files | Task `001` experiment plus task `002` Bicep foundation; gateway policies/orchestration/.NET projects pending |
 | Base branch | `main` at design merge `e1c4ca0`; initial empty base `846a2cb` preserved |
-| Pull request | #1, #2, and #3 merged; task `002` PR not created yet |
+| Pull request | #1, #2, and #3 merged; #4 - infrastructure foundation, open and intentionally unmerged |
 
 ## Known prerequisites and open decisions
 
@@ -385,6 +385,21 @@
 - Task `003` owns backend/pool/breaker/API/subscription resources, the explicit
   Monitor logger, privacy-bounded diagnostic sampling, and native policy traces.
   They are not silently included or claimed complete in this foundation.
+
+### 2026-10-15 - Task 002 published in PR #4
+
+- Reviewed and staged exactly 12 scoped files, checked the complete changed-file
+  list and infrastructure diff, and passed whitespace and credential-shaped
+  content checks. No private targets, compiler artifacts, or JSON parameter
+  source files were staged.
+- Committed foundation work as `3f08119`, pushed
+  `feature/002-infrastructure-foundation`, and opened PR #4 against `main`
+  using the repository template with exact local commands and their results.
+- Marked task `002` done after the PR existed; retained explicit provider/runtime
+  validation limits and task `003`-`008` as pending. The PR is intentionally
+  unmerged. Do not start its dependent task from an assumed merged state.
+- No Azure resources or subscription state were queried or changed for task
+  `002`. Its Bicep is locally validated code, not a new live deployment.
 
 ## Update protocol
 
