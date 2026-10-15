@@ -5,21 +5,21 @@
 | Field | Value |
 | --- | --- |
 | Updated | 2026-10-15 |
-| Phase | Task `002` infrastructure foundation complete in PR #4; not deployed |
-| Authorization | Task `002` code, local validation, documentation, and PR approved on 2026-10-15; no new Azure operations |
+| Phase | Task `003` gateway routing/policies complete in PR #5; not deployed |
+| Authorization | Task `003` code, local validation, documentation, and PR approved on 2026-10-15; no new Azure operations |
 | Planning branch | `chore/lab-planning` |
-| Current implementation task | `002` - done on `feature/002-infrastructure-foundation` |
-| Next task | User review/merge of PR #4, then explicit authorization for `003`; tasks `003`-`008` pending |
+| Current implementation task | `003` - done on `feature/003-gateway-routing-policies` |
+| Next task | User review/merge of PR #5, then authorization for `004`; tasks `004`-`008` pending |
 | Azure deployment | Temporary group deleted and verified absent; Foundry tombstones purged and quota restored; APIM/workspace recovery records retained normally |
-| Solution files | Task `001` experiment plus task `002` Bicep foundation; gateway policies/orchestration/.NET projects pending |
-| Base branch | `main` at design merge `e1c4ca0`; initial empty base `846a2cb` preserved |
-| Pull request | #1, #2, and #3 merged; #4 - infrastructure foundation, open and intentionally unmerged |
+| Solution files | Task `001` experiment, task `002` Bicep foundation, and task `003` gateway code; orchestration/.NET projects pending |
+| Base branch | `main` at infrastructure merge `2967f55`; initial empty base `846a2cb` preserved |
+| Pull request | #1-#4 merged; #5 - gateway routing/affinity policies, open and intentionally unmerged |
 
 ## Known prerequisites and open decisions
 
 | Item | Owner/action | Effect |
 | --- | --- | --- |
-| Implementation authorization | Task `002` code-only work authorized on 2026-10-15 | No new deployment, faults, teardown, or live subscription checks; tasks `003`-`008` pending. |
+| Implementation authorization | Task `003` code-only work authorized on 2026-10-15 | No new deployment, faults, teardown, or live subscription checks; tasks `004`-`008` pending. |
 | Initial base branch | Resolved with explicit user approval on 2026-10-15 | Empty commit `846a2cb` establishes `main`; subsequent work stays on work branches. |
 | Platform feasibility | Task `001`, B1-B2 resolved in `DESIGN.md` | Native original-pin rejection, outbound member evidence, and workspace policy traces verified; no workaround required. |
 | Model and authentication | Task `001` live feasibility passed | `gpt-5.4-mini` / `2026-03-17` / `GlobalStandard` served Responses through API-scoped gateway access and resource-scoped managed identity. |
@@ -400,6 +400,87 @@
   unmerged. Do not start its dependent task from an assumed merged state.
 - No Azure resources or subscription state were queried or changed for task
   `002`. Its Bicep is locally validated code, not a new live deployment.
+
+### 2026-10-15 - Task 003 started after PR #4 merge
+
+- Confirmed PR #4 merged on 2026-10-15 at `2967f55`, fast-forwarded clean
+  local `main`, and created `feature/003-gateway-routing-policies`.
+- Interpreted the user's request for the next work as task `003` in backlog
+  order: implementation, local validation, documentation, and PR publication.
+  No new live subscription checks, deployments, inference, faults, or cleanup
+  are authorized.
+- Reusing task `001` verified native affinity/breaker and effective-host identity
+  contracts; the foundation's diagnostics/RBAC remain the base.
+- README impact: update implemented gateway configuration and keep the absent
+  orchestration/harness and unverified full-lab runtime clearly labeled.
+
+### 2026-10-15 - Task 003 implementation and local validation
+
+- Added `infra/gateway.bicep`, `infra/policies/responses.xml`,
+  `infra/gateway.test.mjs`, `infra/policy.test.ps1`, and the policy contract
+  README. Integrated `infra/main.bicep` and updated foundation contracts.
+  Updated root/infra README, DESIGN, PLAN, TASKS, and this tracker: 13 files.
+- Implemented two TLS-validated backend entities, native cookie-affinity pool,
+  equal weights/priorities, verified breaker settings, one HTTPS POST Responses
+  operation, and API-scoped subscription access. The root waits for both
+  Foundry modules (including model deployments/RBAC) and APIM.
+- Retained backend API `2025-03-01-preview` because the pinned APIM AVM child
+  exposes only stable `2024-05-01` without `sessionAffinity`. Other APIM
+  children retain the approved stable API. No extra state store or service.
+- Added explicit session/scenario, model/store/stream, and chain/cookie transport
+  guards; preserved request bodies, backend errors, and native cookie handling.
+  Added no retry/fallback or expiry/response-ID binding guess. Client expiry,
+  isolated session state, and changed-evidence assertions remain task `005`.
+- Replaced caller backend credentials with gateway managed identity; removed
+  APIM key forwarding. Effective-host allow-listing supplies member evidence;
+  an unknown host fails 502, and on-error never invents an executed member.
+- Added explicit Monitor logger and API diagnostics: 100% fixed sampling,
+  information verbosity, all errors, zero body bytes, no client IP, no request/
+  backend header capture, and only gateway-written response evidence headers.
+  Compact native traces exclude payloads, credentials, cookies, and raw URLs.
+- Bicep build/lint and native parameter compilation passed:
+  `az bicep build --file .\infra\main.bicep --outfile .\artifacts\002-template.json`
+  and `az bicep build-params --file .\infra\main.bicepparam --outfile
+  .\artifacts\002-parameters.json`. Artifact names preserve the existing test
+  contract; contents are the current full entry point, not the old task snapshot.
+- `node --test .\infra\foundation.test.mjs .\infra\gateway.test.mjs`: passed
+  all 11 compiled resource/contract tests, including embedded source equality.
+- `pwsh -NoProfile -File .\infra\policy.test.ps1`: passed XML/forward/auth/
+  correlation/privacy contracts; compiled all 18 actual expressions as C# 7;
+  passed 39 input/host cases. Stand-ins are not an APIM runtime emulator.
+- Initial local iterations caught an invalid regex C# escape and mismatched
+  test assumptions about nested ARM resource-ID dependencies/counts; corrected
+  and reran successfully. The test host's bundled Newtonsoft targets an older
+  compatible runtime, requiring only specific assembly warning 1701 suppression.
+  Policy parser failures use native on-error rather than an undocumented
+  exception type or a broad catch; malformed/non-object JSON is explicitly
+  not promised a JSON 400 response.
+- `git diff --check` passed. Inline documentation assertions passed for 40
+  relative links/anchors, seven Markdown files' fences, nine task states,
+  current authorization/branch, six Mermaid nodes/seven edges, 13 files'
+  LF/final-newline/whitespace rules, and ten ignore fixtures.
+- Reviewed README instructions/relative links and diagram labels as code versus
+  planned client/runtime work. GitHub-rendered Markdown/Mermaid appearance was
+  not checked. No ARM validate/what-if, live policy validation, inference,
+  breaker/fault/recovery, or workspace queries were run: no Azure operations
+  are authorized. Exact expanded-policy runtime assertions remain task `007`.
+- Remaining task `003` acceptance: scoped staged review, commit/push, create a
+  task-linked PR using the repository template, then record it and leave open.
+
+### 2026-10-15 - Task 003 published in PR #5
+
+- Reviewed/staged exactly 13 scoped files and checked the full changed-file
+  list, routing/policy diff, existing-file integration, whitespace, and
+  credential-shaped content. No generated artifacts, private settings, keys,
+  JSON parameter source files, or raw traces were committed.
+- Committed as `0ed1f57`, pushed `feature/003-gateway-routing-policies`, and
+  created PR #5 against `main` with the repository template, task ID, exact
+  validation commands/results, README impact, and runtime limits.
+- Confirmed PR #5 is open with the correct head/base before marking task `003`
+  done. This follow-up records the PR and completion; no PR was merged.
+- Tasks `004`-`008` remain pending. Next: user review/merge of #5, then
+  authorization for task `004` deployment orchestration code. New live Azure
+  checks/deployments/faults/cleanup still require explicit target/action approval.
 
 ## Update protocol
 

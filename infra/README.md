@@ -1,9 +1,9 @@
-# Infrastructure foundation - task 002
+# Infrastructure and gateway configuration - tasks 002/003
 
 This is infrastructure code, **not a deployed or callable lab**. It creates
 resources inside an existing dedicated resource group; it never creates or
 selects that group. No Azure deployment or live validation was performed for
-task `002`. The disposable task `001` experiment is separate.
+tasks `002`/`003`. The disposable task `001` experiment is separate.
 
 ## Resources and module pins
 
@@ -27,6 +27,16 @@ module's ordinary shared-key outputs. The selected AVM marks its nested key
 outputs secure; the entry point exposes no keys and does not re-export them.
 Diagnostic settings use `2021-05-01-preview`; role assignments use `2022-04-01`.
 
+[`gateway.bicep`](gateway.bicep) adds APIM child resources after the service,
+both model deployments, and identity grants are ready. It uses
+`2025-03-01-preview` for native backend affinity; the pinned APIM AVM backend
+child uses `2024-05-01` and cannot express `sessionAffinity`. API, operation,
+policy, subscription, logger, and API diagnostic children retain `2024-05-01`.
+Keeping them in a separate module also avoids a service/identity/account
+dependency cycle; it does not create a second APIM service. See the
+[gateway contract](policies/README.md) for request modes, error handling,
+evidence headers, native traces, and live-verification limits.
+
 All regional resources are fixed to `westus3`. Model inference can run globally.
 APIM's system identity receives only **Cognitive Services OpenAI User** at each
 of the two account scopes. The template does not grant operator, harness, or
@@ -47,6 +57,7 @@ Never add credentials to either file.
 | `location` | `westus3` only; no fallback region |
 | `apimName`, `foundryAName`, `foundryBName`, `workspaceName` | Deterministic environment/group-based defaults; optional explicit names |
 | `modelName`, `modelVersion`, `modelDeploymentName` | `gpt-5.4-mini`, `2026-03-17`, `responses-chat` |
+| `affinityCookieName` | Fixed `APIM-Backend-Affinity`; exported name only, never an opaque value |
 | `modelDeploymentSku`, `modelCapacity` | `GlobalStandard`; 1-20 per account, default 20 |
 | `logRetentionDays`, `logDailyQuotaGb` | 30-90 days, default 30; 1-5 GB/day, default 1 |
 | `tags` | Additional approved tags; required `azd-env-name` and `purpose` ownership values win |
@@ -100,11 +111,13 @@ does not enable any additional content-capture feature. Review emitted fields
 and table-level retention in task `007` before sharing evidence. The workspace
 default is 30 days; service/table retention rules can differ.
 
-Gateway body/header/IP capture controls and compact policy traces belong to
-task `003`. The foundation intentionally creates no API/service diagnostic
-sampling configuration, `azuremonitor` logger, proxy, or policy. Until task
-`003`, **the selected policy-trace path is not configured**. Resource diagnostic
-settings alone do not produce `TraceRecords` or a callable Responses endpoint.
+Task `003` configures the API's explicit `azuremonitor` logger and 100% fixed
+sampling at `information` verbosity, all errors, no client IP, and zero body
+bytes in both directions. Header capture is empty except gateway-written
+request/member response IDs. Compact `responses-lab` traces exclude payloads,
+credentials, cookies, and raw URLs. Resource diagnostics plus this API
+configuration select the native `TraceRecords` path; actual ingestion is still
+unverified for these templates. No Application Insights/extra collector is added.
 
 ## Non-secret output contract
 
@@ -115,13 +128,16 @@ The entry point returns `resourceGroupName`, `apimResourceId`, `apimGatewayUrl`,
 service properties, not assembled from assumed DNS suffixes. Explicit module
 dependencies prevent reading those properties before provisioning finishes.
 
-`responsesEndpoint`, `backendAId`, `backendBId`, and
-`apimSubscriptionResourceId` remain task `003` outputs: those resources do not
-exist yet. No placeholder identifier is presented as a usable resource.
+Task `003` adds `responsesEndpoint`, `backendAId`, `backendBId`,
+`apimSubscriptionResourceId`, and `affinityCookieName` from the implemented
+gateway resources. These are deployment outputs, not a claim of a live
+endpoint. `lab-access` is scoped to this API, active with tracing disabled;
+Azure generates its keys, and no template output retrieves or exposes them.
 
 ## Local validation (no Azure sign-in required)
 
-From the repository root, use Azure CLI with Bicep installed and Node.js 24.
+From the repository root, use Azure CLI with Bicep installed, Node.js 24, and
+PowerShell 7 (`pwsh`, including its bundled Newtonsoft for expression tests).
 The verified local Bicep version is `0.47.16`. Initial compilation downloads
 the exact public AVM modules into the local Bicep cache; it creates no Azure
 resources. Keep the generated JSON compiler output under ignored `artifacts`.
@@ -129,18 +145,27 @@ resources. Keep the generated JSON compiler output under ignored `artifacts`.
 ```powershell
 az bicep build --file .\infra\main.bicep --outfile .\artifacts\002-template.json
 az bicep build-params --file .\infra\main.bicepparam --outfile .\artifacts\002-parameters.json
-node --test .\infra\foundation.test.mjs
+node --test .\infra\foundation.test.mjs .\infra\gateway.test.mjs
+pwsh -NoProfile -File .\infra\policy.test.ps1
 git diff --check
 ```
 
 Build performs Bicep syntax/type checking and linting. `build-params` validates
-the native parameter file against its `using` target. The six offline tests
-check compiled scope and task boundaries, identical model wiring, scoped RBAC,
-Developer/identity settings, complete inventory wiring, output safety/dependency
-ordering, and parameter coverage. They are structural checks, **not an ARM
-expression interpreter or provider-side validation**.
+the native parameter file against its `using` target. The artifact names retain
+the foundation test contract and contain the current complete entry point.
+Eleven Node tests check foundation/routing resource wiring, native affinity/
+breaker configuration, scoped auth, diagnostic privacy, output safety,
+dependency ordering, and parameter coverage.
 
-ARM `validate`/`what-if` are not run: task `002` has no authorization for live
+The PowerShell test parses XML, compiles all 18 actual policy expressions as
+C# 7 against small context stand-ins, and executes 39 input/host fixtures.
+It uses no live gateway and installs no dependencies. Its host references
+PowerShell's bundled Newtonsoft; the specific assembly-version compatibility
+warning is suppressed without suppressing compilation errors.
+These are local structural/expression checks, **not an APIM runtime emulator,
+ARM expression interpreter, or provider-side validation**.
+
+ARM `validate`/`what-if` are not run: tasks `002`/`003` have no authorization for live
 subscription checks and no dedicated deployed group. Do not create a group to
 run them under this task's code-only approval. Before any future deployment,
 obtain authorization and use the actual dedicated group and local
@@ -150,12 +175,15 @@ Do not treat the task `001` ARM results as validation of these new modules.
 Task `007` must verify actual provisioning, RBAC propagation, public endpoint
 authentication, all supported diagnostic settings, event/table emission,
 privacy/retention, model availability and capacity, output endpoint properties,
-and policy traces after task `003`. `azd`, CLI lifecycle orchestration, runtime
-policies, and the .NET harness are not implemented here.
+and the exact expanded policy's routing/error behavior and trace ingestion.
+`azd`, CLI lifecycle orchestration, fault automation, and the .NET harness are
+not implemented here. New policy rejection/error paths also require live
+correlation checks; do not count the old experiment as their verification.
 
 ## Official implementation sources (inspected 2026-10-15)
 
 - [APIM module 0.15.0](https://github.com/Azure/bicep-registry-modules/blob/avm/res/api-management/service/0.15.0/avm/res/api-management/service/main.bicep)
+- [APIM module backend child and its stable-schema limitation](https://github.com/Azure/bicep-registry-modules/blob/avm/res/api-management/service/0.15.0/avm/res/api-management/service/backend/main.bicep)
 - [Foundry account module 0.13.2](https://github.com/Azure/bicep-registry-modules/blob/avm/res/cognitive-services/account/0.13.2/avm/res/cognitive-services/account/main.bicep)
 - [Workspace module 0.16.1, including secure outputs](https://github.com/Azure/bicep-registry-modules/blob/avm/res/operational-insights/workspace/0.16.1/avm/res/operational-insights/workspace/main.bicep)
 - [Bicep best practices](https://learn.microsoft.com/azure/azure-resource-manager/bicep/best-practices)

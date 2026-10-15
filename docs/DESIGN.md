@@ -4,7 +4,9 @@
 **Status:** Task `001` complete; disposable feasibility evidence resolves
 **B1 and B2**, and cleanup is verified. This document specifies contracts for
 later tasks; it is not the complete self-service lab. Task `002` subsequently
-received separate code-only authorization after PR #3 merged.
+received separate code-only authorization after PR #3 merged. Task `003` has
+code-only authorization after PR #4 merged; its expanded gateway policy has
+not been deployed.
 
 ## 1. Gate results and remaining decisions
 
@@ -29,7 +31,7 @@ means documentation/schema evidence, not a successful live gateway test.
 | B1 | Cookie plus open-breaker interaction was unverified. | Native behavior met the requested explicit pinned failure in this test: 503, `CircuitBreakerIsOpen`, selected A, no backend execution. Keep native affinity; no pin cache/token workaround. |
 | B2 | Same-region labels and a pool context ID cannot prove A/B. | Map outbound `context.Request.Url.Host` against generated allow-listed account hosts. Cross-check actual debug forwarding URLs and workspace member fields. Do not use `context.Backend.Id` as the concrete-member response header. |
 
-PR #3 is merged and task `002` has separate code-only authorization. No custom
+PRs #3/#4 are merged and tasks `002`/`003` have separate code-only authorization. No custom
 pin token, response-ID lookup cache, or extra trace collector is needed.
 The separate task `001` deployment/fault/cleanup
 approval did not authorize later tasks.
@@ -144,6 +146,24 @@ other pins. The compiled templates pass local checks; these new module choices
 have **not** been deployed. Exact module sources and validation boundaries are
 in the [infrastructure reference](../infra/README.md).
 
+### Task 003 gateway implementation
+
+`infra/gateway.bicep` and `infra/policies/responses.xml` implement the native
+pool, two breakers, single HTTPS Responses operation, API-scoped subscription,
+managed-identity credential replacement, effective-host evidence, explicit
+transport guards, Monitor logger, and privacy-bounded diagnostic configuration.
+The root waits for APIM, both model deployments, and identity grants.
+
+The pool retains `2025-03-01-preview` for `sessionAffinity`. The pinned AVM
+backend child exposes only the stable `2024-05-01` schema, so the later routing
+module owns these child resources directly rather than weakening the affinity
+contract or creating a service/identity/account dependency cycle. Other APIM
+children retain `2024-05-01`. No new infrastructure service or pin store is added.
+The [gateway contract](../infra/policies/README.md) records precise request/
+response/error behavior and current source links. All validation of the new
+policy is local; provider deployment and complete runtime assertions remain
+task `007`.
+
 ## 4. Routing, state, and per-turn evidence
 
 ### State boundary and transport
@@ -191,6 +211,7 @@ context ID and effective request host for comparison with actual backend URLs.
 | Name | Owner and contract |
 | --- | --- |
 | `X-Lab-Session-Id` | Harness-generated UUID, validated at the gateway; correlation label only, not a routing credential |
+| `X-Lab-Scenario` | Required `stateful` or `stateless` lab request mode; validated before inclusion in normal policy traces |
 | `X-Lab-Request-Id` | Gateway overwrites with `context.RequestId`; return on success and policy/error paths where possible |
 | `X-Lab-Backend-Id` | Gateway overwrites after forwarding with the verified concrete-member label; absent for pre-forwarding rejection rather than inventing an executed backend |
 | `traceparent` | Optional standards-based trace correlation, not evidence of which backend executed |
@@ -279,7 +300,8 @@ During the disposable feasibility deployment, category discovery returned all
 five listed APIM categories, all five listed Foundry categories, and all three
 workspace categories above, plus `AllMetrics` for each parent type. The probe
 enables only `GatewayLogs`, sufficient for B1/B2 and trace correlation; the
-full all-supported-category deployment remains task `002`, not completed here.
+full all-supported-category configuration is now implemented in task `002`
+code, not live-verified. Task `003` adds the native trace configuration.
 
 Retain workspace data for 30 days for the lab; align supported table settings.
 Do not configure a workspace data-export loop. Inventory category availability
@@ -379,9 +401,16 @@ suffix. Configuration export must omit secrets.
 
 Task `002` returns the gateway URL, gateway principal, both Foundry IDs/OpenAI
 endpoints, workspace ID/customer ID, group name, and model deployment name.
-The API endpoint, backend IDs, API-scoped subscription ID, and cookie input
-belong to task `003`; they are intentionally absent until those resources
-exist. Do not publish guessed IDs or advertise the foundation as callable.
+Task `003` adds the API endpoint, backend IDs, API-scoped subscription ID,
+and fixed cookie-name input/output from the implemented routing resources.
+The gateway requires `X-Lab-Scenario` and explicit `stream=false` and
+mode-appropriate `store`; chained cookies and nonempty response IDs are
+validated together. A cookie alone on a new request is rejected. Cookie values
+are opaque; transport checks cannot authenticate their age or response-ID
+binding. The client must honor expiry and reject changed/missing backend
+evidence; those assertions remain task `005`. Malformed/non-object JSON
+uses the gateway expression-error path rather than pretending a successful
+proxy response. No new endpoint is live or advertised as callable.
 
 ### Group lifecycle for both deployment paths
 
