@@ -204,6 +204,7 @@ $forward = $policy.SelectSingleNode('/policies/backend/forward-request')
 Assert-Contract ($forward.timeout -eq '60' -and $forward.'follow-redirects' -eq 'false' -and $forward.'fail-on-error-status-code' -eq 'false') 'Preserve backend errors without redirects or automatic retries'
 $auth = $policy.SelectSingleNode('/policies/inbound/authentication-managed-identity')
 Assert-Contract ($auth.resource -eq 'https://cognitiveservices.azure.com' -and $auth.'ignore-error' -eq 'false') 'Require gateway managed identity'
+Assert-Contract ($auth.'client-id' -eq '__MANAGED_IDENTITY_CLIENT_ID__') 'Select the dedicated user-assigned identity explicitly'
 foreach ($header in @('Ocp-Apim-Subscription-Key', 'api-key', 'Authorization')) {
     Assert-Contract ($null -ne $policy.SelectSingleNode("/policies/inbound/set-header[@name='$header' and @exists-action='delete']")) "Remove caller $header"
 }

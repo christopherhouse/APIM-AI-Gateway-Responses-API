@@ -10,7 +10,8 @@ tasks `002`-`004`. Task `004` adds the external group lifecycle in
 
 | Resource | Exact AVM Bicep module | Configuration |
 | --- | --- | --- |
-| Gateway | `avm/res/api-management/service:0.15.0` | Developer, one unit; system-assigned identity; public endpoint; no VNet |
+| Gateway | `avm/res/api-management/service:0.15.0` | Developer, one unit; dedicated user-assigned identity only; public endpoint; no VNet |
+| Gateway identity | `avm/res/managed-identity/user-assigned-identity:0.6.0` | New owned identity in the same group/region; no federated credentials or extra role grants |
 | Two Foundry accounts | `avm/res/cognitive-services/account:0.13.2` | `AIServices` / `S0`; separate custom subdomains; public endpoints; local/key authentication disabled |
 | Model in each account | Same account module | `gpt-5.4-mini` / `2026-03-17`; `GlobalStandard`, capacity 20 each; `NoAutoUpgrade` |
 | Log Analytics | `avm/res/operational-insights/workspace:0.16.1` | `PerGB2018`; 30-day default retention; 1 GB/day ingestion quota; public query/ingestion; local authentication disabled |
@@ -39,9 +40,17 @@ dependency cycle; it does not create a second APIM service. See the
 evidence headers, native traces, and live-verification limits.
 
 All regional resources are fixed to `westus3`. Model inference can run globally.
-APIM's system identity receives only **Cognitive Services OpenAI User** at each
+APIM's dedicated user-assigned identity receives only **Cognitive Services OpenAI User** at each
 of the two account scopes. The template does not grant operator, harness, or
 evidence-reader permissions, and it does not retrieve gateway subscription keys.
+The two grants are direct account-scoped extension resources: a cold Provider
+what-if rejected the AVM account module's non-null `roleAssignments` parameter
+when the new APIM principal was not yet known. Keeping the runtime reference
+on the actual grant preserves the role, scopes, and predeployment validation.
+The user subsequently required the dedicated user-assigned identity; the same
+runtime-principal constraint applies to its cold deployment. APIM has no
+system-assigned identity. The policy explicitly selects the user-assigned
+identity's client ID rather than relying on a default credential.
 
 ## Native deployment parameters
 
@@ -107,6 +116,8 @@ No fresh category discovery is claimed for task `002`.
 diagnostic settings, nested ARM deployment records, and the externally managed
 group have no independently established resource log categories. Future APIM
 APIs/backends/policies/subscriptions share their parent's resource diagnostics.
+The new user-assigned identity is included in the task `007` live diagnostic
+capability inventory; do not assume it can emit diagnostic settings.
 Activity Log changes are separate; this RG-scoped template does not export
 subscription Activity Logs or create a workspace data-export pipeline.
 
@@ -128,7 +139,8 @@ unverified for these templates. No Application Insights/extra collector is added
 ## Non-secret output contract
 
 The entry point returns `resourceGroupName`, `apimResourceId`, `apimGatewayUrl`,
-`apimPrincipalId`, `foundryAResourceId`, `foundryBResourceId`,
+`apimPrincipalId` (the attached user-assigned identity's principal),
+`apimIdentityResourceId`, `foundryAResourceId`, `foundryBResourceId`,
 `foundryAEndpoint`, `foundryBEndpoint`, `workspaceResourceId`,
 `workspaceCustomerId`, and `modelDeploymentName`. URLs are read from actual
 service properties, not assembled from assumed DNS suffixes. Explicit module

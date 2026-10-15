@@ -91,6 +91,7 @@ var accountNames = [
   foundryAName
   foundryBName
 ]
+var gatewayIdentityName = 'id-${environmentName}-${uniqueString(resourceGroup().id, environmentName)}'
 var modelDeployments = [
   {
     name: modelDeploymentName
@@ -137,6 +138,16 @@ module workspace 'br/public:avm/res/operational-insights/workspace:0.16.1' = {
   }
 }
 
+module gatewayIdentity 'br/public:avm/res/managed-identity/user-assigned-identity:0.6.0' = {
+  name: 'foundation-gateway-identity'
+  params: {
+    name: gatewayIdentityName
+    location: location
+    tags: labTags
+    enableTelemetry: false
+  }
+}
+
 module apim 'br/public:avm/res/api-management/service:0.15.0' = {
   name: 'foundation-apim'
   params: {
@@ -148,7 +159,10 @@ module apim 'br/public:avm/res/api-management/service:0.15.0' = {
     publisherEmail: publisherEmail
     sku: 'Developer'
     skuCapacity: 1
-    managedIdentities: { systemAssigned: true }
+    managedIdentities: {
+      systemAssigned: false
+      userAssignedResourceIds: [gatewayIdentity.outputs.resourceId]
+    }
     publicNetworkAccess: 'Enabled'
     virtualNetworkType: 'None'
     customProperties: {
@@ -192,13 +206,6 @@ module foundries 'br/public:avm/res/cognitive-services/account:0.13.2' = [
       networkAcls: { defaultAction: 'Allow' }
       disableLocalAuth: true
       deployments: modelDeployments
-      roleAssignments: [
-        {
-          roleDefinitionIdOrName: '5e0bd9bd-7b93-4f28-af87-19fc36ad61bd'
-          principalId: apim.outputs.systemAssignedMIPrincipalId!
-          principalType: 'ServicePrincipal'
-        }
-      ]
       diagnosticSettings: [
         {
           name: 'lab-workspace'
@@ -224,23 +231,38 @@ resource accounts 'Microsoft.CognitiveServices/accounts@2025-06-01' existing = [
   }
 ]
 
+// Keep the runtime principal out of AVM's non-null nested parameter validation.
+resource gatewayGrants 'Microsoft.Authorization/roleAssignments@2022-04-01' = [
+  for (name, i) in accountNames: {
+    name: guid(accounts[i].id, apimName, '5e0bd9bd-7b93-4f28-af87-19fc36ad61bd')
+    scope: accounts[i]
+    properties: {
+      roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '5e0bd9bd-7b93-4f28-af87-19fc36ad61bd')
+      principalId: gatewayIdentity.outputs.principalId
+      principalType: 'ServicePrincipal'
+    }
+  }
+]
+
 module routing 'gateway.bicep' = {
   name: 'gateway-routing'
   params: {
     apimName: apimName
+    managedIdentityClientId: gatewayIdentity.outputs.clientId
     foundryAEndpoint: accounts[0].properties.endpoints['OpenAI Language Model Instance API']
     foundryBEndpoint: accounts[1].properties.endpoints['OpenAI Language Model Instance API']
     modelDeploymentName: modelDeploymentName
     affinityCookieName: affinityCookieName
   }
-  dependsOn: [apim, foundries]
+  dependsOn: [apim, foundries, gatewayGrants]
 }
 
 @description('Existing externally managed deployment group; this template does not create it.')
 output resourceGroupName string = resourceGroup().name
 output apimResourceId string = apim.outputs.resourceId
 output apimGatewayUrl string = gateway.properties.gatewayUrl
-output apimPrincipalId string = apim.outputs.systemAssignedMIPrincipalId!
+output apimPrincipalId string = gatewayIdentity.outputs.principalId
+output apimIdentityResourceId string = gatewayIdentity.outputs.resourceId
 output foundryAResourceId string = foundries[0].outputs.resourceId
 output foundryBResourceId string = foundries[1].outputs.resourceId
 output foundryAEndpoint string = accounts[0].properties.endpoints['OpenAI Language Model Instance API']

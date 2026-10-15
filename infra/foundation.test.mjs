@@ -10,6 +10,7 @@ const modules = resources.filter(resource => resource.type === 'Microsoft.Resour
 const moduleByName = name => modules.find(module => module.name === name);
 const workspace = moduleByName('foundation-workspace');
 const apim = moduleByName('foundation-apim');
+const identity = moduleByName('foundation-gateway-identity');
 const foundries = modules.find(module => module.copy?.name === 'foundries');
 const value = (module, name) => module.properties.parameters[name].value;
 
@@ -20,7 +21,7 @@ function allTemplates(current) {
 
 test('foundation stays in its existing group and isolates gateway child resources', () => {
   assert.equal(template.$schema, 'https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#');
-  assert.equal(modules.length, 4);
+  assert.equal(modules.length, 5);
   for (const current of allTemplates(template)) {
     for (const resource of Object.values(current.resources ?? {})) {
       assert.notEqual(resource.type, 'Microsoft.Resources/resourceGroups');
@@ -63,16 +64,18 @@ test('two account-scoped grants connect gateway identity to identical bounded mo
   assert.equal(value(foundries, 'kind'), 'AIServices');
   assert.equal(value(foundries, 'disableLocalAuth'), true);
   assert.equal(value(foundries, 'publicNetworkAccess'), 'Enabled');
-  assert.deepEqual(value(foundries, 'roleAssignments'), [{
-    roleDefinitionIdOrName: '5e0bd9bd-7b93-4f28-af87-19fc36ad61bd',
-    principalId: "[reference('apim').outputs.systemAssignedMIPrincipalId.value]",
-    principalType: 'ServicePrincipal',
-  }]);
-  const grants = Object.values(foundries.properties.template.resources)
+  assert.equal(foundries.properties.parameters.roleAssignments, undefined);
+  const grants = resources
     .filter(resource => resource.type === 'Microsoft.Authorization/roleAssignments');
   assert.equal(grants.length, 1);
+  assert.equal(grants[0].copy.count, "[length(variables('accountNames'))]");
   assert.match(grants[0].scope, /Microsoft\.CognitiveServices\/accounts/);
-  assert.ok(foundries.dependsOn.includes('apim'));
+  assert.equal(grants[0].properties.principalId, "[reference('gatewayIdentity').outputs.principalId.value]");
+  assert.equal(grants[0].properties.principalType, 'ServicePrincipal');
+  assert.match(grants[0].properties.roleDefinitionId, /5e0bd9bd-7b93-4f28-af87-19fc36ad61bd/);
+  assert.ok(grants[0].dependsOn.includes('gatewayIdentity'));
+  assert.ok(grants[0].dependsOn.includes('foundries'));
+  assert.ok(template.resources.routing.dependsOn.includes('gatewayGrants'));
 });
 
 test('Developer gateway stays single-unit, public, and identity-enabled without restoring retired TLS', () => {
@@ -80,7 +83,14 @@ test('Developer gateway stays single-unit, public, and identity-enabled without 
   assert.equal(value(apim, 'skuCapacity'), 1);
   assert.equal(value(apim, 'publicNetworkAccess'), 'Enabled');
   assert.equal(value(apim, 'virtualNetworkType'), 'None');
-  assert.deepEqual(value(apim, 'managedIdentities'), { systemAssigned: true });
+  assert.deepEqual(value(apim, 'managedIdentities'), {
+    systemAssigned: false,
+    userAssignedResourceIds: ["[reference('gatewayIdentity').outputs.resourceId.value]"],
+  });
+  assert.ok(apim.dependsOn.includes('gatewayIdentity'));
+  assert.equal(identity.properties.template.resources.userAssignedIdentity.type, 'Microsoft.ManagedIdentity/userAssignedIdentities');
+  assert.equal(template.outputs.apimPrincipalId.value, "[reference('gatewayIdentity').outputs.principalId.value]");
+  assert.equal(template.outputs.apimIdentityResourceId.value, "[reference('gatewayIdentity').outputs.resourceId.value]");
   for (const protocol of ['Protocols.Tls10', 'Protocols.Tls11', 'Backend.Protocols.Tls10', 'Backend.Protocols.Tls11']) {
     assert.equal(value(apim, 'customProperties')[`Microsoft.WindowsAzure.ApiManagement.Gateway.Security.${protocol}`], 'false');
   }

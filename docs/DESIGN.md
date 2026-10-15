@@ -349,7 +349,7 @@ that diagnostics work.
 | Actor/path | Selected access |
 | --- | --- |
 | Local deployment operator | Existing Azure CLI/azd sign-in to the confirmed target; resource write permissions at the dedicated group and permission to assign the two account-scoped roles. Group creation additionally needs subscription-scope group-create permission. Existing operator permissions were not broadened; the probe created only its gateway's two resource-scoped assignments. |
-| APIM to each Foundry | Gateway system-assigned identity; `Cognitive Services OpenAI User` (`5e0bd9bd-7b93-4f28-af87-19fc36ad61bd`) separately scoped to each account. `authentication-managed-identity` targets `https://cognitiveservices.azure.com`; fail token acquisition explicitly. S16 |
+| APIM to each Foundry | Dedicated user-assigned identity; `Cognitive Services OpenAI User` (`5e0bd9bd-7b93-4f28-af87-19fc36ad61bd`) separately scoped to each account. `authentication-managed-identity` explicitly selects its client ID and targets `https://cognitiveservices.azure.com`; fail token acquisition explicitly. S16 |
 | Harness to APIM | API-scoped APIM subscription, header `Ocp-Apim-Subscription-Key`. No all-APIs/master subscription, anonymous API, or key in a query string. Subscription access is independent from backend Entra authentication. |
 | Evidence reader | Log Analytics read/query access at the lab workspace, not subscription-wide administrator access |
 | Debug-trace operator | Separately authorized management-plane debug-credential/retrieval permissions; not granted to ordinary model callers |
@@ -358,6 +358,13 @@ Set Foundry `disableLocalAuth=true`; no model API keys are needed. Replace
 caller `Authorization`/`api-key` with the gateway identity credential rather
 than trusting caller backend authentication, and do not forward the APIM
 subscription key to Foundry. Keep TLS hostname/chain validation enabled.
+
+**Task `007` design amendment, 2026-10-15:** The user explicitly required a
+user-assigned identity for APIM before service provisioning. The new dedicated
+identity is created in the owned lab group, attached as APIM's only identity,
+and removed with that group. The disposable task `001` experiment used a
+system-assigned identity; its historical results are unchanged and do not
+constitute live verification of this amended configuration.
 
 Retrieve the APIM subscription key only through an authorized management-plane
 operation and put it directly in the harness process environment. Do not print

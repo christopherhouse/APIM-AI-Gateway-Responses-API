@@ -26,7 +26,15 @@ authorize Azure reads, real inference, or injecting/restoring a live fault.
 After PR #8 merged, the user approved starting task `007` live verification
 on 2026-10-15. Preparation uses the active subscription and West US 3; exact
 new-resource targets and provisioning/fault/cleanup actions are confirmed
-before execution. Task `008` is not included.
+before execution. At 16:31 CDT on the same date, after the exact target/action
+handoff, the user explicitly instructed autonomous continuation. This authorizes
+the new `rg-responses-verify007-azd` and `rg-responses-verify007-cli` groups in
+the unchanged active subscription / West US 3, bounded inference, reversible
+fault/restoration, unchanged reruns, and scoped cleanup. Task `008` is not included.
+Before service provisioning, the user additionally required a dedicated
+user-assigned managed identity for APIM. Include that new owned identity in
+each target group; explicitly select its client ID in the gateway policy and
+retain only the two Foundry-scoped OpenAI User grants.
 
 The lab demonstrates conversation-aware routing through Azure API Management
 (APIM) to two Microsoft Foundry backends. Conversations chain Responses API

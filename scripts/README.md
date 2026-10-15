@@ -36,7 +36,7 @@ permissions do not override Azure Policy, deny assignments, or locks.
 
 Required registered providers: `Microsoft.ApiManagement`,
 `Microsoft.CognitiveServices`, `Microsoft.OperationalInsights`, and
-`Microsoft.Insights`. Preflight refuses missing registration or regional
+`Microsoft.Insights`, and `Microsoft.ManagedIdentity`. Preflight refuses missing registration or regional
 support rather than registering or falling back.
 
 Replace these placeholders locally before any live command:
@@ -138,7 +138,7 @@ claimed for these undeployed scripts.
 | --- | --- |
 | `artifacts\lab\<environment>\state.json` | Wrapper target, random ownership UUID, parameter hash, last successful output inventory, retirement status; no keys |
 | `artifacts\lab\<environment>\compiled-parameters.json` | Generated native-parameter compiler output, never a maintained JSON parameter source |
-| `artifacts\lab\<environment>\runtime.json` | Eleven allow-listed, non-secret client values |
+| `artifacts\lab\<environment>\runtime.json` | Twelve allow-listed, non-secret client/ownership values |
 | `artifacts\lab\<environment>\operation.lock` | Exclusive per-environment wrapper lock |
 | `.azure\<environment>\` | azd-managed settings/state, including local publisher metadata and ordinary deployment outputs; never a credential store |
 
@@ -155,7 +155,7 @@ a template-version lock. Do not run concurrent tools outside the wrapper.
 
 After successful provisioning, both drivers export these names from ARM outputs:
 `LAB_RESPONSES_ENDPOINT`, `LAB_MODEL_DEPLOYMENT`, `LAB_AFFINITY_COOKIE_NAME`,
-`LAB_APIM_RESOURCE_ID`, `LAB_APIM_SUBSCRIPTION_RESOURCE_ID`, `LAB_BACKEND_A_ID`,
+`LAB_APIM_RESOURCE_ID`, `LAB_APIM_IDENTITY_RESOURCE_ID`, `LAB_APIM_SUBSCRIPTION_RESOURCE_ID`, `LAB_BACKEND_A_ID`,
 `LAB_BACKEND_B_ID`, `LAB_FOUNDRY_A_RESOURCE_ID`, `LAB_FOUNDRY_B_RESOURCE_ID`,
 `LAB_WORKSPACE_RESOURCE_ID`, and `LAB_WORKSPACE_CUSTOMER_ID`.
 No endpoint guessing or key retrieval is needed for export. A newer failed or

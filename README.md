@@ -21,8 +21,8 @@ unavailable.
 > Task `006` adds [guarded fault and recovery automation](src/ResponsesLab/README.md#controlled-failure-and-recovery).
 > Tasks `002`-`006` have local checks only; none has been run as the full live lab.
 > End-to-end verification and the clean walkthrough remain tasks `007`-`008`.
-> Task `007` completed read-only preparation and is awaiting exact live-target/
-> action confirmation; no full-lab deployment or live result is claimed yet.
+> Task `007` live verification is now authorized and in progress on two new,
+> dedicated environments; no full-lab deployment or live result is claimed yet.
 
 ## 🗺️ Architecture in code
 
@@ -94,8 +94,10 @@ and .NET client.
 
 [`infra/main.bicep`](infra/main.bicep) is resource-group-scoped: one Developer
 gateway, two identical Foundry model deployments, scoped managed-identity
-permissions, and Log Analytics. It enables every inventoried parent log
-category and `AllMetrics`, including workspace diagnostics. The group remains
+permissions, and Log Analytics. The gateway uses one dedicated **user-assigned
+managed identity**, explicitly selected by the backend authentication policy;
+no system-assigned fallback. It enables every inventoried parent log category
+and `AllMetrics`, including workspace diagnostics. The group remains
 externally owned; the template neither creates it nor selects a subscription.
 
 Both lifecycle drivers use native [`deploy.bicepparam`](infra/deploy.bicepparam)

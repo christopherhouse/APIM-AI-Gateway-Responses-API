@@ -1,6 +1,7 @@
 targetScope = 'resourceGroup'
 
 param apimName string
+param managedIdentityClientId string
 param foundryAEndpoint string
 param foundryBEndpoint string
 param modelDeploymentName string
@@ -18,7 +19,7 @@ var labels = [
   'backend-a'
   'backend-b'
 ]
-var policyXml = replace(
+var policyXml = replace(replace(
   replace(
     replace(
       replace(loadTextContent('policies/responses.xml'), '__HOST_A__', toLower(parseUri(foundryAEndpoint).host)),
@@ -30,7 +31,7 @@ var policyXml = replace(
   ),
   '__AFFINITY_COOKIE__',
   affinityCookieName
-)
+), '__MANAGED_IDENTITY_CLIENT_ID__', managedIdentityClientId)
 
 resource gateway 'Microsoft.ApiManagement/service@2024-05-01' existing = {
   name: apimName

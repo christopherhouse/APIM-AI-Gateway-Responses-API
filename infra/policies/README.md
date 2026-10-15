@@ -102,7 +102,9 @@ workspace correlation of the exact deployed policy remains task `007`.
 APIM subscription access is independent of backend identity. Caller
 `Ocp-Apim-Subscription-Key`, `api-key`, and `Authorization` are removed before
 forwarding. `authentication-managed-identity` supplies the gateway credential
-for `https://cognitiveservices.azure.com`, failing explicitly if it cannot.
+for `https://cognitiveservices.azure.com`, explicitly selecting the dedicated
+user-assigned identity through its deployment-substituted `client-id` and
+failing explicitly if it cannot. No system-assigned fallback is configured.
 Both account-scoped OpenAI User grants come from the foundation. Backend TLS
 chain/name verification stays enabled; Foundry key auth stays disabled.
 The API-scoped `lab-access` subscription disallows subscription-based tracing.

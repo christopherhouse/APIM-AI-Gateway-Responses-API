@@ -7,8 +7,8 @@ as code and local validation in merged PR #4; it is not deployed. Task `003`
 is complete as code and local validation in merged PR #5. Task `004` is complete
 as offline-validated code in merged PR #6. Task `005` is complete as code and
 offline validation in merged PR #7. Task `006` is complete as code and offline
-validation in merged PR #8. Task `007` live verification is blocked on exact
-target/action confirmation after read-only preparation;
+validation in merged PR #8. Task `007` live verification is in progress after
+the explicit target/action continuation on 2026-10-15;
 task `008` remains pending.
 IDs are stable; do not renumber completed tasks or hide blocked work.
 
@@ -37,7 +37,7 @@ new platform evidence changes an assumption.
 | 004 | Implement deployment orchestration and Azure CLI parity | 003 | done |
 | 005 | Implement .NET 10 conversation harness and evidence model | 003 | done |
 | 006 | Implement controlled failure, breaker, and recovery scenarios | 004, 005 | done |
-| 007 | Verify end-to-end scenarios and diagnostic evidence in Azure | 006 | blocked |
+| 007 | Verify end-to-end scenarios and diagnostic evidence in Azure | 006 | in_progress |
 | 008 | Complete self-service documentation and clean-environment walkthrough | 007 | pending |
 
 The default execution order is ascending ID. Tasks `004` and `005` can proceed
@@ -263,20 +263,27 @@ authorized against the active subscription and agreed West US 3 target.
 Exact new-resource targets and provisioning/fault/cleanup actions are confirmed
 before execution; no existing application resources may be adopted or changed.
 
-**Current blocker:** Both target/action confirmation attempts returned user
-unavailable, not approval. Proposed first target is
-`rg-responses-verify007-azd` in the unchanged active subscription / West US 3.
-The separate CLI target is `rg-responses-verify007-cli`; both are absent.
-No task `007` group, service, inference workload, or fault was created/run.
-Resume after exact provisioning/inference/fault/restoration/deletion approval.
+**Execution authorization:** Earlier unavailable confirmation attempts were not
+approval. After the exact scoped handoff, the user explicitly instructed
+autonomous continuation at 16:31 CDT on 2026-10-15. Proceed with the new
+`rg-responses-verify007-azd` group, then `rg-responses-verify007-cli`, in the
+unchanged active subscription / West US 3. This includes bounded inference,
+reversible fault/restoration, unchanged reruns, and exact owned-group deletion.
+No existing application resources may be adopted. No deployment or scenario
+success is inferred from this authorization.
+The user's subsequent APIM user-assigned-identity directive authorizes one
+new dedicated identity in each owned group, not an existing identity or any
+broader role grant. Validate its attachment, policy client ID, role scopes,
+ownership checks, and teardown with the rest of the lab.
 
 **Preparation result:** Fixed two actual CLI contract defects: nullable model
 catalog minimum/step and default plain-text `azd auth token` output. All 33
 offline lifecycle cases and the real read-only model/provider/capacity preflight
 passed. The supported isolated azd-to-CLI delegated identity was verified in
 memory. Preparation fixes are published in draft PR #9, not a completed
-task `007` delivery. Provider validation/what-if remains unrun until an empty
-owned group is authorized; these results are not deployment or scenario evidence.
+task `007` delivery. Provider validation/what-if will run against the authorized
+empty owned group before service provisioning; preparation results are not
+deployment or scenario evidence.
 
 Deliverables and acceptance:
 

@@ -129,13 +129,13 @@ function Get-LabOwnedResources($Context, [switch]$AllowMissing) {
     Assert-Lab ($group.id -eq (Get-LabGroupId $Context) -and $group.location -eq 'westus3') 'Group identity/location mismatch.'
     Assert-Lab ($group['tags'] -and $group.tags['azd-env-name'] -ceq $Context.Target.environment -and $group.tags['purpose'] -ceq 'apim-responses-affinity-lab' -and $group.tags['lab-owner'] -ceq $Context.State.owner) 'Group is not owned by this local lab environment; refusing adoption.'
     $resources = @(Invoke-LabCommand az @('resource', 'list', '--subscription', $Context.Target.subscription, '--resource-group', $Context.Target.group))
-    $limits = @{ 'Microsoft.ApiManagement/service' = 1; 'Microsoft.CognitiveServices/accounts' = 2; 'Microsoft.OperationalInsights/workspaces' = 1 }
+    $limits = @{ 'Microsoft.ApiManagement/service' = 1; 'Microsoft.CognitiveServices/accounts' = 2; 'Microsoft.OperationalInsights/workspaces' = 1; 'Microsoft.ManagedIdentity/userAssignedIdentities' = 1 }
     foreach ($resource in $resources) {
         Assert-Lab ($limits.ContainsKey($resource.type)) "Unexpected resource type $($resource.type); refusing reuse/deletion."
         Assert-Lab ($resource.id.StartsWith((Get-LabGroupId $Context) + '/', [StringComparison]::OrdinalIgnoreCase)) 'Resource outside the exact group.'
         Assert-Lab ($resource['tags'] -and $resource.tags['lab-owner'] -ceq $Context.State.owner -and $resource.tags['purpose'] -ceq 'apim-responses-affinity-lab' -and $resource.tags['azd-env-name'] -ceq $Context.Target.environment) 'An inventory resource lacks this environment ownership.'
         if ($Context.State['outputs']) {
-            $expected = @('LAB_APIM_RESOURCE_ID', 'LAB_FOUNDRY_A_RESOURCE_ID', 'LAB_FOUNDRY_B_RESOURCE_ID', 'LAB_WORKSPACE_RESOURCE_ID') | ForEach-Object { $Context.State.outputs[$_] }
+            $expected = @('LAB_APIM_RESOURCE_ID', 'LAB_APIM_IDENTITY_RESOURCE_ID', 'LAB_FOUNDRY_A_RESOURCE_ID', 'LAB_FOUNDRY_B_RESOURCE_ID', 'LAB_WORKSPACE_RESOURCE_ID') | ForEach-Object { $Context.State.outputs[$_] }
             Assert-Lab ($resource.id -in $expected) 'Resource ID differs from the last successful deployment inventory.'
         }
         $limits[$resource.type]--
@@ -237,13 +237,14 @@ function Invoke-LabPreflight($Context, [switch]$CreateGroup) {
     $parameters = Get-LabParameters $Context
     $inventory = Get-LabOwnedResources $Context -AllowMissing
     Assert-LabModel $Context $parameters $inventory
-    foreach ($namespace in @('Microsoft.ApiManagement', 'Microsoft.CognitiveServices', 'Microsoft.OperationalInsights', 'Microsoft.Insights')) {
+    foreach ($namespace in @('Microsoft.ApiManagement', 'Microsoft.CognitiveServices', 'Microsoft.OperationalInsights', 'Microsoft.Insights', 'Microsoft.ManagedIdentity')) {
         $provider = Invoke-LabCommand az @('provider', 'show', '--subscription', $Context.Target.subscription, '--namespace', $namespace)
         Assert-Lab ($provider.registrationState -eq 'Registered') "$namespace is not registered; an authorized operator must register it separately."
         $type = switch ($namespace) {
             Microsoft.ApiManagement { 'service' }
             Microsoft.CognitiveServices { 'accounts' }
             Microsoft.OperationalInsights { 'workspaces' }
+            Microsoft.ManagedIdentity { 'userAssignedIdentities' }
         }
         if ($type) {
             $resourceTypes = @($provider.resourceTypes | Where-Object resourceType -eq $type)
@@ -260,7 +261,7 @@ function Invoke-LabPreflight($Context, [switch]$CreateGroup) {
     Assert-LabPermission $Context (Get-LabGroupId $Context) @('Microsoft.Authorization/roleAssignments/write', 'Microsoft.Resources/deployments/write')
     $parametersFile = Join-Path $Context.Root 'infra\deploy.bicepparam'
     $common = @('--subscription', $Context.Target.subscription, '--resource-group', $Context.Target.group, '--parameters', $parametersFile)
-    $null = Invoke-LabCommand az (@('deployment', 'group', 'validate', '--validation-level', 'Provider') + $common)
+    Invoke-LabCommand az (@('deployment', 'group', 'validate', '--validation-level', 'Provider', '--output', 'none', '--only-show-errors') + $common) -Json $false
     Invoke-LabCommand az (@('deployment', 'group', 'what-if', '--validation-level', 'Provider') + $common) -Json $false
     Save-LabState $Context
 }
@@ -283,6 +284,7 @@ function Export-LabRuntime($Context) {
         LAB_MODEL_DEPLOYMENT = 'modelDeploymentName'
         LAB_AFFINITY_COOKIE_NAME = 'affinityCookieName'
         LAB_APIM_RESOURCE_ID = 'apimResourceId'
+        LAB_APIM_IDENTITY_RESOURCE_ID = 'apimIdentityResourceId'
         LAB_APIM_SUBSCRIPTION_RESOURCE_ID = 'apimSubscriptionResourceId'
         LAB_BACKEND_A_ID = 'backendAId'
         LAB_BACKEND_B_ID = 'backendBId'
@@ -390,7 +392,7 @@ function Invoke-LabProvision($Context, [ValidateSet('Azd', 'Cli')][string]$Drive
     if ($Driver -eq 'Azd') {
         Invoke-LabCommand azd @('provision', '--environment', $Context.Target.environment, '--no-prompt') -Json $false
     } else {
-        $null = Invoke-LabCommand az @('deployment', 'group', 'create', '--subscription', $Context.Target.subscription, '--resource-group', $Context.Target.group, '--name', "lab-$($Context.Target.environment)", '--parameters', (Join-Path $Context.Root 'infra\deploy.bicepparam'))
+        Invoke-LabCommand az @('deployment', 'group', 'create', '--subscription', $Context.Target.subscription, '--resource-group', $Context.Target.group, '--name', "lab-$($Context.Target.environment)", '--parameters', (Join-Path $Context.Root 'infra\deploy.bicepparam'), '--output', 'none', '--only-show-errors') -Json $false
     }
     $null = Export-LabRuntime $Context
 }

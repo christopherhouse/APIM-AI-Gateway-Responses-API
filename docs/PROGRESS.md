@@ -5,21 +5,21 @@
 | Field | Value |
 | --- | --- |
 | Updated | 2026-10-15 |
-| Phase | Task `007` blocked on exact target/action confirmation after read-only preparation; no task `007` resources created |
-| Authorization | User approved starting live verification on 2026-10-15; confirm exact new targets/actions before provisioning, faults, and cleanup |
+| Phase | Task `007` guarded azd provisioning in progress; user-assigned identity configuration validated |
+| Authorization | Explicit 16:31 CDT continuation on 2026-10-15 covers the two new stated targets, bounded inference, reversible fault/restoration, reruns, and scoped cleanup |
 | Planning branch | `chore/lab-planning` |
-| Current implementation task | `007` - blocked on `feature/007-live-verification` |
-| Next task | Exact target/action approval, then validation and live task `007`; `008` pending |
-| Azure deployment | Temporary group deleted and verified absent; Foundry tombstones purged and quota restored; APIM/workspace recovery records retained normally |
+| Current implementation task | `007` - in_progress on `feature/007-live-verification` |
+| Next task | Validate and execute live task `007`; `008` pending |
+| Azure deployment | Task `001` cleaned; task `007` owned azd group created and guarded provisioning started; no inference or fault yet |
 | Solution files | Task `001` experiment, task `002` Bicep, task `003` gateway, task `004` lifecycle, task `005` harness, and task `006` fault/recovery automation; full live verification pending |
 | Base branch | `main` at fault/recovery merge `721d299`; initial empty base `846a2cb` preserved |
-| Pull request | #1-#8 merged; #9 is a draft preparation/blocked-verification PR for task `007` |
+| Pull request | #1-#8 merged; #9 is the draft task `007` work branch PR |
 
 ## Known prerequisites and open decisions
 
 | Item | Owner/action | Effect |
 | --- | --- | --- |
-| Implementation authorization | Task `007` live-verification preparation authorized on 2026-10-15 | Read-only checks may proceed; confirm exact targets and provisioning/fault/cleanup actions before execution. Task `008` remains pending. |
+| Implementation authorization | Task `007` live target/action continuation authorized on 2026-10-15 at 16:31 CDT | New `rg-responses-verify007-azd`, then `rg-responses-verify007-cli`, unchanged subscription / West US 3; bounded inference, reversible fault/restoration, reruns, cleanup. Task `008` remains pending. |
 | Initial base branch | Resolved with explicit user approval on 2026-10-15 | Empty commit `846a2cb` establishes `main`; subsequent work stays on work branches. |
 | Platform feasibility | Task `001`, B1-B2 resolved in `DESIGN.md` | Native original-pin rejection, outbound member evidence, and workspace policy traces verified; no workaround required. |
 | Model and authentication | Task `001` live feasibility passed | `gpt-5.4-mini` / `2026-03-17` / `GlobalStandard` served Responses through API-scoped gateway access and resource-scoped managed identity. |
@@ -964,6 +964,101 @@
 - Resume from the exact-target confirmation gate. azd can use the verified
   isolated delegated CLI identity, so the user does not need to run `azd up`
   or sign in again for that supported configuration.
+
+### 2026-10-15 - Task 007 exact-target continuation authorized
+
+- After the exact first-target/action handoff, the user explicitly instructed
+  autonomous continuation at 16:31 CDT. This new instruction resolves the
+  earlier approval blocker; unavailable prompts remain recorded as unavailable,
+  not retroactively treated as approval.
+- Continue on `feature/007-live-verification` and draft PR #9. Execute the new
+  `rg-responses-verify007-azd` lab first, then the separate
+  `rg-responses-verify007-cli` lab, in the unchanged active subscription and
+  West US 3. Scope includes bounded inference, reversible fault/restoration,
+  unchanged reruns, and exact owned-group cleanup. No existing app resources,
+  region/SKU/model substitutions, unapproved purges, or task `008`.
+- Initial inference budget is at most 96 HTTP attempts across both environments:
+  one healthy run (24) and one bounded failure run (at most 24) each, with
+  2,048 output tokens per request. Further troubleshooting requires cumulative
+  budget review; this is not a monetary spending guarantee.
+- Official Azure MCP schema validation of existing `azure.yaml` passed.
+  Provider validation/what-if and actual service deployment remain pending.
+- Updated PLAN/TASKS/PROGRESS and README status before any task `007` Azure
+  mutation. Next: validate the authorized owned group and existing templates,
+  then execute the guarded azd path.
+
+### 2026-10-15 - Task 007 cold validation corrections and identity amendment
+
+- Created only the exact tagged, owned `rg-responses-verify007-azd` group.
+  No service resources, inference, gateway-key retrieval, or faults yet.
+- Actual Azure CLI `2.83.0` prints a Bicep installation notice before JSON
+  for native `.bicepparam` deployment commands. Provider validation succeeded
+  but JSON parsing failed. Validation and CLI creation now request no unused
+  result body (`--output none`) and check the command exit status; commands
+  that consume JSON still parse strictly. This avoids exposing parameter
+  metadata and retains the Provider gate.
+- Cold Provider what-if then rejected the account AVM's non-null
+  `roleAssignments[0].principalId` because the new gateway principal was not
+  available during nested parameter evaluation. Moved the two grants to
+  account-scoped extension resources with explicit runtime dependencies.
+  Provider validation/what-if then passed with 21 planned creates; azd preview
+  also passed. No services were provisioned by either check.
+- The user then explicitly requested a **user-assigned managed identity for
+  APIM**. Added a dedicated owned identity through exact AVM pin `0.6.0`,
+  attached it without a system-assigned identity, selected its client ID in
+  `authentication-managed-identity`, and kept the two OpenAI User grants at
+  the exact Foundry scopes. Earlier preview proof predates this amendment;
+  repeat live validation before provisioning.
+- Updated ownership inventory, required-provider checks, non-secret runtime
+  export, scoped deletion fixtures, design/plan/task records, and READMEs for
+  the additional identity. It is not an existing identity adoption or an
+  authorization to broaden permissions.
+- After the identity change, Bicep build/lint/native parameters, 11 compiled
+  infrastructure contracts, and 19 C# policy expressions / 42 fixtures passed.
+  All 33 lifecycle cases passed before adding the focused identity
+  duplicate/substitution case; rerun that suite next. The unchanged .NET
+  Release build passed with zero warnings/errors.
+- Next: finish identity ownership checks and repeat Provider/azd preview for
+  the amended configuration, then provision the guarded azd lab.
+
+### 2026-10-15 - Task 007 user-assigned identity validation passed
+
+- The amended Bicep/native parameters, all 11 compiled infrastructure
+  contracts, 19 policy expressions / 42 fixtures, and all 34 lifecycle cases
+  passed. The added identity case rejects duplicate and substituted resources
+  before reuse or deletion.
+- Guarded `Preflight` passed on `rg-responses-verify007-azd`, including
+  `Microsoft.ManagedIdentity` registration/regional support and actual
+  Provider validation/what-if. Planned changes: 22 creates, including the
+  dedicated identity; no service resources were created.
+- `azd provision --preview --environment verify007-azd --no-prompt` passed
+  against the amended templates. The isolated delegated CLI identity and
+  existing environment were reused; no login/subscription/global config change.
+- Recorded current azure-validate recipe proof in the ignored deployment plan;
+  Aspire/Docker/azd service packaging are not applicable to this
+  infrastructure-only azd project and local harness. Marked that plan Validated.
+- Next: guarded azd provisioning, then actual identity/RBAC/policy verification
+  and bounded scenarios. No inference, faults, or service deployment success
+  is claimed yet.
+
+### 2026-10-15 - Task 007 guarded azd provisioning started
+
+- Started the supported `Invoke-Lab.ps1 -Action Provision -Driver Azd` flow
+  with explicit live/deploy opt-ins, the exact authorized target, isolated
+  delegated azd configuration, and previously approved local publisher
+  metadata. The attached command remains in progress; do not start another
+  operation against this environment.
+- Source configuration includes the dedicated user-assigned identity and
+  passed fresh Provider/what-if/preview gates before this invocation.
+  No completed deployment, runtime routing, inference, or fault result is
+  claimed at this checkpoint.
+- Reviewed the scoped implementation/test diff and 16-file change list.
+  `git diff --check`, UTF-8/no-BOM/LF/final-newline checks, all 65 relative
+  Markdown links/anchors, fences, task `007` in-progress / `008` pending,
+  and five private-state ignore checks passed.
+- All 11 compiled infrastructure contracts also passed after adding the
+  explicit policy client-ID substitution assertions. Current draft PR #9
+  will record this ongoing run, not falsely mark task `007` done.
 
 ## Update protocol
 
