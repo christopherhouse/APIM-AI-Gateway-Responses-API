@@ -18,8 +18,12 @@ Resource-group-scoped `azd` deployment is documented as beta.
 Sign in beforehand with `az login`; for the `Azd` driver, also use
 `azd auth login` as the same operator/tenant. The scripts do not log in, change
 the active subscription, register providers, or choose another region.
-The `Azd` driver compares identity claims from short-lived management tokens
-held in memory; it does not print or persist those tokens.
+The `Azd` driver explicitly requests JSON token output and compares identity
+claims from short-lived management tokens held in memory; it does not print
+or persist those tokens. For automation, azd's supported Azure CLI delegated
+authentication is also usable: configure `auth.useAzCliAuth` in an isolated
+`AZD_CONFIG_DIR` under ignored `artifacts/`, leaving global azd settings
+unchanged. The same operator/tenant check still applies.
 
 The operator needs subscription-scope group-create permission and sufficient
 resource deployment/read permissions at the new group, including role
@@ -64,7 +68,11 @@ Never reuse another application's group, even if empty.
 | Resource names and diagnostics | Deterministic Bicep defaults; 30-day workspace retention, 1 GB/day ingestion quota |
 
 Model overrides must still be GPT-5-family or newer, exactly available with
-Responses support and an acceptable catalog lifecycle/capacity step.
+Responses support and an acceptable catalog lifecycle/capacity configuration.
+The wrapper requires a declared maximum and enforces supplied minimum, step,
+and allowed values. Some model catalog entries omit minimum/step; it prints
+that limitation without inventing defaults. Provider validation and what-if
+remain mandatory before either driver deploys.
 The SKU cannot change; capacity is bounded to 1-20 per account. Only the
 default model/version/capacity has task `001` live feasibility evidence.
 This wrapper intentionally does not expose all lower-level Bicep overrides.

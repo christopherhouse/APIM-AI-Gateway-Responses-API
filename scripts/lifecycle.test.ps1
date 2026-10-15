@@ -219,6 +219,30 @@ try {
         & $module { $script:Fixture.models[0].model.capabilities.responses = 'false' }
         Test-Fails { & $module { Invoke-LabPreflight $script:Context } } 'Responses support'
     }
+    Test-Case 'nullable catalog minimum and step still require Provider validation' {
+        & $module {
+            $script:Fixture.models[0].model.skus[0].capacity = @{ minimum = $null; step = $null; maximum = 10000000; default = 10 }
+            Invoke-LabPreflight $script:Context -CreateGroup
+        }
+        $calls = & $module { $script:Calls | ForEach-Object { $_.Arguments -join ' ' } }
+        Test-Assert (($calls -join "`n") -match 'validate --validation-level Provider') 'Nullable bounds skipped Provider validation'
+        Test-Assert (($calls -join "`n") -match 'what-if --validation-level Provider') 'Nullable bounds skipped what-if'
+    }
+    Test-Case 'missing catalog maximum fails before group creation' {
+        & $module { $script:Fixture.models[0].model.skus[0].capacity = @{ minimum = $null; step = $null; maximum = $null } }
+        Test-Fails { & $module { Invoke-LabPreflight $script:Context -CreateGroup } } 'catalog maximum'
+        Test-Assert (-not (& $module { $script:Fixture.exists })) 'Missing maximum caused a write'
+    }
+    Test-Case 'declared catalog minimum step and allowed values remain enforced' {
+        & $module { $script:Fixture.models[0].model.skus[0].capacity.minimum = 21 }
+        Test-Fails { & $module { Invoke-LabPreflight $script:Context } } 'catalog minimum'
+        & $module { $script:Fixture.models[0].model.skus[0].capacity.minimum = 1; $script:Fixture.models[0].model.skus[0].capacity.step = 2 }
+        Test-Fails { & $module { Invoke-LabPreflight $script:Context } } 'catalog step'
+        & $module { $script:Fixture.models[0].model.skus[0].capacity.step = 0 }
+        Test-Fails { & $module { Invoke-LabPreflight $script:Context } } 'Catalog step is invalid'
+        & $module { $script:Fixture.models[0].model.skus[0].capacity.step = 1; $script:Fixture.models[0].model.skus[0].capacity.allowedValues = @(10, 30) }
+        Test-Fails { & $module { Invoke-LabPreflight $script:Context } } 'allowed catalog value'
+    }
     Test-Case 'provider registration and region cannot silently fall back' {
         & $module { $script:Fixture.providerRegistered = $false }
         Test-Fails { & $module { Invoke-LabPreflight $script:Context } } 'not registered'
@@ -274,6 +298,7 @@ try {
                 Assert-Lab ($script:Fixture.azdEnvironment.LAB_MODEL_NAME -ceq 'gpt-5.4-mini') 'Stale azd model was retained'
                 Assert-Lab ($script:Fixture.azdEnvironment.LAB_MODEL_CAPACITY -ceq '20') 'Capacity was not synchronized'
                 Assert-Lab (-not $script:Fixture.azdEnvironment.ContainsKey('LAB_APIM_SUBSCRIPTION_KEY')) 'Key was saved to azd'
+                Assert-Lab (@($script:Calls | Where-Object { $_.Tool -eq 'azd' -and ($_.Arguments -join ' ') -match '^auth token .*--output json$' }).Count -eq 1) 'Default plain-text azd token output was requested instead of JSON'
                 Initialize-LabAzd $script:Context -RequireExisting
             } finally { Restore-LabProcessEnvironment $previous }
         }

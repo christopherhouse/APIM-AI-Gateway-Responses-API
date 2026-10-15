@@ -193,7 +193,18 @@ function Assert-LabModel($Context, $Parameters, $Inventory) {
     $skus = @($matches[0].model.skus | Where-Object { $_.name -ceq $skuName })
     Assert-Lab ($skus.Count -eq 1 -and $skus[0].usageName) 'Missing exact model SKU/quota metadata.'
     $sku = $skus[0]
-    Assert-Lab ($sku.capacity.minimum -le $capacity -and $sku.capacity.maximum -ge $capacity -and $sku.capacity.step -gt 0 -and (($capacity - $sku.capacity.minimum) % $sku.capacity.step) -eq 0) 'Requested capacity violates catalog bounds/step.'
+    $bounds = $sku['capacity']
+    Assert-Lab ($bounds -and $null -ne $bounds['maximum'] -and $bounds.maximum -ge $capacity) 'Requested capacity exceeds or is missing the catalog maximum.'
+    if ($null -ne $bounds['minimum']) {
+        Assert-Lab ($bounds.minimum -le $capacity) 'Requested capacity violates the catalog minimum.'
+    }
+    if ($null -ne $bounds['step']) {
+        Assert-Lab ($bounds.step -gt 0 -and $null -ne $bounds['minimum']) 'Catalog step is invalid or lacks its minimum anchor.'
+        Assert-Lab ((($capacity - $bounds.minimum) % $bounds.step) -eq 0) 'Requested capacity violates the catalog step.'
+    }
+    if ($null -eq $bounds['minimum'] -or $null -eq $bounds['step']) {
+        Write-Host 'Catalog minimum/step is not fully specified; no values inferred. Provider validation remains required before deployment.'
+    }
     if ($sku['deprecationDate']) { Assert-Lab ([DateTimeOffset]::Parse($sku.deprecationDate) -gt [DateTimeOffset]::UtcNow) 'Selected SKU is retired.' }
     if ($sku.capacity['allowedValues']) { Assert-Lab ($capacity -in $sku.capacity.allowedValues) 'Requested capacity is not an allowed catalog value.' }
     $delta = 2 * $capacity
@@ -340,7 +351,7 @@ function Initialize-LabAzd($Context, [switch]$RequireExisting) {
     $azdVersion = Invoke-LabCommand azd @('version', '--output', 'json')
     Assert-Lab ([version]($azdVersion.azd.version -replace '-.*$', '') -ge [version]'1.36.0') 'azd 1.36.0 or newer is required.'
     $cliToken = Invoke-LabCommand az @('account', 'get-access-token', '--subscription', $Context.Target.subscription, '--resource', 'https://management.azure.com/')
-    $azdToken = Invoke-LabCommand azd @('auth', 'token', '--tenant-id', $account.tenantId, '--scope', 'https://management.azure.com/.default')
+    $azdToken = Invoke-LabCommand azd @('auth', 'token', '--tenant-id', $account.tenantId, '--scope', 'https://management.azure.com/.default', '--output', 'json')
     Assert-Lab ((Get-LabTokenIdentity $cliToken.accessToken) -ceq (Get-LabTokenIdentity $azdToken.token)) 'azd and Azure CLI identities differ. Sign both in as the same operator; no login or subscription switching is automatic.'
     $envPath = Join-Path $Context.Root ".azure\$($Context.Target.environment)\.env"
     if (-not (Test-Path -LiteralPath $envPath)) {

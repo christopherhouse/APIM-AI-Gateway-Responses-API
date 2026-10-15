@@ -21,6 +21,8 @@ unavailable.
 > Task `006` adds [guarded fault and recovery automation](src/ResponsesLab/README.md#controlled-failure-and-recovery).
 > Tasks `002`-`006` have local checks only; none has been run as the full live lab.
 > End-to-end verification and the clean walkthrough remain tasks `007`-`008`.
+> Task `007` completed read-only preparation and is awaiting exact live-target/
+> action confirmation; no full-lab deployment or live result is claimed yet.
 
 ## 🗺️ Architecture in code
 

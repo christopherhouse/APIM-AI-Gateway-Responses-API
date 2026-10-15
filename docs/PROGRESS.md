@@ -5,21 +5,21 @@
 | Field | Value |
 | --- | --- |
 | Updated | 2026-10-15 |
-| Phase | Task `006` code/offline validation complete in open PR #8; no live faults authorized |
-| Authorization | Task `006` code, offline checks, documentation, and PR approved on 2026-10-15; no new Azure operations |
+| Phase | Task `007` blocked on exact target/action confirmation after read-only preparation; no task `007` resources created |
+| Authorization | User approved starting live verification on 2026-10-15; confirm exact new targets/actions before provisioning, faults, and cleanup |
 | Planning branch | `chore/lab-planning` |
-| Current implementation task | `006` - done on `feature/006-controlled-failure-recovery`, PR #8 open |
-| Next task | User review/merge of #8; task `007` requires separate live-operation authorization; `008` pending |
+| Current implementation task | `007` - blocked on `feature/007-live-verification` |
+| Next task | Exact target/action approval, then validation and live task `007`; `008` pending |
 | Azure deployment | Temporary group deleted and verified absent; Foundry tombstones purged and quota restored; APIM/workspace recovery records retained normally |
 | Solution files | Task `001` experiment, task `002` Bicep, task `003` gateway, task `004` lifecycle, task `005` harness, and task `006` fault/recovery automation; full live verification pending |
-| Base branch | `main` at harness merge `dadd598`; initial empty base `846a2cb` preserved |
-| Pull request | #1-#7 merged; #8 open for task `006` |
+| Base branch | `main` at fault/recovery merge `721d299`; initial empty base `846a2cb` preserved |
+| Pull request | #1-#8 merged; task `007` PR pending |
 
 ## Known prerequisites and open decisions
 
 | Item | Owner/action | Effect |
 | --- | --- | --- |
-| Implementation authorization | Task `006` code-only work authorized on 2026-10-15 | No new deployment, faults, teardown, credential retrieval, inference, or live subscription checks; tasks `007`-`008` pending. |
+| Implementation authorization | Task `007` live-verification preparation authorized on 2026-10-15 | Read-only checks may proceed; confirm exact targets and provisioning/fault/cleanup actions before execution. Task `008` remains pending. |
 | Initial base branch | Resolved with explicit user approval on 2026-10-15 | Empty commit `846a2cb` establishes `main`; subsequent work stays on work branches. |
 | Platform feasibility | Task `001`, B1-B2 resolved in `DESIGN.md` | Native original-pin rejection, outbound member evidence, and workspace policy traces verified; no workaround required. |
 | Model and authentication | Task `001` live feasibility passed | `gpt-5.4-mini` / `2026-03-17` / `GlobalStandard` served Responses through API-scoped gateway access and resource-scoped managed identity. |
@@ -866,6 +866,88 @@
   faults, workspace queries, teardown, or purge were performed. Tasks `007` and
   `008` remain pending. Next: user review/merge of #8 and separate explicit
   target/action authorization before task `007` live verification.
+
+### 2026-10-15 - Task 007 live verification started
+
+- User reported PR #8 merged and approved starting live verification. Confirmed
+  merge commit `721d299`, fast-forwarded clean `main`, and created
+  `feature/007-live-verification` before tracked changes.
+- Read task `007` acceptance and the existing azd/CLI entry points. The
+  supported deployment command is the guarded wrapper, not bare `azd up`.
+  Preserve the fixed region/SKU/model, externally owned groups, process-only
+  credentials, independent failure restoration, and explicit teardown gates.
+- Read-only CLI discovery confirmed the same enabled AzureCloud subscription
+  used for the feasibility experiment. No subscription was changed. azd
+  `1.36.0` is installed; no azd environments exist yet.
+- Requested subscription/region confirmation through the user-input tool.
+  The user was unavailable; no confirmation was inferred and no resource
+  changes were made. Continue preparation while keeping live mutations gated.
+- The ignored deployment-plan file contained archived task `002`/`001` records;
+  added a task `007` planning section without replacing that historical proof.
+  No prior validation result is treated as current task `007` validation.
+- An initial CLI version query had a Windows quoting error; no Azure write
+  occurred. Retry tool-version discovery with JSON parsing before validation.
+- Next: read-only quota/capacity/permission checks, complete target/action
+  approval, validate the existing artifacts, then provision and collect actual
+  scenario/diagnostic/rerun/cleanup evidence. Task `007` is not complete.
+
+### 2026-10-15 - Task 007 read-only preparation and real contract fixes
+
+- Proposed two new clean environments: `verify007-azd` /
+  `rg-responses-verify007-azd`, then `verify007-cli` /
+  `rg-responses-verify007-cli`, in the unchanged active subscription and West
+  US 3. Both exact groups returned absent. No group was created.
+- Confirmed Azure CLI `2.83.0`, Bicep `0.47.16`, PowerShell `7.6.7`, and azd
+  `1.36.0`. Installed the missing `quota` extension only after `az quota list`
+  failed for the missing command. CognitiveServices, ApiManagement, and
+  OperationalInsights quota scopes then returned `BadRequest`; those results
+  are unsupported APIs, not unlimited or zero quota.
+- Read-only model catalog exposes the approved GA Responses model/version/SKU
+  with maximum 10,000,000 and default 10, but null minimum/step. The wrapper
+  incorrectly required both fields and rejected capacity 20 before any write.
+  Now enforce supplied constraints and require a declared maximum, log omitted
+  minimum/step without inventing defaults, and retain mandatory Provider
+  validation/what-if. Three focused cases cover the nullable shape, missing
+  maximum, and enforcement of declared constraints.
+- Found a second real contract defect while checking identity: pinned azd
+  `1.36.0` returns plain text from `auth token` unless JSON is explicitly
+  requested. Added `--output json` and a regression assertion in the existing
+  initialization case; verified the format against the actual CLI and pinned
+  official source. No token was printed or persisted.
+- The default azd profile is not signed in. Verified the supported alternative
+  using `auth.useAzCliAuth=true` in isolated ignored
+  `artifacts\007-azd-config`, with process-only `AZD_CONFIG_DIR`. Actual azd/
+  Azure CLI tenant/operator claims matched in memory. No global configuration,
+  sign-in, subscription, operator permission, or repository credential change.
+- `pwsh -NoProfile -File .\scripts\lifecycle.test.ps1`: all 33 offline cases
+  passed after both fixes. `git diff --check`: passed. Updated the lifecycle
+  README with nullable catalog behavior, explicit token format, and optional
+  isolated delegated authentication.
+- Retried the actual guarded `Preflight` with local, previously approved
+  publisher metadata: passed model/version/Responses, quota/capacity, provider
+  registration/region, and group-create permission checks; explicitly created
+  no group. Exact model usage was 50 of 1,000; available regional capacity 950,
+  compared with 40 additional units per environment.
+- Resource Graph aggregate counts showed West US 3 has two APIM instances,
+  one AI services account, and two workspaces; no existing resource was adopted
+  or changed. Effective group create/delete, deployment and role-assignment
+  grants passed. Policy inventory returned only the three existing Defender
+  relational database/SQL/storage initiatives; none was changed. These checks
+  do not replace Provider validation against the actual new group.
+- Presented the completed first-target plan through the user-input tool with
+  separate provisioning/rerun, bounded key/inference, reversible fault, and
+  exact-group deletion confirmations. The user was unavailable again; no
+  affirmative target/action confirmation was inferred.
+- Task `007` is blocked, not done. No new group/service, real gateway-key
+  retrieval, inference, backend fault, or teardown was performed. The private
+  plan remains Planning, not Validated. Resume after exact target/action
+  approval, then validate before provisioning. Task `008` remains pending.
+- Final preparation hygiene passed for seven scoped UTF-8/no-BOM/LF text files,
+  45 relative Markdown links/anchors, balanced fences, blocked task `007` /
+  pending `008` consistency, and five private/generated-state ignore fixtures.
+  Inspected the focused lifecycle diff and repository PR template; final staged
+  scope/secrets review and a draft handoff PR follow. This is not completion of
+  the live-verification acceptance criteria.
 
 ## Update protocol
 

@@ -23,6 +23,10 @@ including inference or credential retrieval, are authorized.
 After PR #7 merged, the user authorized task `006` controlled-failure/recovery
 code, offline checks, documentation, and PR publication only. This does not
 authorize Azure reads, real inference, or injecting/restoring a live fault.
+After PR #8 merged, the user approved starting task `007` live verification
+on 2026-10-15. Preparation uses the active subscription and West US 3; exact
+new-resource targets and provisioning/fault/cleanup actions are confirmed
+before execution. Task `008` is not included.
 
 The lab demonstrates conversation-aware routing through Azure API Management
 (APIM) to two Microsoft Foundry backends. Conversations chain Responses API
@@ -211,9 +215,12 @@ Its implementation and offline validation are complete in PR #6, merged at
 Its implementation and offline validation are complete in PR #7, merged at
 `dadd598` on 2026-10-15. Task `006` began on
 `feature/006-controlled-failure-recovery` with code-only authorization.
-Its implementation and offline validation are complete in PR #8, left open
-for user review; the full lab has not been deployed or live-verified.
-Tasks `007`-`008` remain pending.
+Its implementation and offline validation are complete in PR #8, merged at
+`721d299` on 2026-10-15. Task `007` began on
+`feature/007-live-verification` after approval to start live verification.
+Read-only preparation found and corrected two lifecycle contract defects;
+live execution is blocked pending exact target/action confirmation.
+The full lab has not yet been deployed or live-verified; task `008` is pending.
 
 ## Execution and progress
 

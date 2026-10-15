@@ -7,7 +7,9 @@ as code and local validation in merged PR #4; it is not deployed. Task `003`
 is complete as code and local validation in merged PR #5. Task `004` is complete
 as offline-validated code in merged PR #6. Task `005` is complete as code and
 offline validation in merged PR #7. Task `006` is complete as code and offline
-validation in open PR #8; tasks `007`-`008` remain pending.
+validation in merged PR #8. Task `007` live verification is blocked on exact
+target/action confirmation after read-only preparation;
+task `008` remains pending.
 IDs are stable; do not renumber completed tasks or hide blocked work.
 
 ## Status and dependency rules
@@ -35,7 +37,7 @@ new platform evidence changes an assumption.
 | 004 | Implement deployment orchestration and Azure CLI parity | 003 | done |
 | 005 | Implement .NET 10 conversation harness and evidence model | 003 | done |
 | 006 | Implement controlled failure, breaker, and recovery scenarios | 004, 005 | done |
-| 007 | Verify end-to-end scenarios and diagnostic evidence in Azure | 006 | pending |
+| 007 | Verify end-to-end scenarios and diagnostic evidence in Azure | 006 | blocked |
 | 008 | Complete self-service documentation and clean-environment walkthrough | 007 | pending |
 
 The default execution order is ascending ID. Tasks `004` and `005` can proceed
@@ -238,7 +240,7 @@ build, 113 offline .NET cases, formatting, publish, 30 lifecycle cases, Bicep
 compilation, 11 foundation/gateway contracts, and 19 compiled policy expressions
 with 42 cases passed. Published CLI guards, 24-file text/scope checks, 67
 relative links/anchors, and nine ignore fixtures passed. Published in PR #8,
-left open for user review and merging.
+merged on 2026-10-15.
 No live Azure operation was performed; task `007` must verify this exact path.
 
 Deliverables and acceptance:
@@ -255,8 +257,25 @@ Deliverables and acceptance:
 
 ## 007 - Verify end-to-end scenarios and diagnostic evidence in Azure
 
-**Gate:** Azure deployment and the controlled fault scenario require explicit
-authorization; previous permission to write code alone does not authorize them.
+**Authorization:** On 2026-10-15, after merging PR #8, the user approved starting
+live verification on `feature/007-live-verification`. Read-only preparation is
+authorized against the active subscription and agreed West US 3 target.
+Exact new-resource targets and provisioning/fault/cleanup actions are confirmed
+before execution; no existing application resources may be adopted or changed.
+
+**Current blocker:** Both target/action confirmation attempts returned user
+unavailable, not approval. Proposed first target is
+`rg-responses-verify007-azd` in the unchanged active subscription / West US 3.
+The separate CLI target is `rg-responses-verify007-cli`; both are absent.
+No task `007` group, service, inference workload, or fault was created/run.
+Resume after exact provisioning/inference/fault/restoration/deletion approval.
+
+**Preparation result:** Fixed two actual CLI contract defects: nullable model
+catalog minimum/step and default plain-text `azd auth token` output. All 33
+offline lifecycle cases and the real read-only model/provider/capacity preflight
+passed. The supported isolated azd-to-CLI delegated identity was verified in
+memory. Provider validation/what-if remains unrun until an empty owned group
+is authorized; these results are not deployment or scenario evidence.
 
 Deliverables and acceptance:
 
