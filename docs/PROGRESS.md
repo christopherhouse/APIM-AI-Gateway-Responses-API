@@ -5,21 +5,21 @@
 | Field | Value |
 | --- | --- |
 | Updated | 2026-10-15 |
-| Phase | Task `003` gateway routing/policies complete in PR #5; not deployed |
-| Authorization | Task `003` code, local validation, documentation, and PR approved on 2026-10-15; no new Azure operations |
+| Phase | Task `004` deployment orchestration offline-validated; PR publication pending; not deployed |
+| Authorization | Task `004` code, offline checks, documentation, and PR approved on 2026-10-15; no new Azure operations |
 | Planning branch | `chore/lab-planning` |
-| Current implementation task | `003` - done on `feature/003-gateway-routing-policies` |
-| Next task | User review/merge of PR #5, then authorization for `004`; tasks `004`-`008` pending |
+| Current implementation task | `004` - in_progress on `feature/004-deployment-orchestration` |
+| Next task | Publish task `004` PR; tasks `005`-`008` pending |
 | Azure deployment | Temporary group deleted and verified absent; Foundry tombstones purged and quota restored; APIM/workspace recovery records retained normally |
-| Solution files | Task `001` experiment, task `002` Bicep foundation, and task `003` gateway code; orchestration/.NET projects pending |
-| Base branch | `main` at infrastructure merge `2967f55`; initial empty base `846a2cb` preserved |
-| Pull request | #1-#4 merged; #5 - gateway routing/affinity policies, open and intentionally unmerged |
+| Solution files | Task `001` experiment, task `002` Bicep, task `003` gateway, and task `004` guarded azd/CLI lifecycle; .NET/fault automation pending |
+| Base branch | `main` at gateway merge `e1ed64a`; initial empty base `846a2cb` preserved |
+| Pull request | #1-#5 merged; task `004` PR pending |
 
 ## Known prerequisites and open decisions
 
 | Item | Owner/action | Effect |
 | --- | --- | --- |
-| Implementation authorization | Task `003` code-only work authorized on 2026-10-15 | No new deployment, faults, teardown, or live subscription checks; tasks `004`-`008` pending. |
+| Implementation authorization | Task `004` code-only work authorized on 2026-10-15 | No new deployment, faults, teardown, credential retrieval, or live subscription checks; tasks `005`-`008` pending. |
 | Initial base branch | Resolved with explicit user approval on 2026-10-15 | Empty commit `846a2cb` establishes `main`; subsequent work stays on work branches. |
 | Platform feasibility | Task `001`, B1-B2 resolved in `DESIGN.md` | Native original-pin rejection, outbound member evidence, and workspace policy traces verified; no workaround required. |
 | Model and authentication | Task `001` live feasibility passed | `gpt-5.4-mini` / `2026-03-17` / `GlobalStandard` served Responses through API-scoped gateway access and resource-scoped managed identity. |
@@ -481,6 +481,106 @@
 - Tasks `004`-`008` remain pending. Next: user review/merge of #5, then
   authorization for task `004` deployment orchestration code. New live Azure
   checks/deployments/faults/cleanup still require explicit target/action approval.
+
+### 2026-10-15 - Task 004 started after PR #5 merge
+
+- Confirmed PR #5 merged at `e1ed64a`, fast-forwarded clean local `main`, and
+  created `feature/004-deployment-orchestration`.
+- The next ordered task is `004`, code/offline validation/docs/PR only.
+  No Azure reads/writes, key retrieval, inference, or teardown are authorized.
+- Existing PLAN/DESIGN define the architecture: keep the group outside Bicep,
+  native `.bicepparam` inputs, confirmed active subscription, West US 3,
+  process-only API key handoff, and scoped opt-in teardown.
+- Local `azd version` reports `1.36.0`; inspected its help and pinned official
+  schema/provider sources for native parameter preference, RG scope, hooks,
+  and deletion semantics. This is not live deployment evidence.
+- README impact: document both new orchestration paths, prerequisites, local
+  state/secret boundaries, reruns/teardown, and unverified runtime gates.
+
+### 2026-10-15 - Task 004 implementation and offline validation
+
+- Added `azure.yaml`, native `infra/deploy.bicepparam`, and shared PowerShell 7
+  lifecycle code: `scripts/Invoke-Lab.ps1`, `Lab.psm1`, `Azd-Hook.ps1`,
+  `lifecycle.test.ps1`, and the lifecycle guide. Updated root/infra README,
+  DESIGN, PLAN, TASKS, and this tracker: 13 scoped files.
+- Both drivers use the same Bicep/native parameter contract. The wrapper
+  requires explicit action/target opt-ins, displays/checks the active
+  subscription and West US 3 target, checks model/version/Responses/quota/
+  capacity/provider/permissions, creates the dedicated group outside Bicep,
+  and runs Provider validation/what-if before either deployment command.
+- Local state binds target, random group/resource owner tags, compiled-input
+  hash, successful inventory, and retirement status; an exclusive operation
+  lock guards each environment. Unknown/untagged resources and changed inputs
+  fail explicitly. Matching rerun allocations do not require duplicate quota.
+- Pinned azd 1.36.0 provider source inspection found group initialization can
+  precede hooks; the wrapper therefore creates/checks the owned group before
+  invoking azd provision. Hooks recheck before deployment/deletion. Identity
+  claims must match Azure CLI; supported azd inputs, including defaults, are
+  synchronized from compiled native parameters, not stale local `.env` values.
+- Both drivers export eleven allow-listed non-secret runtime values from actual
+  deployment outputs, refusing stale output reuse after a later failed or
+  incomplete deployment. The future client receives those values and its
+  API-scoped gateway key only in the process environment, restored in `finally`.
+  No .NET harness or fault implementation was added.
+- Teardown requires an exact group confirmation, ownership/inventory and
+  permission checks, and actual group absence before state retirement.
+  azd down is additionally bound to the same identity/local target and uses
+  `--force --purge=false --no-prompt` after wrapper confirmation: no optional
+  purge prompt is exposed. CLI-only teardown covers partial deployments too.
+  Neither path purges recovery records or claims immediate quota/name release.
+- `az bicep build --file .\infra\main.bicep --outfile .\artifacts\002-template.json`:
+  passed build/lint. `az bicep build-params --file .\infra\main.bicepparam --outfile
+  .\artifacts\002-parameters.json`: passed. Only a newer-Bicep availability
+  notice was emitted; no tool upgrade was needed.
+- `node --test .\infra\foundation.test.mjs .\infra\gateway.test.mjs`: all 11
+  passed. `pwsh -NoProfile -File .\infra\policy.test.ps1`: all 18 C# 7
+  expressions compiled and 39 cases plus XML/auth/forward/trace contracts passed.
+- `pwsh -NoProfile -File .\scripts\lifecycle.test.ps1`: 28 offline cases passed,
+  including both actual driver functions' create/validate/deploy ordering and
+  scoped deletion, target/owner/azd identity drift, catalog/quota/provider/
+  permission failures, pagination scope, immutable reruns, stale output refusal,
+  allow-listed configuration, public opt-ins, and key restoration/absence.
+  The only real CLI call inside this test compiles native parameters locally;
+  all management commands/credentials are synthetic fixtures.
+- Iterations caught a synthetic publisher placeholder rejection, missing export
+  directory creation, stale-output filtering, and PowerShell's empty-versus-
+  absent process-environment behavior; corrected the fixture or production
+  cause and reran. A test insertion initially nested cases and reset the wrong
+  fixture; flattened those cases before the successful final run.
+- PowerShell AST checks passed for all four scripts/module; installed
+  `powershell-yaml` parsed `azure.yaml` and passed its native-entry-point,
+  target binding, version, and four-hook contracts. An optional template-
+  directory probe in the combined shell command returned nonzero because
+  that directory is absent; the repository's root PR template was read.
+- README impact: documented both paths, commands/prerequisites, state/secret
+  boundaries, predictable reruns, partial-failure handling, costs, and scoped
+  teardown, explicitly distinguishing implemented/offline-tested/live work.
+- No live Azure reads, provider validation/what-if, deployments, model calls,
+  credential retrieval, faults, workspace queries, deletion, or purge were run.
+  Their real service shapes, clean-environment behavior, propagation, privacy,
+  and recovery records remain task `007` assertions.
+- Remaining: final documentation/hygiene/staged scope review, commit/push,
+  publish a task-linked PR using the repository template, and record the PR.
+
+### 2026-10-15 - Task 004 documentation and handoff checks
+
+- Inline Python/PowerShell assertions passed for 13 scoped text files' LF/
+  final-newline/whitespace rules, seven Markdown files' balanced fences,
+  48 relative links/anchors, nine task states, 12 ignore fixtures, and the
+  README Mermaid source's six nodes/seven edges. Native parameter sources,
+  lifecycle code, and sanitized sample paths remain versionable; generated
+  parameters/runtime/state and azd local settings remain ignored.
+- Final standalone PowerShell AST/YAML checks passed again with exit zero for
+  all four script/module files and the four-hook/native-parameter configuration;
+  the earlier absent optional template-directory probe is resolved. Only
+  `.github/pull_request_template.md` exists and its headings, comments, and
+  checklists will be preserved.
+- `git diff --check` passed. Reviewed affected README instructions, links,
+  implemented-versus-planned diagram labels, and explicit runtime limitations.
+  GitHub-rendered Markdown/Mermaid appearance was not verified; no browser
+  rendering success is claimed.
+- No remaining implementation or offline validation blocker. Remaining:
+  staged scope/secret review, commit/push, PR publication, and PR/status record.
 
 ## Update protocol
 

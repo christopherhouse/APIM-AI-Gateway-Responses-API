@@ -14,6 +14,9 @@ validation, documentation, and PR publication. No new live Azure operations
 are authorized by that request. After PR #4 merged on 2026-10-15, the user
 authorized the next task, `003`, for code, local checks, documentation, and PR
 publication only. No new live Azure operations are authorized.
+After PR #5 merged on the same date, the user authorized task `004` deployment
+orchestration code, offline checks, documentation, and PR publication only.
+This does not authorize running that orchestration against Azure.
 
 The lab demonstrates conversation-aware routing through Azure API Management
 (APIM) to two Microsoft Foundry backends. Conversations chain Responses API
@@ -70,7 +73,9 @@ evidence as of 2026-10-15. B1/B2 are resolved: native pinned-breaker rejection
 and concrete outbound host evidence passed. Task `002` implements the
 infrastructure foundation in merged PR #4. Task `003` adds gateway routing,
 affinity, and diagnostic policies on `feature/003-gateway-routing-policies`.
-This is code-only work, not a deployed self-service lab.
+Task `004` implements guarded azd/CLI orchestration for those templates;
+both drivers share native `deploy.bicepparam` inputs and external group
+ownership. This is offline-validated code, not a deployed self-service lab.
 The selected trace contract is verified native policy trace records plus
 correlated gateway logs, not full debugger transcripts.
 
@@ -186,9 +191,10 @@ feasibility experiment and cleanup completed. Task `002` then began on
 `feature/002-infrastructure-foundation` with separate code-only authorization.
 PR #4 merged at `2967f55` on 2026-10-15. Task `003` then began on
 `feature/003-gateway-routing-policies` with code-only authorization.
-Its implementation and local validation are complete in open PR #5; the full
-lab has not been deployed or live-verified.
-Tasks `004`-`008` remain pending.
+Its implementation and local validation are complete in PR #5, merged at
+`e1ed64a` on 2026-10-15. Task `004` began on
+`feature/004-deployment-orchestration` with code-only authorization; the full
+lab has not been deployed or live-verified. Tasks `005`-`008` remain pending.
 
 ## Execution and progress
 
