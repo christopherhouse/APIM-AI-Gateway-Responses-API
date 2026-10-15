@@ -5,15 +5,15 @@
 | Field | Value |
 | --- | --- |
 | Updated | 2026-10-15 |
-| Phase | Task `004` deployment orchestration offline-validated; PR publication pending; not deployed |
+| Phase | Task `004` complete as offline-validated code in PR #6; not deployed |
 | Authorization | Task `004` code, offline checks, documentation, and PR approved on 2026-10-15; no new Azure operations |
 | Planning branch | `chore/lab-planning` |
-| Current implementation task | `004` - in_progress on `feature/004-deployment-orchestration` |
-| Next task | Publish task `004` PR; tasks `005`-`008` pending |
+| Current implementation task | `004` - done on `feature/004-deployment-orchestration` |
+| Next task | User review/merge of #6, then authorize task `005`; tasks `005`-`008` pending |
 | Azure deployment | Temporary group deleted and verified absent; Foundry tombstones purged and quota restored; APIM/workspace recovery records retained normally |
 | Solution files | Task `001` experiment, task `002` Bicep, task `003` gateway, and task `004` guarded azd/CLI lifecycle; .NET/fault automation pending |
 | Base branch | `main` at gateway merge `e1ed64a`; initial empty base `846a2cb` preserved |
-| Pull request | #1-#5 merged; task `004` PR pending |
+| Pull request | #1-#5 merged; #6 open against `main`, left unmerged for user review |
 
 ## Known prerequisites and open decisions
 
@@ -581,6 +581,25 @@
   rendering success is claimed.
 - No remaining implementation or offline validation blocker. Remaining:
   staged scope/secret review, commit/push, PR publication, and PR/status record.
+
+### 2026-10-15 - Task 004 published in PR #6
+
+- Reviewed/staged exactly 13 scoped files; `git diff --cached --check` and
+  explicit branch/file-list/generated-state/credential-shaped content checks
+  passed. No JSON parameter source, private environment state, real identity
+  metadata, tokens, keys, or raw traces were staged.
+- Committed as `dd67b1e`, pushed `feature/004-deployment-orchestration`, and
+  created PR #6 against `main` using all repository template headings, comments,
+  and checklists, with task ID, exact commands/results, README impact, and
+  live-validation limits. Confirmed the PR is open with the correct head/base.
+- The first post-creation `gh pr view --repo` call needed an explicit PR number;
+  querying #6 succeeded. PR creation itself succeeded and was not repeated.
+- Marked task `004` done only after the verified PR existed. This follow-up
+  records completion and will be pushed to the same PR; no PR was merged.
+- No Azure operation was performed for task `004`. Tasks `005`-`008` remain
+  pending. Next: user review/merge of #6, then authorization for task `005`
+  harness code. Live deployment/fault/credential/cleanup operations still need
+  separate explicit target/action authorization.
 
 ## Update protocol
 

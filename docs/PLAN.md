@@ -193,7 +193,8 @@ PR #4 merged at `2967f55` on 2026-10-15. Task `003` then began on
 `feature/003-gateway-routing-policies` with code-only authorization.
 Its implementation and local validation are complete in PR #5, merged at
 `e1ed64a` on 2026-10-15. Task `004` began on
-`feature/004-deployment-orchestration` with code-only authorization; the full
+`feature/004-deployment-orchestration` with code-only authorization.
+Its implementation and offline validation are complete in open PR #6; the full
 lab has not been deployed or live-verified. Tasks `005`-`008` remain pending.
 
 ## Execution and progress

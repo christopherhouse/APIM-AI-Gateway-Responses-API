@@ -4,8 +4,8 @@ Task `000` is complete and PR #2 is merged. Task `001` completed the authorized
 disposable feasibility test and cleanup; B1/B2 are resolved in
 [DESIGN.md](DESIGN.md), with evidence in merged PR #3. Task `002` is complete
 as code and local validation in merged PR #4; it is not deployed. Task `003`
-is complete as code and local validation in merged PR #5. Task `004` is in
-progress with code-only authorization; tasks `005`-`008` remain pending.
+is complete as code and local validation in merged PR #5. Task `004` is complete
+as offline-validated code in open PR #6; tasks `005`-`008` remain pending.
 IDs are stable; do not renumber completed tasks or hide blocked work.
 
 ## Status and dependency rules
@@ -30,7 +30,7 @@ new platform evidence changes an assumption.
 | 001 | Validate platform capabilities and finalize design | 000 | done |
 | 002 | Establish Bicep infrastructure and observability foundation | 001 | done |
 | 003 | Implement gateway routing, affinity, and diagnostic policies | 002 | done |
-| 004 | Implement deployment orchestration and Azure CLI parity | 003 | in_progress |
+| 004 | Implement deployment orchestration and Azure CLI parity | 003 | done |
 | 005 | Implement .NET 10 conversation harness and evidence model | 003 | pending |
 | 006 | Implement controlled failure, breaker, and recovery scenarios | 004, 005 | pending |
 | 007 | Verify end-to-end scenarios and diagnostic evidence in Azure | 006 | pending |
@@ -165,12 +165,13 @@ next task. `feature/004-deployment-orchestration` covers code, offline checks,
 documentation, and PR publication only. No live Azure checks, deployment,
 resource changes, inference, faults, teardown, or credential retrieval.
 
-**Local result:** Both lifecycle drivers and four azd hooks are implemented.
+**Result:** Both lifecycle drivers and four azd hooks are implemented in PR #6,
+left open for user review/merge.
 Bicep/native parameter compilation, 11 foundation/gateway contracts, all 18
 policy expressions/39 fixtures, 28 offline lifecycle cases, PowerShell syntax,
 and YAML hook/configuration checks passed. No live Azure checks were run;
 actual provisioning/reruns, credential handoff, and teardown remain task `007`
-gates. PR publication is the remaining task `004` acceptance item.
+gates, not inferred successes from offline mocks.
 
 Deliverables and acceptance:
 
