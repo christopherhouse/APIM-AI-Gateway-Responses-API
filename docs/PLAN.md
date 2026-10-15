@@ -201,8 +201,9 @@ Its implementation and local validation are complete in PR #5, merged at
 `feature/004-deployment-orchestration` with code-only authorization.
 Its implementation and offline validation are complete in PR #6, merged at
 `a74ebd2` on 2026-10-15. Task `005` began on
-`feature/005-conversation-harness` with code-only authorization; the full lab
-has not been deployed or live-verified. Tasks `006`-`008` remain pending.
+`feature/005-conversation-harness` with code-only authorization.
+Its implementation and offline validation are complete in open PR #7; the full
+lab has not been deployed or live-verified. Tasks `006`-`008` remain pending.
 
 ## Execution and progress
 

@@ -5,15 +5,15 @@
 | Field | Value |
 | --- | --- |
 | Updated | 2026-10-15 |
-| Phase | Task `005` harness in progress; no live inference authorized |
+| Phase | Task `005` harness complete in open PR #7; no live inference authorized |
 | Authorization | Task `005` code, offline checks, documentation, and PR approved on 2026-10-15; no new Azure operations |
 | Planning branch | `chore/lab-planning` |
-| Current implementation task | `005` - in_progress on `feature/005-conversation-harness` |
-| Next task | Implement/offline-validate `005` and publish PR; tasks `006`-`008` pending |
+| Current implementation task | `005` - done on `feature/005-conversation-harness` |
+| Next task | User review/merge of #7, then authorization for `006`; tasks `006`-`008` pending |
 | Azure deployment | Temporary group deleted and verified absent; Foundry tombstones purged and quota restored; APIM/workspace recovery records retained normally |
 | Solution files | Task `001` experiment, task `002` Bicep, task `003` gateway, task `004` lifecycle, and task `005` .NET harness; fault automation pending |
 | Base branch | `main` at lifecycle merge `a74ebd2`; initial empty base `846a2cb` preserved |
-| Pull request | #1-#6 merged; task `005` PR pending |
+| Pull request | #1-#6 merged; task `005` PR #7 open for review |
 
 ## Known prerequisites and open decisions
 
@@ -708,6 +708,23 @@
 - `git diff --cached --check` and the final `dotnet format` verification passed.
   `git check-attr text eol -- ResponsesLab.slnx` reports `text: set`, `eol: lf`.
   Remaining: commit/push, publish the templated PR, then record task completion.
+
+### 2026-10-15 - Task 005 completed in PR #7
+
+- Committed the 20 scoped harness/documentation/formatting files as `29b31fd`
+  and pushed `feature/005-conversation-harness`.
+- Created PR #7 against `main` using the repository template's four headings,
+  comments, and review checklist. Included task `005` acceptance, README impact,
+  exact validation commands/results, and explicit limits on offline evidence.
+  Confirmed it is open, non-draft, and targets the correct head/base at
+  `29b31fd`; no PR was merged.
+- Marked task `005` done only after its implementation, offline checks, and PR
+  existed. Updated the plan/backlog/current checkpoint in this docs-only
+  follow-up for the same PR. No application or infrastructure behavior changed.
+- No Azure operations were performed. Real model quality/routing/diagnostic
+  verification remains task `007`; controlled-fault automation is task `006`.
+  Next: user review/merge of #7, then authorization for task `006`. Do not start
+  its implementation from an unmerged dependency without explicit approval.
 
 ## Update protocol
 
