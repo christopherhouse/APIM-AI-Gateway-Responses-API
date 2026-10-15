@@ -4,11 +4,14 @@
 
 This is the agreed implementation plan, not an implemented solution.
 On 2026-10-15, the user authorized task `000` after planning PR #1 was merged,
-then task `001` after bootstrap PR #2 was merged. Current authorization covers
+then task `001` after bootstrap PR #2 was merged. That authorization covered
 platform design and its read-only checks. Later on 2026-10-15 the user explicitly
 authorized a cost-bounded, disposable task `001` feasibility deployment,
 controlled failure, evidence collection, and cleanup. This exception does not
-authorize tasks `002`-`008` or the complete self-service lab.
+authorize tasks `002`-`008` or the complete self-service lab. After merging
+PR #3 on the same date, the user separately authorized task `002` code, local
+validation, documentation, and PR publication. No new live Azure operations
+are authorized by that request.
 
 The lab demonstrates conversation-aware routing through Azure API Management
 (APIM) to two Microsoft Foundry backends. Conversations chain Responses API
@@ -31,7 +34,7 @@ the required routing information.
 | Model backends | Two new Foundry resources, each with its own deployment of the same model and version. |
 | Model choice | User requires GPT-5-family or newer. Task `001` verified `gpt-5.4-mini` / `2026-03-17` / `GlobalStandard` with real Responses calls; West US 3 resources, global inference processing. |
 | Networking | Public network access enabled; authentication remains required. No existing application resources are reused. |
-| Infrastructure | Bicep plus APIM policy XML where needed. |
+| Infrastructure | Bicep with native `.bicepparam` deployment inputs, plus APIM policy XML where needed; no maintained JSON parameter files. |
 | Routing | Backend load-balancing pool, per-backend circuit breakers, and the documented session-affinity mechanism verified during design. |
 | Stateless traffic | Demonstrate distribution across both identical model deployments without conversation chaining. |
 | Stateful traffic | Multiple independent conversations, each chaining with `previous_response_id` and retaining affinity. |
@@ -62,10 +65,11 @@ Supported resource diagnostics and gateway evidence --> Log Analytics
 This is a logical design, not an implemented system. [DESIGN.md](DESIGN.md)
 records task `001` source-backed choices and live disposable feasibility
 evidence as of 2026-10-15. B1/B2 are resolved: native pinned-breaker rejection
-and concrete outbound host evidence passed. Task `002` still awaits user
-authorization and the dependency merge/branch decision. The selected trace
-contract is verified native policy trace records plus correlated gateway logs,
-not full debugger transcripts.
+and concrete outbound host evidence passed. Task `002` now implements the
+infrastructure foundation on `feature/002-infrastructure-foundation`, based
+on merged PR #3. This is code-only work, not a deployed self-service lab.
+The selected trace contract is verified native policy trace records plus
+correlated gateway logs, not full debugger transcripts.
 
 ## Mandatory design gates
 
@@ -174,9 +178,10 @@ authorized on `chore/000-repository-bootstrap`; no implementation work is
 permitted directly on `main`.
 
 Bootstrap PR #2 was merged at `9efe056` on 2026-10-15. Task `001` then began on
-`chore/001-platform-design`. PR #3 remains open; the explicitly authorized
-feasibility experiment continues on that same research branch. The remaining
-design gates still apply before tasks `002`-`008`.
+`chore/001-platform-design`. PR #3 merged at `e1c4ca0` on 2026-10-15 after the
+feasibility experiment and cleanup completed. Task `002` then began on
+`feature/002-infrastructure-foundation` with separate code-only authorization.
+Tasks `003`-`008` remain pending.
 
 ## Execution and progress
 

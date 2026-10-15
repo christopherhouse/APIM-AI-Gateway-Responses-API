@@ -1,0 +1,26 @@
+{
+  "apim": {
+    "logs": [
+      "GatewayLogs",
+      "GatewayLlmLogs",
+      "GatewayMCPLogs",
+      "DeveloperPortalAuditLogs",
+      "WebSocketConnectionLogs"
+    ],
+    "metrics": ["AllMetrics"]
+  },
+  "foundry": {
+    "logs": [
+      "Audit",
+      "AzureOpenAIRequestUsage",
+      "ManagedNetworkEvent",
+      "RequestResponse",
+      "Trace"
+    ],
+    "metrics": ["AllMetrics"]
+  },
+  "workspace": {
+    "logs": ["Audit", "Jobs", "SummaryLogs"],
+    "metrics": ["AllMetrics"]
+  }
+}
