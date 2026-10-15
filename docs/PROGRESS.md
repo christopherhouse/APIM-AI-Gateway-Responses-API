@@ -5,15 +5,15 @@
 | Field | Value |
 | --- | --- |
 | Updated | 2026-10-15 |
-| Phase | Platform research recorded; final design blocked on B1-B3 |
+| Phase | Platform research recorded in PR #3; final design blocked on B1-B2 |
 | Authorization | Task `001` authorized on 2026-10-15, including its read-only checks; no Azure mutations or deployment |
 | Planning branch | `chore/lab-planning` |
 | Current implementation task | `001` - blocked on `chore/001-platform-design`; evidence in `docs/DESIGN.md` |
-| Next task | Publish research PR; obtain the B1-B3 decisions/authorized feasibility evidence before `002` |
+| Next task | Review PR #3; obtain B1-B2 confirmation/authorized feasibility evidence before `002` |
 | Azure deployment | Not attempted |
 | Solution files | Not created |
 | Base branch | `main` at bootstrap merge `9efe056`; initial empty base `846a2cb` preserved |
-| Pull request | #1 and #2 merged; task `001` PR not yet created |
+| Pull request | #1 and #2 merged; #3 - platform design research, open and intentionally unmerged |
 
 ## Known prerequisites and open decisions
 
@@ -21,7 +21,7 @@
 | --- | --- | --- |
 | Implementation authorization | Task `001` authorized on 2026-10-15 | Evidence-backed design/read-only checks only; no infrastructure implementation or live mutations. |
 | Initial base branch | Resolved with explicit user approval on 2026-10-15 | Empty commit `846a2cb` establishes `main`; subsequent work stays on work branches. |
-| Platform feasibility | Task `001`, blockers B1-B3 in `DESIGN.md` | Confirm cookie/breaker interaction, concrete member identity, and trace interpretation before `002`. |
+| Platform feasibility | Task `001`, blockers B1-B2 in `DESIGN.md` | Confirm cookie/breaker interaction and concrete member identity before `002`; native policy-trace path selected. |
 | Model and authentication | Task `001` research recorded | User requested GPT-5-family or newer: `gpt-5.4-mini` / `2026-03-17` / `GlobalStandard` selected; gateway identity/API subscription design; runtime untested. |
 | Live Azure operations | Explicit deployment/fault authorization before task `007` or any earlier live run | Planning or implementation authorization is not blanket deployment approval. |
 
@@ -187,6 +187,24 @@
   and feasibility deployment/fault execution is not authorized.
 - Remaining handoff: publish the research PR and record its number; task `001`
   remains blocked on B1-B3 regardless of PR publication.
+
+### 2026-10-15 - Task 001 research published in PR #3
+
+- Committed the investigation as `3efcc3f`, pushed
+  `chore/001-platform-design`, and opened PR #3 against `main` using the
+  repository PR template. The PR remains open and unmerged.
+- Clarified the trace interpretation against the existing task's APIM
+  trace-record requirement: native policy-generated `TraceRecords` plus
+  correlated gateway logs are selected. The initially listed B3 is not an
+  additional approval gate; full debugger-transcript ingestion remains outside
+  this design rather than an assumed requirement.
+- Current blockers are B1 and B2 only. The task remains `blocked`, not done;
+  PR publication does not establish the missing runtime contract.
+- Updated current README/PLAN/TASKS/DESIGN/checkpoint references consistently;
+  earlier investigation entries preserve their original sequence.
+- No deployment or fault authorization was inferred. Next: review PR #3 and
+  close B1-B2 via authoritative confirmation or explicitly authorized,
+  disposable feasibility work before any task `002` implementation.
 
 ## Update protocol
 

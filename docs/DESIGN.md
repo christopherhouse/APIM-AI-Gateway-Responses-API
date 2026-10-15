@@ -15,7 +15,7 @@ means documentation/schema evidence, not a successful live gateway test.
 | 2. Foundry/model/region | `AIServices`, `S0`, `gpt-5.4-mini` version `2026-03-17`, `GlobalStandard`, Responses v1. West US 3 resource placement; inference can be global. Catalog, quota, and capacity checks succeeded. S4-S7, S23 | Read-only checks passed; creation/inference not tested |
 | 3. Affinity and evidence | Native opaque cookie transport is documented. A pool ID or region is not proof of the concrete backend member. The outbound member-identity contract below needs verification. S1, S8 | Blocked: B2 |
 | 4. Pinned failure | Reviewed docs describe normal stickiness and breaker exclusion separately, not their interaction for an existing cookie. They do not establish the required pinned-failure contract. S1-S3 | Blocked: B1 |
-| 5. Traces | `trace` policy records can reach `ApiManagementGatewayLogs.TraceRecords`. Full per-request debug traces are a separate mechanism, not automatically a workspace trace transcript. S8-S11 | Policy-trace path documented; interpretation decision B3 |
+| 5. Traces | Select actual `trace` policy records in `ApiManagementGatewayLogs.TraceRecords`, not access logs alone. Full debugger transcripts are a separate mechanism. S8-S11 | Native policy-trace path selected; ingestion still needs task `007` |
 | 6. Resource diagnostics | Parent resources have documented categories; child/control-plane resources need an explicit unsupported-category inventory. See section 6. S12-S15 | Inventory documented; actual category discovery deferred until resources exist |
 | 7. Authentication | API-scoped APIM subscription access for the harness; gateway system identity with resource-scoped OpenAI User roles for both Foundries. No model keys. S16 | Design selected; live authorization not tested |
 | 8. Group lifecycle | Resource-group-scoped `azd` is documented as beta. Bicep does not create the group. `azd down` can delete an externally created group. S17-S18 | Ownership contract selected; beta noted, clean-environment behavior still needs task `007` |
@@ -26,12 +26,16 @@ means documentation/schema evidence, not a successful live gateway test.
 | --- | --- | --- |
 | B1 | No verified native contract for an existing affinity cookie after its backend breaker opens. This is an evidence gap, **not proof that native affinity is unsupported**. | Obtain authoritative confirmation, or explicitly authorize a small disposable Developer gateway feasibility deployment/fault test. If native behavior conflicts, approve a revised strict-pinning design before any workaround. |
 | B2 | Both Foundries are in West US 3; `x-ms-region` cannot identify A versus B. The docs do not promise that `context.Backend.Id` at every policy stage is the resolved member rather than the pool. | Confirm a supported gateway-derived concrete-member signal, ideally in the same feasibility test, and correlate it with `BackendUrl`/`BackendId` in gateway logs. Do not substitute the client-supplied label or a decoded cookie. |
-| B3 | "APIM tracing in Log Analytics" could mean policy trace records or the entire request debugger transcript. Only the first has a verified native workspace destination here. | Confirm that policy-generated traces plus correlated gateway logs satisfy the requirement. If full debug transcripts must be ingested, approve a separate export/ingestion design and its resources/security scope first. |
 
 Task `002` must not begin while these gates remain open. No custom pin token,
 response-ID lookup cache, extra trace collector, or live feasibility experiment
 is authorized by this document. The options above are decisions, not completed
 work or permission to change the agreed requirements.
+
+For the agreed APIM trace-record requirement, select policy-generated traces
+plus correlated gateway logs. This is actual trace content, not a substitution
+of correlation IDs or access logs alone. Automatic ingestion of full debugger
+transcripts is not promised; adding it would require separately approved scope.
 
 ## 2. Read-only Azure evidence
 
@@ -218,7 +222,7 @@ pinned error and prove no unintended member execution.
 
 ## 6. Diagnostics, trace destinations, and retention
 
-Select the **native policy-trace path**, subject to interpretation decision B3:
+Select the **native policy-trace path** for the agreed trace-record requirement:
 enable Azure Monitor gateway logging with resource-specific destination mode,
 100% sampling for this small lab, information verbosity, no client-IP capture,
 zero request/response body bytes, and only allow-listed correlation headers.
@@ -369,9 +373,8 @@ dedicated lab deployment with the selected Developer SKU and two backends:
 6. Verify nonempty `TraceRecords` and the correlation join. If full debugger
    transcripts are required instead, pause for the separate approved design.
 
-Only then close B1/B2, record the decision on B3, and finalize the design before
-task `002`. Do not claim completion of task `001` merely because this document
-and a research PR exist.
+Only then close B1/B2 and finalize the design before task `002`. Do not claim
+completion of task `001` merely because this document and a research PR exist.
 
 ## 10. Official sources
 

@@ -1,7 +1,7 @@
 # Task execution order
 
 Task `000` is complete and PR #2 is merged. Task `001` has recorded research but
-is blocked on design decisions B1-B3 in [DESIGN.md](DESIGN.md); later tasks
+is blocked on design decisions B1-B2 in [DESIGN.md](DESIGN.md); later tasks
 remain pending.
 IDs are stable; do not renumber completed tasks or hide blocked work.
 
@@ -70,8 +70,8 @@ Deliverables and acceptance:
 
 **Current blocker:** [DESIGN.md](DESIGN.md) records source-backed findings and
 successful read-only region/model/quota/capacity checks. B1 needs the native
-cookie-plus-breaker contract, B2 needs concrete pool-member evidence, and B3
-needs confirmation of policy traces versus full debugger transcripts.
+cookie-plus-breaker contract and B2 needs concrete pool-member evidence.
+Native policy traces plus correlated gateway logs are the selected trace path.
 Close these through authoritative confirmation/explicitly authorized feasibility
 work or an approved design change before starting `002`. A research PR does
 not complete this task.

@@ -10,7 +10,7 @@ unavailable.
 
 > **Design investigation, not a runnable lab.** Bootstrap is merged. Task `001`
 > has documentation and read-only Azure evidence, but remains **blocked** on
-> the native pinned-failure/member-identity contract and the trace requirement.
+> the native pinned-failure and concrete-member identity contracts.
 > There are no deployment scripts, Bicep resources, APIM policies, or .NET
 > projects yet. No Azure resources have been created by this work.
 
@@ -76,7 +76,7 @@ No run or deployment commands are published yet because they do not exist.
 | Document | Purpose |
 | --- | --- |
 | [Lab plan](docs/PLAN.md) | Agreed requirements and mandatory design gates |
-| [Design and evidence](docs/DESIGN.md) | Verified findings, proposed contracts, and blockers B1-B3 |
+| [Design and evidence](docs/DESIGN.md) | Verified findings, proposed contracts, and blockers B1-B2 |
 | [Task backlog](docs/TASKS.md) | Ordered work and acceptance criteria |
 | [Progress tracker](docs/PROGRESS.md) | Authorization, execution history, and PR state |
 | [Contributor instructions](.github/copilot-instructions.md) | Branch workflow, checks, and README standards |

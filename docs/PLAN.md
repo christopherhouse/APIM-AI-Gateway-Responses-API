@@ -60,8 +60,9 @@ Supported resource diagnostics and gateway evidence --> Log Analytics
 This is a logical design, not an implemented system. [DESIGN.md](DESIGN.md)
 records the task `001` source-backed choices, read-only Azure checks, and
 proposed routing/authentication/configuration contracts as of 2026-10-15.
-Native pinned-failure behavior, concrete backend-member evidence, and the
-intended trace interpretation remain blockers B1-B3; task `002` must wait.
+Native pinned-failure behavior and concrete backend-member evidence remain
+blockers B1-B2; task `002` must wait. The selected trace contract is native policy
+trace records plus correlated gateway logs, not full debugger transcripts.
 
 ## Mandatory design gates
 
