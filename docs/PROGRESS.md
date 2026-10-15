@@ -5,15 +5,15 @@
 | Field | Value |
 | --- | --- |
 | Updated | 2026-10-15 |
-| Phase | Task `006` controlled-failure/recovery code in progress; no live faults authorized |
+| Phase | Task `006` code/offline validation complete in open PR #8; no live faults authorized |
 | Authorization | Task `006` code, offline checks, documentation, and PR approved on 2026-10-15; no new Azure operations |
 | Planning branch | `chore/lab-planning` |
-| Current implementation task | `006` - in_progress on `feature/006-controlled-failure-recovery` |
-| Next task | Implement/offline-validate `006` and publish PR; tasks `007`-`008` pending |
+| Current implementation task | `006` - done on `feature/006-controlled-failure-recovery`, PR #8 open |
+| Next task | User review/merge of #8; task `007` requires separate live-operation authorization; `008` pending |
 | Azure deployment | Temporary group deleted and verified absent; Foundry tombstones purged and quota restored; APIM/workspace recovery records retained normally |
 | Solution files | Task `001` experiment, task `002` Bicep, task `003` gateway, task `004` lifecycle, task `005` harness, and task `006` fault/recovery automation; full live verification pending |
 | Base branch | `main` at harness merge `dadd598`; initial empty base `846a2cb` preserved |
-| Pull request | #1-#7 merged; task `006` PR pending |
+| Pull request | #1-#7 merged; #8 open for task `006` |
 
 ## Known prerequisites and open decisions
 
@@ -850,6 +850,22 @@
   No credentials, private environment state, compiled outputs, or raw traces
   are staged. The PR body follows the inspected template and records exact
   commands/results plus README impact and live-validation limits.
+
+### 2026-10-15 - Task 006 completed in PR #8
+
+- Committed all 24 scoped files as `448e4f7` and pushed
+  `feature/006-controlled-failure-recovery`.
+- Created PR #8 against `main` using every repository template heading, comment,
+  and checklist item. Included task `006` acceptance, README impact, exact
+  commands/results, and explicit offline-versus-live limitations.
+- Verified PR #8 is open, non-draft, and has the correct base/head and
+  implementation commit. No PR was merged.
+- Marked task `006` done only after the PR existed and its head was verified.
+  This follow-up records completion in PLAN/TASKS/PROGRESS on the same branch.
+- No Azure reads, credential retrieval, inference, resource changes, controlled
+  faults, workspace queries, teardown, or purge were performed. Tasks `007` and
+  `008` remain pending. Next: user review/merge of #8 and separate explicit
+  target/action authorization before task `007` live verification.
 
 ## Update protocol
 

@@ -6,8 +6,8 @@ disposable feasibility test and cleanup; B1/B2 are resolved in
 as code and local validation in merged PR #4; it is not deployed. Task `003`
 is complete as code and local validation in merged PR #5. Task `004` is complete
 as offline-validated code in merged PR #6. Task `005` is complete as code and
-offline validation in merged PR #7. Task `006` is in progress with code-only
-authorization; tasks `007`-`008` remain pending.
+offline validation in merged PR #7. Task `006` is complete as code and offline
+validation in open PR #8; tasks `007`-`008` remain pending.
 IDs are stable; do not renumber completed tasks or hide blocked work.
 
 ## Status and dependency rules
@@ -34,7 +34,7 @@ new platform evidence changes an assumption.
 | 003 | Implement gateway routing, affinity, and diagnostic policies | 002 | done |
 | 004 | Implement deployment orchestration and Azure CLI parity | 003 | done |
 | 005 | Implement .NET 10 conversation harness and evidence model | 003 | done |
-| 006 | Implement controlled failure, breaker, and recovery scenarios | 004, 005 | in_progress |
+| 006 | Implement controlled failure, breaker, and recovery scenarios | 004, 005 | done |
 | 007 | Verify end-to-end scenarios and diagnostic evidence in Azure | 006 | pending |
 | 008 | Complete self-service documentation and clean-environment walkthrough | 007 | pending |
 
@@ -237,7 +237,8 @@ conservative breaker-window assertions, and original-chain recovery. Release
 build, 113 offline .NET cases, formatting, publish, 30 lifecycle cases, Bicep
 compilation, 11 foundation/gateway contracts, and 19 compiled policy expressions
 with 42 cases passed. Published CLI guards, 24-file text/scope checks, 67
-relative links/anchors, and nine ignore fixtures passed; PR publication remains.
+relative links/anchors, and nine ignore fixtures passed. Published in PR #8,
+left open for user review and merging.
 No live Azure operation was performed; task `007` must verify this exact path.
 
 Deliverables and acceptance:

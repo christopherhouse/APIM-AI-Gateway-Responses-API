@@ -210,8 +210,10 @@ Its implementation and offline validation are complete in PR #6, merged at
 `feature/005-conversation-harness` with code-only authorization.
 Its implementation and offline validation are complete in PR #7, merged at
 `dadd598` on 2026-10-15. Task `006` began on
-`feature/006-controlled-failure-recovery` with code-only authorization; the full
-lab has not been deployed or live-verified. Tasks `007`-`008` remain pending.
+`feature/006-controlled-failure-recovery` with code-only authorization.
+Its implementation and offline validation are complete in PR #8, left open
+for user review; the full lab has not been deployed or live-verified.
+Tasks `007`-`008` remain pending.
 
 ## Execution and progress
 
