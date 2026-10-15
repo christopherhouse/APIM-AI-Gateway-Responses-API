@@ -3,6 +3,7 @@
 # Normalize repository text consistently, including on Windows.
 *.md text eol=lf
 *.json text eol=lf
+*.mjs text eol=lf
 *.yml text eol=lf
 *.yaml text eol=lf
 *.xml text eol=lf

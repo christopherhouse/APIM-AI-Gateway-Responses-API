@@ -1,7 +1,8 @@
 # Task execution order
 
-Task `000` is complete in PR #2, left unmerged for user review. Later tasks
-remain pending and require authorization before execution.
+Task `000` is complete and PR #2 is merged. Task `001` completed the authorized
+disposable feasibility test and cleanup; B1/B2 are resolved in
+[DESIGN.md](DESIGN.md), with evidence in PR #3. Later tasks remain pending.
 IDs are stable; do not renumber completed tasks or hide blocked work.
 
 ## Status and dependency rules
@@ -23,7 +24,7 @@ new platform evidence changes an assumption.
 | ID | Task | Depends on | Status |
 | --- | --- | --- | --- |
 | 000 | Bootstrap repository and contributor workflow | Implementation authorization; base branch established | done |
-| 001 | Validate platform capabilities and finalize design | 000 | pending |
+| 001 | Validate platform capabilities and finalize design | 000 | done |
 | 002 | Establish Bicep infrastructure and observability foundation | 001 | pending |
 | 003 | Implement gateway routing, affinity, and diagnostic policies | 002 | pending |
 | 004 | Implement deployment orchestration and Azure CLI parity | 003 | pending |
@@ -65,7 +66,20 @@ Deliverables and acceptance:
 
 ## 001 - Validate platform capabilities and finalize design
 
-**Scope:** Evidence-backed design; no Azure deployment yet.
+**Scope:** Evidence-backed design plus the explicitly authorized disposable
+feasibility deployment, fault test, evidence collection, and verified cleanup.
+Use Developer APIM (one unit), two small identical GPT-5.4 mini deployments,
+and bounded diagnostics in a new dedicated resource group. This is not task
+`002` infrastructure or authorization for tasks `002`-`008`.
+
+**Result:** B1/B2 resolved with real inference, debug/workspace correlation,
+explicit original-pin breaker rejection, healthy fresh sessions, and recovery.
+The exact owned group was deleted; both Foundry recovery records were purged
+to release model quota. APIM/workspace recovery records retain their normal
+Azure soft-delete periods. Selected native policy traces were ingested and
+correlated. See [DESIGN.md](DESIGN.md) and
+[sanitized evidence](../evidence/samples/task001-feasibility.json). PR #3 remains
+unmerged; tasks `002`-`008` are neither implemented nor authorized by this work.
 
 Deliverables and acceptance:
 

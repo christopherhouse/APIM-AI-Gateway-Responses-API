@@ -3,9 +3,12 @@
 ## Scope and authorization
 
 This is the agreed implementation plan, not an implemented solution.
-On 2026-10-15, the user authorized task `000` after planning PR #1 was merged.
-Authorization covers repository bootstrap only; later implementation tasks and
-Azure operations are not yet authorized.
+On 2026-10-15, the user authorized task `000` after planning PR #1 was merged,
+then task `001` after bootstrap PR #2 was merged. Current authorization covers
+platform design and its read-only checks. Later on 2026-10-15 the user explicitly
+authorized a cost-bounded, disposable task `001` feasibility deployment,
+controlled failure, evidence collection, and cleanup. This exception does not
+authorize tasks `002`-`008` or the complete self-service lab.
 
 The lab demonstrates conversation-aware routing through Azure API Management
 (APIM) to two Microsoft Foundry backends. Conversations chain Responses API
@@ -26,7 +29,7 @@ the required routing information.
 | Region | West US 3 (`westus3`) for all regional resources. Do not silently substitute another region. |
 | Gateway | New Developer SKU APIM instance. |
 | Model backends | Two new Foundry resources, each with its own deployment of the same model and version. |
-| Model choice | Choose a reasonable lower-cost model after verifying regional availability, Responses support, and quota. No model is selected yet. |
+| Model choice | User requires GPT-5-family or newer. Task `001` verified `gpt-5.4-mini` / `2026-03-17` / `GlobalStandard` with real Responses calls; West US 3 resources, global inference processing. |
 | Networking | Public network access enabled; authentication remains required. No existing application resources are reused. |
 | Infrastructure | Bicep plus APIM policy XML where needed. |
 | Routing | Backend load-balancing pool, per-backend circuit breakers, and the documented session-affinity mechanism verified during design. |
@@ -56,9 +59,13 @@ Backend load-balancing pool
 Supported resource diagnostics and gateway evidence --> Log Analytics
 ```
 
-This is a logical design. Exact resource types, APIs, policy expressions,
-session transport, diagnostic destinations, and authentication are not yet
-validated or chosen.
+This is a logical design, not an implemented system. [DESIGN.md](DESIGN.md)
+records task `001` source-backed choices and live disposable feasibility
+evidence as of 2026-10-15. B1/B2 are resolved: native pinned-breaker rejection
+and concrete outbound host evidence passed. Task `002` still awaits user
+authorization and the dependency merge/branch decision. The selected trace
+contract is verified native policy trace records plus correlated gateway logs,
+not full debugger transcripts.
 
 ## Mandatory design gates
 
@@ -90,8 +97,10 @@ subscription evidence before implementation proceeds:
 8. Verify how `azd` creates or uses the resource group without Bicep managing its
    lifecycle, and ensure the Azure CLI path uses the same Bicep and parameters.
 
-A failed gate is a documented blocker, not permission to change the requested
-region, SKU, failure semantics, or diagnostic requirements silently.
+A failed or unresolved gate is a documented blocker, not permission to change
+the requested region, SKU, failure semantics, or diagnostic requirements
+silently. Current gate results and the exact conditions to resume are recorded
+in [DESIGN.md](DESIGN.md).
 
 ## Harness and evidence contract
 
@@ -163,6 +172,11 @@ The repository's initial base was created with explicit user approval on
 into `main` at `f5bae67` on the same date. Task `000` was then explicitly
 authorized on `chore/000-repository-bootstrap`; no implementation work is
 permitted directly on `main`.
+
+Bootstrap PR #2 was merged at `9efe056` on 2026-10-15. Task `001` then began on
+`chore/001-platform-design`. PR #3 remains open; the explicitly authorized
+feasibility experiment continues on that same research branch. The remaining
+design gates still apply before tasks `002`-`008`.
 
 ## Execution and progress
 

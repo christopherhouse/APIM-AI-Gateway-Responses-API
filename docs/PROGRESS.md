@@ -5,25 +5,25 @@
 | Field | Value |
 | --- | --- |
 | Updated | 2026-10-15 |
-| Phase | Repository bootstrap complete; awaiting user PR review/merge |
-| Authorization | Task `000` authorized on 2026-10-15; later tasks and Azure operations not authorized |
+| Phase | Task `001` completed; B1-B2 resolved with live evidence and verified cleanup |
+| Authorization | Task `001` research plus temporary billable deployment, controlled failure, evidence, and cleanup explicitly approved on 2026-10-15 |
 | Planning branch | `chore/lab-planning` |
-| Current implementation task | `000` - done on `chore/000-repository-bootstrap` |
-| Next task | `001` - platform validation/design, after authorization and merge of #2 (or documented dependency branch use) |
-| Azure deployment | Not attempted |
-| Solution files | Not created |
-| Base branch | `main` at planning merge `f5bae67`; initial empty base `846a2cb` preserved |
-| Pull request | #1 merged; #2 - bootstrap, open and intentionally unmerged |
+| Current implementation task | `001` - done on `chore/001-platform-design`; later tasks pending |
+| Next task | User review/merge of PR #3, then explicit authorization for `002` |
+| Azure deployment | Temporary group deleted and verified absent; Foundry tombstones purged and quota restored; APIM/workspace recovery records retained normally |
+| Solution files | Task `001` experiment only; complete lab and .NET projects not created |
+| Base branch | `main` at bootstrap merge `9efe056`; initial empty base `846a2cb` preserved |
+| Pull request | #1 and #2 merged; #3 - platform design and verified feasibility, open and intentionally unmerged |
 
 ## Known prerequisites and open decisions
 
 | Item | Owner/action | Effect |
 | --- | --- | --- |
-| Implementation authorization | Task `000` authorized on 2026-10-15 | Bootstrap only; later task authorization remains outstanding. |
+| Implementation authorization | Task `001` feasibility exception authorized on 2026-10-15 | Disposable experiment only; tasks `002`-`008` remain pending. |
 | Initial base branch | Resolved with explicit user approval on 2026-10-15 | Empty commit `846a2cb` establishes `main`; subsequent work stays on work branches. |
-| Platform feasibility | Task `001` | Verify Developer SKU, West US 3 model availability, recommended affinity, pinned-backend failure semantics, and diagnostic/trace delivery. |
-| Model and authentication | Task `001` | Choose based on verified support, cost suitability, quota, and least-privilege access. |
-| Live Azure operations | Explicit deployment/fault authorization before task `007` or any earlier live run | Planning or implementation authorization is not blanket deployment approval. |
+| Platform feasibility | Task `001`, B1-B2 resolved in `DESIGN.md` | Native original-pin rejection, outbound member evidence, and workspace policy traces verified; no workaround required. |
+| Model and authentication | Task `001` live feasibility passed | `gpt-5.4-mini` / `2026-03-17` / `GlobalStandard` served Responses through API-scoped gateway access and resource-scoped managed identity. |
+| Live Azure operations | Temporary task `001` deployment/fault/cleanup approved | New dedicated owned group only; no existing resource changes or target substitution. |
 
 ## Execution log
 
@@ -115,6 +115,218 @@
 - No README content change is needed for this instructions-only follow-up:
   the root README already links the contributor workflow; lab capabilities,
   status, commands, and architecture have not changed.
+
+### 2026-10-15 - Task 001 started
+
+- User confirmed PR #2 merged and authorized the next batch. Followed the
+  ordered backlog with task `001`, including read-only platform checks.
+- Confirmed PR #2 merged, fetched origin, and fast-forwarded `main` to
+  `9efe056`. Created `chore/001-platform-design` before edits.
+- No deployment, resource changes, subscription switching, or fault injection
+  are authorized or performed in this batch.
+
+### 2026-10-15 - Task 001 evidence and blocked design handoff
+
+- Added `docs/DESIGN.md` with eight gate results, official sources/dates,
+  pinned API versions, model/authentication choices, state/routing/evidence
+  contracts, category inventory, shared configuration, ownership/teardown
+  requirements, and a proposed reversible fault/observation procedure.
+- Active AzureCloud subscription was enabled. Successful read-only commands:
+  `az account show`, `az version`, `az provider show` for APIM/CognitiveServices/
+  OperationalInsights, `az cognitiveservices model list --location westus3`,
+  `az cognitiveservices usage list --location westus3`, and `az rest --method get`
+  against Model Capacities List API `2025-06-01`.
+- Selected catalog candidate `AIServices` / `gpt-4.1-mini` / `2025-04-14` /
+  `Standard`: Responses capability true, quota `OpenAI.Standard.gpt4.1-mini`
+  current 0 / limit 5000, available West US 3 capacity 5000. Proposed capacity
+  is 10 per backend. Metadata is a snapshot, not a deployment reservation.
+- Corrected local CLI quoting and model-to-quota identifier filtering during
+  investigation; successful results, not failed guesses, informed the design.
+  No credentials or private subscription settings are committed.
+- Verified the native policy-trace table path separately from full debugger
+  traces. Inspected official sample and versioned azd teardown source; do not
+  assume `azd down` preserves an externally created resource group.
+- Blocked task `001`, not marked done: B1 cookie/breaker behavior, B2 concrete
+  member evidence, and B3 trace interpretation need the decisions/evidence
+  documented in `DESIGN.md`. Did not invent a cache or strict-pinning workaround.
+- Updated README with an explicitly planned Mermaid architecture, engaging
+  navigation, findings, and limitations. Kept PLAN/TASKS/PROGRESS consistent.
+- No infrastructure, policy implementation, deployment scripts, harness code,
+  resource mutations, faults, or inference calls were created/performed.
+- Documentation checks and the research PR are the remaining handoff work.
+
+### 2026-10-15 - GPT-5 model requirement
+
+- User requested at least a GPT-5-family model during design. Superseded the
+  initial GPT-4.1 mini candidate with `gpt-5.4-mini`, version `2026-03-17`,
+  `GlobalStandard`, proposed capacity 20 per backend (40 total).
+- Catalog evidence reports `GenerallyAvailable` and Responses support. The
+  West US 3 usage entry `OpenAI.GlobalStandard.gpt-5.4-mini` reports current 50,
+  limit 1000, available 950; the successful Model Capacities List GET also
+  returned 950 for West US 3 / GlobalStandard.
+- Kept resource placement in West US 3 and explicitly documented that global
+  inference processing is not a region-only residency guarantee.
+- Updated README, PLAN, and DESIGN for the selected GPT-5 model and bounded
+  reasoning/output budget. No inference call or resource modification occurred.
+
+### 2026-10-15 - Task 001 documentation validation
+
+- `git diff --check` and `git diff --cached --check` passed after normalizing
+  the newly created DESIGN document from CRLF to the declared LF convention.
+- PowerShell assertions passed for five changed text files, 16 relative
+  Markdown links, balanced fences, 24 sequential source IDs (25 official
+  source URLs), all eight design gates, the GPT-5.4 mini contract, and the
+  blocked task `001` / pending tasks `002`-`008` state.
+- Checked the README Mermaid source's six declared nodes and seven valid
+  edges, and reviewed its labels/caption as explicitly planned architecture.
+  GitHub-rendered visual presentation was not verified; no Mermaid renderer
+  was used. No claim of runtime diagram rendering or Azure behavior is made.
+- Reviewed the staged five-file documentation scope and checked that private
+  subscription identifiers/settings are absent. No solution build/tests or
+  live scenario/log-ingestion checks were run: there are no solution projects
+  and feasibility deployment/fault execution is not authorized.
+- Remaining handoff: publish the research PR and record its number; task `001`
+  remains blocked on B1-B3 regardless of PR publication.
+
+### 2026-10-15 - Task 001 research published in PR #3
+
+- Committed the investigation as `3efcc3f`, pushed
+  `chore/001-platform-design`, and opened PR #3 against `main` using the
+  repository PR template. The PR remains open and unmerged.
+- Clarified the trace interpretation against the existing task's APIM
+  trace-record requirement: native policy-generated `TraceRecords` plus
+  correlated gateway logs are selected. The initially listed B3 is not an
+  additional approval gate; full debugger-transcript ingestion remains outside
+  this design rather than an assumed requirement.
+- Current blockers are B1 and B2 only. The task remains `blocked`, not done;
+  PR publication does not establish the missing runtime contract.
+- Updated current README/PLAN/TASKS/DESIGN/checkpoint references consistently;
+  earlier investigation entries preserve their original sequence.
+- No deployment or fault authorization was inferred. Next: review PR #3 and
+  close B1-B2 via authoritative confirmation or explicitly authorized,
+  disposable feasibility work before any task `002` implementation.
+
+### 2026-10-15 - Disposable feasibility exception authorized
+
+- User explicitly approved temporary billable resources, the reversible failure
+  test, evidence, and cleanup, with cost sensitivity. User fixed APIM at
+  Developer SKU, one unit; no SKU comparison or substitution is needed.
+- Continue task `001` on the existing PR #3 research branch; hold its merge
+  until results are recorded. Tasks `002`-`008` remain pending.
+- Verified active target, permissions, providers, model quota/capacity, and
+  current USD retail prices. West US 3 Developer unit is $0.0658/hour;
+  GPT-5.4 mini global input/output are $0.75/$4.50 per million tokens;
+  positive workspace ingestion meter is $2.30/GB. These are estimates, not
+  guaranteed billed charges.
+- Target under $5: three-hour lifetime, at most 64 model requests, 2,048
+  output tokens/request, short inputs, and a 1 GB/day workspace cap. The
+  illustrative conservative allowance is approximately $3.19 before taxes
+  and other charges. Workspace caps can overshoot and are not billing caps.
+- Prepare only `experiments/001-affinity/` plus ignored deployment state.
+  Build and validate before deployment; restore any fault and verify deletion
+  of the exact newly created group. No resources have been created yet.
+
+### 2026-10-15 - Feasibility validation and deployment started
+
+- Added `experiments/001-affinity/` with minimal Bicep/policy, bounded Node
+  probe and focused tests, workspace collector, and attached cleanup watcher.
+  Direct resources isolate the exact preview backend contract; this is not
+  selection of the later lab's reusable module structure.
+- Built Bicep and parsed XML; the shared Azure validation helper passed CLI,
+  authentication, build, ARM validation, and what-if (18 creates, no changes or
+  deletions). Static RBAC uses APIM system identity and OpenAI User only at
+  the two new account scopes. Four focused probe tests passed.
+- MCP policy retrieval used an identity without access; the already-authorized
+  active CLI context successfully reviewed three Defender initiatives. No
+  subscription was switched or permissions broadened for a tool.
+- Created a new session/purpose/expiry-tagged group outside Bicep after
+  confirming it did not exist. Started the validated deployment and verified
+  its management-plane responsiveness. Both identical model deployments and
+  workspace succeeded; Developer APIM is activating.
+- Started and verified the attached cleanup watcher. It will delete only the
+  matching owned group on the local signal or before the three-hour deadline.
+  It is not a detached/cloud cleanup service.
+- No inference or failure injection has run yet. Runtime policy compilation,
+  B1/B2, workspace ingestion, restoration, and deletion remain outstanding.
+
+### 2026-10-15 - Feasibility results and verified cleanup
+
+- The initial deployment failed only because the new gateway did not have an
+  `azuremonitor` logger. Added an explicit `azureMonitor` logger and dependency.
+  Revalidation and the repair deployment succeeded. The helper's text what-if
+  counts included nested property changes; resource-level JSON confirmed no
+  resource deletes. No existing application resource was adopted or changed.
+- Verified Developer one unit, both selected GPT-5.4 mini deployments, scoped
+  gateway OpenAI User roles, API subscription access, and zero body/header/IP
+  capture. Parent diagnostic categories matched the design inventory; only
+  `GatewayLogs` was enabled for this experiment, not the all-category solution.
+- Four independent three-turn conversations stayed pinned. A complete
+  eight-call stateless sample observed A=4/B=4. Outbound request host matched
+  debugger forwarding URLs and workspace `BackendId`/`BackendUrl`;
+  `context.Backend.Id` was the pool ID, not the resolved member.
+- Final failure sequence at 18:10-18:11 UTC: real A path 404; three fresh B
+  successes; original A cookie/response ID returned non-JSON 503. Its workspace
+  row selected `backend-a`, with empty `BackendUrl`, no backend response,
+  and policy reason `CircuitBreakerIsOpen`. Debugger evidence explicitly
+  reported the open breaker without forwarding. Restoring A allowed the same
+  original cookie/response chain to succeed on A.
+- Preserved failed iterations rather than hiding them: intermittent TLS
+  resets affected fetch and curl; one probe outlasted the 30-second breaker
+  and rediscovered the fault; an earlier non-JSON 503 exposed an error-parser
+  assumption. Final transport uses a single native HTTPS keep-alive agent,
+  no automatic retries or relaxed certificate validation. Fault-window probes
+  now use two-second spacing; non-JSON HTTP errors remain observable failures.
+- Durable accounting: 59/64 attempts, four transport failures, 55 HTTP records
+  in the workspace (49x200, 4x404, 2x503). All 54 captured response IDs joined
+  to rows with policy traces; one earlier 503's metadata was lost before the
+  parser fix. Recorded usage: 1,316 input / 300 output tokens, approximately
+  $0.002337 at the checked model rates. This is not the final Azure bill or a
+  claim that unknown attempts were free.
+- Restored and independently verified both original backend URLs. The attached
+  ownership-checking watcher started cleanup at 18:16:12 UTC and verified
+  the exact group absent at **18:20:36 UTC**, within the three-hour allowance.
+- Deleted Foundry account records retained 40 quota units. Verified their exact
+  group and session/purpose tags, then purged only those two synthetic records
+  under the approved cleanup scope. Quota returned from 90 to the original 50.
+  No active lab resources remain. APIM's recovery record is scheduled for
+  October 17, 2026, 18:16:26 UTC purge; the workspace retains normal 14-day
+  recovery state. Neither was restored or claimed to be permanently purged.
+- Added sanitized real-run evidence at
+  `evidence/samples/task001-feasibility.json`. Private targets, credentials,
+  cookies, raw response objects, and raw debugger transcripts are not committed.
+- Task `001` gates are resolved; mark it `done` with PR #3 already present.
+  Later tasks `002`-`008` remain pending and unimplemented. PR #3 is safe to
+  review/merge as the completed design; leave merging to the user.
+- Local and publication checks follow below; the full .NET/azd delivery is not
+  present and its clean-environment validations were not claimed.
+- Final policy cleanup removes the speculative context-ID classification
+  alternative; the member label now uses only the effective-host branch that
+  supplied the verified live evidence. No additional deployment followed
+  teardown; this simplification receives local XML/build review, not a new
+  live-policy claim.
+
+### 2026-10-15 - Final feasibility publication checks
+
+- `az bicep build --file .\experiments\001-affinity\main.bicep --outfile
+  .\artifacts\001-template-final.json` passed without build/lint findings.
+  XML parse and verified-host-only member-classification review passed.
+- `node --check` passed for the probe and workspace collector.
+  `node --test .\experiments\001-affinity\probe.test.mjs` passed all six focused
+  cases, including failed-attempt budget accounting, session isolation,
+  changed/missing evidence, duplicate cookies, transport cookie preservation,
+  and non-JSON error handling. PowerShell cleanup-script parsing passed.
+- Document assertions passed for 22 relative links, fences, 28 sequential
+  source IDs, eight gates, task `001` done / `002`-`008` pending, sanitized
+  evidence counters, and ignored private artifacts versus versioned samples.
+- Added `.mjs` to the existing LF Git attributes so the experiment follows
+  the repository's Windows-independent text conventions. Removed the helper's
+  generated template from the experiment directory; build outputs stay ignored.
+- The README diagram remains conceptual and unchanged; no GitHub-rendered
+  Mermaid preview or complete .NET/azd/CLI walkthrough was performed. Those
+  later deliverables remain pending, not proxy-validated by the experiment.
+- Publish these results on the existing `chore/001-platform-design` / PR #3;
+  preserve its template, document the failed iterations and soft-delete
+  recovery records, and leave it open/unmerged for the user.
 
 ## Update protocol
 
