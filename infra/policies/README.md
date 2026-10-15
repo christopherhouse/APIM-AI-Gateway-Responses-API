@@ -74,7 +74,9 @@ executed-member evidence. Task `001` observed 503 / `CircuitBreakerIsOpen`
 without forwarding for the original cookie, while fresh sessions reached the
 healthy member inside the open window. This is not a promise of indefinite
 healthy-only routing or a global availability SLA. Controlled fault scripts
-are task `006`, not included here.
+are implemented by task `006` in the
+[guarded fault workflow](../../src/ResponsesLab/README.md#controlled-failure-and-recovery);
+they have not been live-verified with this policy.
 
 ## Trustworthy evidence and credentials
 
@@ -88,6 +90,14 @@ After forwarding, `X-Lab-Backend-Id` is derived **only** by matching effective
 instead of a successful response with guessed evidence. No host/context/debug
 probe headers are returned. `context.Backend.Id` is not used as the member.
 The error path deletes the member header rather than implying execution.
+
+Task `006` adds `X-Lab-Error-Reason: CircuitBreakerIsOpen` only when
+`context.LastError.Reason` is exactly that native gateway error. The policy
+deletes caller/backend copies in inbound, outbound, and error paths; it never
+copies arbitrary error text or invents an executed member. The fault harness
+requires this reason plus 503 and a gateway UUID for its pinned-breaker
+assertion. A bare 503 is not sufficient proof. The header is not a full trace;
+workspace correlation of the exact deployed policy remains task `007`.
 
 APIM subscription access is independent of backend identity. Caller
 `Ocp-Apim-Subscription-Key`, `api-key`, and `Authorization` are removed before

@@ -18,8 +18,9 @@ unavailable.
 > [gateway routing and policy diagnostics](infra/policies/README.md).
 > Task `004` adds [guarded azd and Azure CLI lifecycle scripts](scripts/README.md).
 > Task `005` adds the [bounded .NET 10 conversation harness](src/ResponsesLab/README.md).
-> Tasks `002`-`005` have local checks only; none has been run as the full live lab.
-> Fault automation and end-to-end verification remain tasks `006`-`008`.
+> Task `006` adds [guarded fault and recovery automation](src/ResponsesLab/README.md#controlled-failure-and-recovery).
+> Tasks `002`-`006` have local checks only; none has been run as the full live lab.
+> End-to-end verification and the clean walkthrough remain tasks `007`-`008`.
 
 ## 🗺️ Architecture in code
 
@@ -41,8 +42,8 @@ flowchart LR
 ```
 
 *Implemented components, not a running deployment.* Bicep-labeled nodes,
-gateway policies, lifecycle scripts, and the client have code; controlled-fault
-automation and complete runtime verification remain planned.
+gateway policies, lifecycle scripts, the client, and controlled-fault automation
+have code; complete runtime verification remains planned.
 Solid arrows show requests; dotted arrows show diagnostics. The harness keeps
 routing context, Foundry owns response state, and APIM is not a
 conversation-history database. Native pinning
@@ -82,7 +83,8 @@ location does not imply West US 3-only processing.
 
 The lab now has Bicep and APIM policy XML, `azd` orchestration, an equivalent
 Azure CLI path, Log Analytics configuration, and the .NET 10 console harness.
-Controlled-fault automation and complete scenario verification remain planned.
+Task `006` implements the opt-in fault workflow; complete scenario verification
+remains planned.
 The experiment has its own guarded probe, separate from the full-lab lifecycle
 and .NET client.
 
@@ -115,7 +117,7 @@ The policy never retries a broken chain onto another backend.
 **Not live yet:** local Bicep, XML, compiled-expression, and contract checks do
 not establish Azure provisioning, full-lab routing, or diagnostic ingestion.
 Those assertions remain in task `007`. No new Azure operations were performed
-for tasks `002`-`005`; running the lifecycle scripts or inference still requires separate
+for tasks `002`-`006`; running the lifecycle scripts or inference still requires separate
 target/action authorization.
 
 ## 🚦 Guarded deployment lifecycle
@@ -131,6 +133,7 @@ what-if before deployment. Neither silently changes subscription or region.
 | `Preflight` / `Export` | `-AllowAzure`, including read-only subscription checks |
 | `Provision` | `-AllowAzure -AllowDeploy`; new or provably owned dedicated group only |
 | `Run` | `-AllowAzure -AllowCredentialRead`, plus client `--allow-requests`; key in process environment only |
+| Failure `Run` | Additionally `-AllowFaults -ConfirmResourceGroup <exact-name>` and the client's exact failure opt-ins; owned backend URL-only conditional updates |
 | `Down` | `-AllowAzure -AllowDelete -ConfirmResourceGroup <exact-name>`; inventory-checked group deletion, no permanent purge |
 
 Use **PowerShell 7**, Azure CLI 2.83.0+ with Bicep, and azd 1.36.0+ for the
@@ -140,7 +143,7 @@ client handoff, reruns, failure handling, costs, and scoped teardown.
 Use its wrapper rather than bare `azd` commands.
 
 **Offline-tested, not a live walkthrough:** no Azure operations were performed
-for tasks `004`/`005`. `Run` hands configuration/credentials to the published
+for tasks `004`-`006`. `Run` hands configuration/credentials to the published
 .NET client. Clean-environment provisioning, real key handoff, reruns,
 diagnostic ingestion, and deletion/recovery behavior remain task `007` gates.
 
@@ -168,6 +171,36 @@ documents publishing, the exact guarded run command, configuration bounds,
 evidence fields, privacy, and exit codes. No live response sample or
 workspace-ingestion claim is made by these offline checks.
 
+## 🛠️ Controlled failure and recovery
+
+Task `006` adds a separately authorized `failure` scenario. It first observes
+both healthy backends, then changes **only one owned backend's URL path on its
+existing Foundry host**. This is an endpoint-misconfiguration simulation, not a
+physical service outage, model deletion, or synthetic policy error.
+
+```mermaid
+flowchart LR
+    Setup["Observe both members<br/>Keep original chain"] --> Fault["Conditional URL-path fault"]
+    Fault --> Detect["Observe real backend 404"]
+    Detect --> Prove["Within conservative 30-second window<br/>3 fresh healthy sessions + pinned breaker 503"]
+    Prove --> Restore["Finally: conditional URL restoration"]
+    Fault -.-> Restore
+    Detect -.-> Restore
+    Restore --> Recover["After breaker pause<br/>Recover original ID/cookie chain"]
+```
+
+*Implemented workflow; live proof remains task `007`.* Every HTTP attempt has
+phase/timing/correlation evidence. The gateway exposes a fixed
+`CircuitBreakerIsOpen` reason only for that actual policy error, without
+inventing an executed backend. A missed window or unrelated error fails.
+Restoration gets its own bounded, uncancelled attempt; concurrent changes or
+failed verification retain a non-secret recovery journal and fail visibly.
+
+The [fault guide](src/ResponsesLab/README.md#controlled-failure-and-recovery)
+documents exact opt-ins, ownership/ETag checks, budgets, recovery, hard-stop
+limitations, and manual reconciliation. **No live faults were run for this
+implementation.**
+
 ## 📚 Follow the work
 
 | Document | Purpose |
@@ -177,7 +210,7 @@ workspace-ingestion claim is made by these offline checks.
 | [Infrastructure reference](infra/README.md) | Native parameters, pinned modules, diagnostics inventory, outputs, and offline checks |
 | [Gateway contract](infra/policies/README.md) | Request modes, cookies, errors, identity, safe traces, and runtime verification gates |
 | [Deployment lifecycle](scripts/README.md) | azd/CLI commands, prerequisites, explicit opt-ins, local state, credential handoff, and teardown |
-| [Conversation harness](src/ResponsesLab/README.md) | .NET build/test/publish, bounded runs, isolated chains, turn evidence, and failure accounting |
+| [Conversation harness](src/ResponsesLab/README.md) | .NET build/test/publish, healthy and guarded fault scenarios, timing/evidence, restoration, and failure accounting |
 | [Task backlog](docs/TASKS.md) | Ordered work and acceptance criteria |
 | [Progress tracker](docs/PROGRESS.md) | Authorization, execution history, and PR state |
 | [Contributor instructions](.github/copilot-instructions.md) | Branch workflow, checks, and README standards |
@@ -209,5 +242,5 @@ group within the three-hour bound. Both deleted Foundry accounts were purged
 and model quota returned to baseline. Azure retains normal APIM/workspace
 soft-delete recovery records; they are not a running gateway or workspace.
 The under-$5 target was an estimate, not a billing cap; the final Azure bill
-is not yet available. Tasks `002`-`005` have separate code-only authorization; later
+is not yet available. Tasks `002`-`006` have separate code-only authorization; later
 deployments still require explicit authorization.

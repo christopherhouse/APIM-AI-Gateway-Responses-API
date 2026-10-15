@@ -1,9 +1,10 @@
-# Conversation harness - task 005
+# Conversation harness - tasks 005 and 006
 
 **Implemented and offline-tested, not live-verified.** This .NET 10 console
 application runs a small developer/architecture-expert script through the
-deployed gateway. It is not an agent framework, tool-calling loop, or fault
-injector. No real inference or credentials were used for task `005`.
+deployed gateway. It is not an agent framework or tool-calling loop. Task `006`
+adds the separately guarded endpoint-fault scenario below. No real inference,
+credentials, or Azure changes were used for tasks `005`/`006`.
 
 ## Build and check without Azure
 
@@ -27,6 +28,9 @@ incomplete response accounting, body limits, request/run deadlines, secret
 redaction, and separate distributions. There are no socket calls in tests.
 Publishing creates an ignored Windows apphost requiring the .NET 10 runtime;
 it does not provision or call Azure.
+Task `006` adds in-memory scenario/management tests for expected versus unrelated
+errors, conservative breaker timing, conditional URL-only writes, ambiguous
+write outcomes, concurrent changes, cancellation, restoration, and recovery.
 
 ## Authorized inference through the lifecycle wrapper
 
@@ -56,7 +60,7 @@ For a separately approved single scenario, pass
 as `-ClientArguments`. Invoke the wrapper directly with `&` in PowerShell 7;
 do not pass an argument array through a nested `pwsh -File` invocation.
 
-These are two scenarios, not two complete back-to-back runs:
+The default `both` selects these two healthy scenarios, not the fault workflow:
 
 | Scenario | Request behavior and assertion |
 | --- | --- |
@@ -90,7 +94,8 @@ Set optional controls in the local process **before** invoking the wrapper:
 | `LAB_RUN_TIMEOUT_SECONDS` | 600 | 30-1800, includes request spacing and all scenarios |
 | `LAB_REQUEST_INTERVAL_SECONDS` | 10 | 10-30 after each completed attempt before the next turn |
 | `LAB_MAX_RETRIES` | 0 | 0 only; no application retries |
-| `LAB_ENABLE_FAULTS` | absent | Absent or `false`; task `006` is not implemented |
+| `LAB_ENABLE_FAULTS` | absent | Absent or `false` for healthy runs; wrapper supplies `true` only with explicit failure opt-ins |
+| `LAB_FAILURE_PROBE_INTERVAL_SECONDS` | 2 | Exactly 2; used only for bounded fault-window checks |
 
 Empty, malformed, and out-of-range overrides fail explicitly instead of being
 clamped or defaulted. Concurrency is one. Defaults plan **24 requests**:
@@ -117,7 +122,8 @@ Each processed turn emits one JSON line with:
 | `clientRequestId`, `gatewayRequestId` | Separate caller UUID and actual `X-Lab-Request-Id` workspace-correlation UUID |
 | `backendId` | Only allow-listed gateway `backend-a`/`backend-b`, never model-authored claims or pool identity |
 | `affinityFingerprint` | First 12 SHA-256 hex characters of the opaque cookie, never its value |
-| `httpStatus`, `errorCode`, `outcome`, `sent` | Actual response status, safe error code, explicit result, and whether HTTP was attempted |
+| `httpStatus`, `errorCode`, `gatewayErrorReason`, `outcome`, `sent` | Actual status, safe error code, fixed gateway breaker reason when present, explicit result, and whether HTTP was attempted |
+| `startedAt`, `finishedAt`, `retryAfterSeconds` | Client-observed timing and optional server pause; not invented server-side breaker timestamps |
 
 Success requires completed assistant text, a valid response ID, one gateway
 request UUID, a concrete member, unchanged member for an existing stateful
@@ -150,10 +156,114 @@ chain failure, within the same overall deadline.
 | 1 | Request/contract/affinity/distribution failure, incomplete work, or cancellation/deadline |
 | 2 | Invalid invocation or configuration, before HTTP |
 
-Controlled faults are not expected failures in this version; the summary
-explicitly reports zero expected-failure scenarios. A 503 during a healthy run
-is a failure. Task `006` will add its separately authorized failure procedure,
-not reinterpret arbitrary errors as passes.
+Healthy runs report zero expected-failure scenarios. A 503 during a healthy run
+is still a failure. Only the separate controlled-failure workflow below can
+classify its specific observed 404 and gateway breaker rejection as expected.
+
+## Controlled failure and recovery
+
+**This changes a live backend and sends real inference. Code-only authorization
+does not permit running it.** Obtain separate approval for the exact existing
+lab, inference, fault, and restoration. Use the same published client and
+PowerShell 7 wrapper/target variables as above:
+
+```powershell
+$client = (Resolve-Path .\artifacts\publish\ResponsesLab\ResponsesLab.exe).Path
+& .\scripts\Invoke-Lab.ps1 -Action Run -EnvironmentName $environment -SubscriptionId $subscription -ResourceGroupName $group -AllowAzure -AllowCredentialRead -AllowFaults -ConfirmResourceGroup $group -ClientPath $client -ClientArguments @('--allow-requests', '--scenario', 'failure', '--allow-faults', '--confirm-resource-group', $group)
+```
+
+The argument order is intentional. Missing either fault opt-in, a mismatched
+confirmation, or ordinary healthy arguments with `-AllowFaults` fails before
+Azure calls. The wrapper holds the existing environment lock, checks permissions
+to read/write both exact backend entities, and temporarily supplies
+`LAB_ENABLE_FAULTS=true` and the ignored environment's `fault-recovery.json`
+path. It restores prior configuration/credentials afterward.
+
+The .NET controller independently validates:
+
+- The explicit active Azure CLI subscription; exact group/APIM/Foundry IDs,
+  West US 3 location, environment/owner/purpose tags, Developer SKU/one unit,
+  and the actual gateway/Foundry OpenAI endpoint properties.
+- Exactly `backend-a` and `backend-b`, their unchanged HTTPS hosts/paths, TLS
+  validation, absent backend credentials/proxy, verified breaker parameters,
+  and the native two-member equal-weight affinity pool.
+- Original backend/pool configurations and concrete ETags. Recheck versions
+  before injection; never use wildcard `If-Match`, unconditional PUT, a custom
+  fault host, policy-generated 404, or model deletion.
+
+Management uses the existing Azure CLI sign-in, with short-lived ARM tokens
+captured in process memory only. CLI children do not inherit the gateway key;
+tokens and raw management error bodies are never logged or persisted.
+Management HTTP disables redirects/cookies, caps bodies at 1 MiB, and has a
+60-second request deadline; each CLI authentication command is bounded to
+30 seconds. The pinned backend API remains `2025-03-01-preview`.
+
+### What a passing fault run observes
+
+| Phase | Required observation |
+| --- | --- |
+| Healthy setup | Observe both members within `LAB_STATEFUL_SESSION_COUNT` attempts, at baseline spacing; retain the first session's original member, response ID, and cookie |
+| Apply | Write a non-secret recovery journal before a URL-only conditional PATCH to `/task006-intentionally-missing/openai/v1` on that same host |
+| Detect | Up to eight 15-second-spaced observations; successful turns may advance normally while configuration propagates, but require a real forwarded 404 with the original member and valid gateway UUID |
+| Fresh sessions | Three consecutive new successful stateful sessions on the other member, two seconds apart |
+| Original pin | The same cookie/last successful ID receives 503 with `X-Lab-Error-Reason: CircuitBreakerIsOpen`, a gateway UUID, and no executed-member header; no ID/cookie advancement |
+| Restore | Attempt in `finally`, even after cancellation/scenario error; conditional URL-only restoration, unchanged configuration/version checks, and a confirming GET |
+| Recover | After the nominal 30-second pause or a longer observed `Retry-After` up to 120 seconds, observe success on the original member using that exact preserved chain; at most eight observations, 15 seconds apart |
+
+The three fresh calls **and** pinned rejection must finish within a conservative
+30-second window anchored to the triggering 404 request's **start**, not a new
+window starting when its body finishes. Actual latency/propagation can make this
+fail. The code does not assert instant convergence or keep trying new sessions
+until a convenient sample passes. A longer `Retry-After`, unexpected status,
+missing evidence, cookie expiry, backend switch, or exhausted budget fails.
+
+These are named, bounded observations, not application transport retries or
+history replay. Only this explicit probe path can continue a chain after the
+validated controlled 404/breaker 503; ordinary healthy chains remain terminal
+on failure. No arbitrary 401/403/429/500 or unproven 503 becomes an expected pass.
+
+Each attempt emits JSON containing its phase, start/observation times, and the
+same safe turn evidence described above. Final phase and session tables retain
+HTTP errors, members, counts, separate scenario/restoration errors, and observed
+apply/detect/reject/restore/recovery timestamps. Exit `0` requires both
+expected-failure assertions, all three healthy fresh sessions, verified
+restoration, and original-chain recovery. Otherwise exit `1`.
+
+### Fault budgets and interrupted restoration
+
+The failure scenario is separate from `both`; it does not run the healthy
+workloads first. It uses session-count, token/reasoning, request/run deadline,
+and baseline-spacing controls above; turns-per-session and stateless-count
+controls do not size this workflow. Defaults allow at most **24** HTTP attempts,
+or **28** at the maximum setup-session count. At 4,096 output tokens each,
+the maximum request budget is **114,688 output tokens**, not a monetary cap.
+Early success or failure uses fewer attempts.
+
+The whole-run deadline includes the waits. Restoration gets an independent
+**180-second** deadline so Ctrl+C/overall cancellation does not skip cleanup.
+Recovery does not extend the overall deadline. Restoration failure is reported
+separately and cannot be hidden by a successful scenario assertion.
+
+A hard process kill, machine loss, lost management access, or concurrent edit
+can prevent restoration. Before the attempted mutation, the journal is flushed
+to disk with only the backend ID, original/fault URLs, original ETag, owner,
+original-properties hash, and timestamp. Full backend configuration, credentials,
+cookies, and tokens stay out of this file. A verified restore removes it;
+an unresolved journal blocks another failure run.
+An unchanged GET after an ambiguous/lost apply response does not prove that a
+write cannot still complete: the journal is retained and cleanup is reported
+unverified. Only a definite conditional rejection or an observed fault followed
+by verified restoration resolves it automatically. Unexpected asynchronous
+management responses are not treated as completed mutations.
+
+If it remains, **do not delete it merely to rerun or force an unconditional
+overwrite**. Stop other writers; obtain authorization for the exact recorded
+target; recheck active subscription, ownership, current backend configuration,
+and its current ETag. Reconcile any concurrent changes manually. Restore only
+the approved original URL with that concrete current `If-Match`, then GET and
+verify the intended complete configuration before archiving/removing the
+journal. The recorded hash aids review; it is not automatic write authorization.
+If those checks cannot be made safely, leave the journal and report the blocker.
 
 ## What this does not prove
 
@@ -161,12 +271,14 @@ The offline checks and console pass/fail do not establish live provisioning,
 native pool behavior, actual model memory/answer quality, APIM policy runtime,
 or workspace ingestion. The gateway request UUID is a correlation identifier,
 not a full debug trace or proof of a workspace row. Task `007` must run this
-exact client against the deployed gateway and correlate actual policy traces,
-after the controlled-fault work in task `006`.
+exact client and fault workflow against the deployed gateway and correlate
+actual policy traces. Offline fault tests are not a new live experiment.
 
 ## Official references (inspected 2026-10-15)
 
 - [Azure Responses API and chaining](https://learn.microsoft.com/azure/foundry/openai/how-to/responses)
 - [Responses create contract, instructions, and output-token bound](https://developers.openai.com/api/reference/resources/responses/methods/create)
 - [.NET CookieContainer behavior](https://learn.microsoft.com/dotnet/api/system.net.cookiecontainer?view=net-10.0)
+- [Conditional backend update](https://learn.microsoft.com/rest/api/apimanagement/backend/update)
+- [Pinned preview REST specification](https://github.com/Azure/azure-rest-api-specs/blob/main/specification/apimanagement/resource-manager/Microsoft.ApiManagement/ApiManagement/preview/2025-03-01-preview/openapi.json)
 - [Gateway contract and runtime limits](../../infra/policies/README.md)

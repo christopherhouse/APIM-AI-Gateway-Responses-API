@@ -20,9 +20,19 @@ internal sealed class ResponsesClient(HttpClient http, LabOptions options)
         Timeout = Timeout.InfiniteTimeSpan
     };
 
-    internal async Task<TurnEvidence> SendAsync(Conversation session, string prompt, CancellationToken cancellationToken)
+    internal Task<TurnEvidence> SendAsync(Conversation session, string prompt, CancellationToken cancellationToken) =>
+        SendCoreAsync(session, prompt, cancellationToken, false);
+
+    internal Task<TurnEvidence> SendFaultProbeAsync(Conversation session, string prompt, CancellationToken cancellationToken) =>
+        SendCoreAsync(session, prompt, cancellationToken, true);
+
+    private async Task<TurnEvidence> SendCoreAsync(Conversation session, string prompt, CancellationToken cancellationToken, bool faultProbe)
     {
-        if (session.Failed || session.Turns.Count >= session.PlannedTurns)
+        if (faultProbe && session.Scenario != "stateful")
+            throw new InvalidOperationException("Controlled fault probes require a stateful session.");
+        if ((session.Failed && (!faultProbe || session.Turns.Any(turn =>
+                turn.Outcome != TurnOutcome.Success && !turn.IsControlledFault(session.OriginalBackend)))) ||
+            session.Turns.Count >= session.PlannedTurns)
             throw new InvalidOperationException("Cannot resume a failed or completed conversation.");
 
         var evidence = new TurnEvidence(session.Scenario, session.Id, session.Turns.Count + 1,
@@ -44,6 +54,7 @@ internal sealed class ResponsesClient(HttpClient http, LabOptions options)
             var result = evidence with
             {
                 Outcome = outcome,
+                FinishedAt = DateTimeOffset.UtcNow,
                 OutputText = Redact(evidence.OutputText),
                 ErrorCode = Redact(evidence.ErrorCode)
             };
@@ -90,11 +101,16 @@ internal sealed class ResponsesClient(HttpClient http, LabOptions options)
             using var response = await http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, timeout.Token);
             var backend = SingleHeader(response, "X-Lab-Backend-Id");
             var requestId = SingleHeader(response, "X-Lab-Request-Id");
+            var retryAfter = response.Headers.RetryAfter;
             evidence = evidence with
             {
                 HttpStatus = (int)response.StatusCode,
                 BackendId = backend is "backend-a" or "backend-b" ? backend : null,
-                GatewayRequestId = Guid.TryParseExact(requestId, "D", out _) ? requestId : null
+                GatewayRequestId = Guid.TryParseExact(requestId, "D", out _) ? requestId : null,
+                GatewayErrorReason = SingleHeader(response, "X-Lab-Error-Reason") == "CircuitBreakerIsOpen"
+                    ? "CircuitBreakerIsOpen" : null,
+                RetryAfterSeconds = retryAfter?.Delta?.TotalSeconds ??
+                    (retryAfter?.Date is { } date ? Math.Max(0, (date - DateTimeOffset.UtcNow).TotalSeconds) : null)
             };
             var selected = response.Headers.TryGetValues("Set-Cookie", out var setCookies)
                 ? setCookies.Where(value => value.StartsWith(options.CookieName + "=", StringComparison.Ordinal)).ToArray()
@@ -114,7 +130,7 @@ internal sealed class ResponsesClient(HttpClient http, LabOptions options)
                 evidence = evidence with { ErrorCode = ErrorCode(bytes) };
                 return Finish(TurnOutcome.HttpError);
             }
-            if (evidence.BackendId is null || evidence.GatewayRequestId is null)
+            if (evidence.BackendId is null || evidence.GatewayRequestId is null || evidence.GatewayErrorReason is not null)
                 return Finish(TurnOutcome.MissingEvidence);
             if (stateful && session.OriginalBackend is not null && backend != session.OriginalBackend)
                 return Finish(TurnOutcome.AffinityViolation);
@@ -236,7 +252,7 @@ internal sealed class ResponsesClient(HttpClient http, LabOptions options)
         return null;
     }
 
-    private static async Task<byte[]?> ReadBodyAsync(HttpResponseMessage response, CancellationToken token)
+    internal static async Task<byte[]?> ReadBodyAsync(HttpResponseMessage response, CancellationToken token)
     {
         if (response.Content.Headers.ContentLength > MaxResponseBytes)
             return null;

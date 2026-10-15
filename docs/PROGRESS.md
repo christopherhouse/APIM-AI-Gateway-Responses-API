@@ -5,21 +5,21 @@
 | Field | Value |
 | --- | --- |
 | Updated | 2026-10-15 |
-| Phase | Task `005` harness complete in open PR #7; no live inference authorized |
-| Authorization | Task `005` code, offline checks, documentation, and PR approved on 2026-10-15; no new Azure operations |
+| Phase | Task `006` code/offline validation complete in open PR #8; no live faults authorized |
+| Authorization | Task `006` code, offline checks, documentation, and PR approved on 2026-10-15; no new Azure operations |
 | Planning branch | `chore/lab-planning` |
-| Current implementation task | `005` - done on `feature/005-conversation-harness` |
-| Next task | User review/merge of #7, then authorization for `006`; tasks `006`-`008` pending |
+| Current implementation task | `006` - done on `feature/006-controlled-failure-recovery`, PR #8 open |
+| Next task | User review/merge of #8; task `007` requires separate live-operation authorization; `008` pending |
 | Azure deployment | Temporary group deleted and verified absent; Foundry tombstones purged and quota restored; APIM/workspace recovery records retained normally |
-| Solution files | Task `001` experiment, task `002` Bicep, task `003` gateway, task `004` lifecycle, and task `005` .NET harness; fault automation pending |
-| Base branch | `main` at lifecycle merge `a74ebd2`; initial empty base `846a2cb` preserved |
-| Pull request | #1-#6 merged; task `005` PR #7 open for review |
+| Solution files | Task `001` experiment, task `002` Bicep, task `003` gateway, task `004` lifecycle, task `005` harness, and task `006` fault/recovery automation; full live verification pending |
+| Base branch | `main` at harness merge `dadd598`; initial empty base `846a2cb` preserved |
+| Pull request | #1-#7 merged; #8 open for task `006` |
 
 ## Known prerequisites and open decisions
 
 | Item | Owner/action | Effect |
 | --- | --- | --- |
-| Implementation authorization | Task `005` code-only work authorized on 2026-10-15 | No new deployment, faults, teardown, credential retrieval, inference, or live subscription checks; tasks `006`-`008` pending. |
+| Implementation authorization | Task `006` code-only work authorized on 2026-10-15 | No new deployment, faults, teardown, credential retrieval, inference, or live subscription checks; tasks `007`-`008` pending. |
 | Initial base branch | Resolved with explicit user approval on 2026-10-15 | Empty commit `846a2cb` establishes `main`; subsequent work stays on work branches. |
 | Platform feasibility | Task `001`, B1-B2 resolved in `DESIGN.md` | Native original-pin rejection, outbound member evidence, and workspace policy traces verified; no workaround required. |
 | Model and authentication | Task `001` live feasibility passed | `gpt-5.4-mini` / `2026-03-17` / `GlobalStandard` served Responses through API-scoped gateway access and resource-scoped managed identity. |
@@ -725,6 +725,147 @@
   verification remains task `007`; controlled-fault automation is task `006`.
   Next: user review/merge of #7, then authorization for task `006`. Do not start
   its implementation from an unmerged dependency without explicit approval.
+
+### 2026-10-15 - Task 006 started after PR #7 merge
+
+- Confirmed PR #7 merged at `dadd598`, fast-forwarded clean local `main`, and
+  created `feature/006-controlled-failure-recovery` before implementation.
+- Scope: implement the task `001` same-host backend-path fault, scoped
+  ownership/concurrency guards, known-session/fresh-session/breaker evidence,
+  guaranteed restoration attempts, recovery assertions, offline tests, docs,
+  and a task-linked PR.
+- No Azure reads, credential retrieval, inference, actual backend changes,
+  controlled faults, deployment, or teardown are authorized or performed.
+  Tasks `007`-`008` remain pending.
+- README impact: document the guarded fault workflow and failure/recovery
+  evidence while preserving the distinction between offline implementation and
+  task `007` live verification.
+
+### 2026-10-15 - Task 006 implementation and offline checks
+
+- Added `FaultOptions.cs`, `BackendFault.cs`, and `FailureRunner.cs`, plus
+  focused scenario/controller test files. Extended existing session/turn/client/
+  invocation logic without changing healthy-run failure semantics. Updated
+  the wrapper/module/lifecycle tests, narrow policy/error-header contracts,
+  README/guides, and design/plan/task/progress records: 24 scoped files.
+- Failure invocation requires wrapper/client opt-ins, exact group confirmation,
+  existing owned environment, backend read/write permissions, and independent
+  controller checks of subscription/IDs/tags/region/SKU/endpoints/TLS/auth,
+  breaker/pool contracts, and concrete configuration versions.
+- Reused bounded HTTP/JSON/cookie handling. Management uses current Azure CLI
+  authentication in process memory, with no gateway key inherited by CLI
+  children, no printed raw errors/tokens, and no automatic subscription change.
+  The official pinned preview REST specification confirms backend PATCH and
+  concrete `If-Match`; no live provider call was made to validate them.
+- The controller journals non-secret recovery metadata before an attempted
+  URL-only conditional PATCH to the reserved missing path on the same host.
+  Rechecks both members/pool before injection; `finally` attempts a URL-only
+  restore under an independent 180-second deadline and verifies full properties.
+  Concurrent edits and unverified restoration retain the journal and fail.
+  An ambiguous write still triggers restoration/reconciliation; hard kill and
+  lost permission remain explicit manual-recovery limitations.
+- The runner establishes both healthy members before injection, waits up to
+  eight propagation observations for the real original-member 404, then requires
+  three fresh healthy-member sessions and original-pin breaker 503 inside the
+  conservative window. That window starts with the triggering request, not its
+  delayed body completion. No history replay, transport retry, arbitrary
+  expected-error classification, or indefinite healthy-only routing claim.
+- The policy deletes spoofable error-reason headers and emits only actual
+  `CircuitBreakerIsOpen`; it still invents no executed member on gateway error.
+  Phase/session summaries retain attempts, timings, HTTP errors, members,
+  recovery, and separate scenario/restoration failures. Normal healthy runs
+  still report zero expected-failure scenarios.
+- `dotnet build .\ResponsesLab.slnx --configuration Release --no-restore
+  --nologo`: passed with zero warnings/errors.
+- `dotnet test .\ResponsesLab.slnx --configuration Release --no-build
+  --no-restore --nologo`: all 111 cases passed, none skipped. Added cases cover
+  complete chain recovery, propagation, wrong/missing evidence, unrelated
+  errors, latency consuming the window, cancellation, cleanup deadline, failed/
+  ambiguous writes, conditional-only restoration, concurrent changes, retained
+  journals, target validation, and maximum observation counts.
+- `dotnet format .\ResponsesLab.slnx --no-restore --verbosity quiet` applied
+  formatting; `dotnet format .\ResponsesLab.slnx --verify-no-changes
+  --no-restore --verbosity quiet`: passed.
+- `dotnet publish .\src\ResponsesLab\ResponsesLab.csproj --configuration Release
+  --no-build --no-restore --output .\artifacts\publish\ResponsesLab --nologo`:
+  passed; generated executable remains ignored.
+- `pwsh -NoProfile -File .\scripts\lifecycle.test.ps1`: all 30 offline cases
+  passed, including before-read fault gates and temporary fault/key handoff.
+- `az bicep build --file .\infra\main.bicep --outfile
+  .\artifacts\002-template.json --only-show-errors`: passed locally.
+  `node --test .\infra\foundation.test.mjs .\infra\gateway.test.mjs`: all 11
+  contracts passed. `pwsh -NoProfile -File .\infra\policy.test.ps1`: all 19
+  actual expressions compiled as C# 7; 42 cases and XML/auth/trace contracts
+  passed, including the narrow breaker-reason header.
+- Initial compilation caught a nullable pool access; corrected the guard and
+  direct non-null access without suppressions. Subsequent builds/tests passed.
+- README impact: implemented-versus-live status, fault flow diagram, exact
+  guarded command, credential/ownership boundaries, budgets, evidence, timeout/
+  crash limitations, and manual journal reconciliation are documented.
+- No Azure reads, real key/token retrieval, inference, backend edits, faults,
+  deployment, workspace queries, teardown, or purge were performed. Remaining:
+  final CLI guards, docs/ignore/text/staged scope/secrets checks, commit/push,
+  templated PR, and completion records after the PR exists.
+
+### 2026-10-15 - Task 006 final restoration and publication checks
+
+- Final review caught an ambiguous-write edge case: seeing the original backend
+  version immediately after an interrupted or asynchronous PATCH does not prove
+  that the write cannot complete later. Only an explicit conditional HTTP 412
+  proves rejection. Retain the recovery journal and fail restoration verification
+  for an ambiguous apply with an unchanged GET; do not claim successful cleanup.
+- Management GET/PATCH now requires the documented synchronous HTTP 200 and
+  rejects unexpected asynchronous responses. Added two focused cases for a lost
+  apply outcome and HTTP 202 with the old version still visible. Updated the
+  design and harness guide's manual-reconciliation instructions.
+- `dotnet format ResponsesLab.slnx --no-restore`: passed.
+  `dotnet build ResponsesLab.slnx -c Release --no-restore`: passed, zero
+  warnings/errors. `dotnet test ResponsesLab.slnx -c Release --no-build
+  --no-restore`: all 113 cases passed, none skipped.
+  `dotnet format ResponsesLab.slnx --verify-no-changes --no-restore`: passed.
+  `dotnet publish src\ResponsesLab\ResponsesLab.csproj -c Release --no-build
+  --no-restore -o artifacts\publish\ResponsesLab`: passed.
+- Repeated the final published executable's offline CLI guards: no arguments
+  returned exit 2; `--help` returned exit 0; failure selection without its fault
+  opt-ins returned exit 2; complete fault arguments without configuration
+  returned exit 2. Earlier, complete synthetic configuration with an existing
+  journal returned exit 1 before any Azure CLI call; a fake CLI trap confirmed
+  no authentication was attempted and the synthetic key was absent from output.
+- All 24 scoped files passed UTF-8/no-BOM/LF/final-newline/whitespace checks.
+  All 67 relative Markdown links/anchors, fence parity, ordered task states,
+  and nine generated/local/fault-journal ignore fixtures passed. Reviewed both
+  README Mermaid sources (six nodes/seven edges each), affected commands,
+  links, and offline-versus-live labels. GitHub-rendered appearance was not
+  verified; no browser-rendering success is claimed.
+- `git diff --check`: passed. Inspected the repository PR template and confirmed
+  no alternate template directory exists. Publication will preserve its four
+  headings, comments, and checklist items.
+- No live Azure operation was performed. Remaining: staged scope/secrets
+  inspection, commit/push, templated task-linked PR, then completion records
+  after that PR exists. Task `007` live verification still needs explicit
+  target/action authorization.
+- Staged exactly the 24 enumerated task files and inspected the integration
+  diff. Exact branch/file-list, generated-state exclusion, staged text, and
+  credential-shaped-content checks passed; `git diff --cached --check` passed.
+  No credentials, private environment state, compiled outputs, or raw traces
+  are staged. The PR body follows the inspected template and records exact
+  commands/results plus README impact and live-validation limits.
+
+### 2026-10-15 - Task 006 completed in PR #8
+
+- Committed all 24 scoped files as `448e4f7` and pushed
+  `feature/006-controlled-failure-recovery`.
+- Created PR #8 against `main` using every repository template heading, comment,
+  and checklist item. Included task `006` acceptance, README impact, exact
+  commands/results, and explicit offline-versus-live limitations.
+- Verified PR #8 is open, non-draft, and has the correct base/head and
+  implementation commit. No PR was merged.
+- Marked task `006` done only after the PR existed and its head was verified.
+  This follow-up records completion in PLAN/TASKS/PROGRESS on the same branch.
+- No Azure reads, credential retrieval, inference, resource changes, controlled
+  faults, workspace queries, teardown, or purge were performed. Tasks `007` and
+  `008` remain pending. Next: user review/merge of #8 and separate explicit
+  target/action authorization before task `007` live verification.
 
 ## Update protocol
 

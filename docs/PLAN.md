@@ -20,6 +20,9 @@ This does not authorize running that orchestration against Azure.
 After PR #6 merged, the user authorized task `005` harness code, offline
 validation, documentation, and PR publication only. No live Azure operations,
 including inference or credential retrieval, are authorized.
+After PR #7 merged, the user authorized task `006` controlled-failure/recovery
+code, offline checks, documentation, and PR publication only. This does not
+authorize Azure reads, real inference, or injecting/restoring a live fault.
 
 The lab demonstrates conversation-aware routing through Azure API Management
 (APIM) to two Microsoft Foundry backends. Conversations chain Responses API
@@ -81,6 +84,9 @@ both drivers share native `deploy.bicepparam` inputs and external group
 ownership. This is offline-validated code, not a deployed self-service lab.
 Task `005` adds the bounded .NET 10 client, isolated response chains, and
 per-turn/session evidence; its HTTP transport tests are offline only.
+Task `006` adds the opt-in same-host backend-path fault, bounded breaker/
+fresh-session observations, conditional restoration, and original-chain recovery.
+It too is offline-validated code, not live fault/routing evidence.
 The selected trace contract is verified native policy trace records plus
 correlated gateway logs, not full debugger transcripts.
 
@@ -202,8 +208,12 @@ Its implementation and local validation are complete in PR #5, merged at
 Its implementation and offline validation are complete in PR #6, merged at
 `a74ebd2` on 2026-10-15. Task `005` began on
 `feature/005-conversation-harness` with code-only authorization.
-Its implementation and offline validation are complete in open PR #7; the full
-lab has not been deployed or live-verified. Tasks `006`-`008` remain pending.
+Its implementation and offline validation are complete in PR #7, merged at
+`dadd598` on 2026-10-15. Task `006` began on
+`feature/006-controlled-failure-recovery` with code-only authorization.
+Its implementation and offline validation are complete in PR #8, left open
+for user review; the full lab has not been deployed or live-verified.
+Tasks `007`-`008` remain pending.
 
 ## Execution and progress
 

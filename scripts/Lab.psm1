@@ -397,16 +397,31 @@ function Remove-LabDeployment($Context, [ValidateSet('Azd', 'Cli')][string]$Driv
     Complete-LabDeletion $Context
 }
 
-function Invoke-LabClient($Context, [string]$ClientPath, [string[]]$ClientArguments) {
+function Invoke-LabClient($Context, [string]$ClientPath, [string[]]$ClientArguments, [switch]$AllowFaults) {
+    if ('--allow-faults' -in $ClientArguments -or 'failure' -in $ClientArguments) {
+        Assert-Lab $AllowFaults 'Failure client requires the separate -AllowFaults opt-in.'
+    }
+    if ($AllowFaults) {
+        Assert-Lab ($env:LAB_ALLOW_AZURE -ceq 'true' -and $env:LAB_CONFIRM_RESOURCE_GROUP -ceq $Context.Target.group) 'Failure client requires live authorization and exact group confirmation.'
+        Assert-Lab (-not (Test-Path -LiteralPath (Join-Path $Context.Directory 'fault-recovery.json'))) 'An unresolved fault-recovery.json blocks another failure run.'
+    }
     Assert-Lab (Test-Path -LiteralPath $ClientPath -PathType Leaf) 'Supply the published client executable path; see src\ResponsesLab\README.md.'
     Assert-Lab ($null -ne (Get-Command $ClientPath -CommandType Application -ErrorAction SilentlyContinue)) 'ClientPath must be an executable, not a shell script.'
     $runtime = Export-LabRuntime $Context
+    if ($AllowFaults) {
+        foreach ($member in @('A', 'B')) {
+            Assert-Lab ($runtime["LAB_BACKEND_${member}_ID"] -ceq "$($runtime.LAB_APIM_RESOURCE_ID)/backends/backend-$($member.ToLowerInvariant())") 'Fault target is not an exact allow-listed backend.'
+            Assert-LabPermission $Context $runtime["LAB_BACKEND_${member}_ID"] @('Microsoft.ApiManagement/service/backends/read', 'Microsoft.ApiManagement/service/backends/write')
+        }
+    }
     $access = Get-LabRest "$($runtime.LAB_APIM_SUBSCRIPTION_RESOURCE_ID)?api-version=2024-05-01"
     Assert-Lab ($access.properties.scope -eq "$($runtime.LAB_APIM_RESOURCE_ID)/apis/responses" -and $access.properties.state -eq 'active') 'Gateway subscription is not active and scoped to the Responses API.'
     $keys = Invoke-LabCommand az @('rest', '--method', 'post', '--url', "https://management.azure.com$($runtime.LAB_APIM_SUBSCRIPTION_RESOURCE_ID)/listSecrets?api-version=2024-05-01")
     Assert-Lab (-not [string]::IsNullOrWhiteSpace($keys.primaryKey)) 'No gateway subscription key returned.'
     $previous = @{}
     try {
+        $runtime.LAB_ENABLE_FAULTS = $AllowFaults.ToString().ToLowerInvariant()
+        $runtime.LAB_FAULT_RECOVERY_PATH = Join-Path $Context.Directory 'fault-recovery.json'
         $runtime.LAB_APIM_SUBSCRIPTION_KEY = $keys.primaryKey
         foreach ($key in $runtime.Keys) {
             $previous[$key] = [Environment]::GetEnvironmentVariable($key, 'Process')
@@ -417,6 +432,8 @@ function Invoke-LabClient($Context, [string]$ClientPath, [string[]]$ClientArgume
     } finally {
         Restore-LabProcessEnvironment $previous
         $runtime.Remove('LAB_APIM_SUBSCRIPTION_KEY')
+        $runtime.Remove('LAB_ENABLE_FAULTS')
+        $runtime.Remove('LAB_FAULT_RECOVERY_PATH')
         $keys = $null
     }
 }

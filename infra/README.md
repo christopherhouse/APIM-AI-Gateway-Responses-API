@@ -188,7 +188,8 @@ and the exact expanded policy's routing/error behavior and trace ingestion.
 Task `004` implements azd/CLI lifecycle orchestration using this entry point;
 its offline checks do not establish real provisioning or teardown.
 Task `005` adds the [offline-tested .NET harness](../src/ResponsesLab/README.md).
-Fault automation remains pending. New policy rejection/error paths also require live
+Task `006` adds guarded fault/recovery automation with offline checks only.
+New policy rejection/error paths also require live
 correlation checks; do not count the old experiment as their verification.
 
 ## Official implementation sources (inspected 2026-10-15)

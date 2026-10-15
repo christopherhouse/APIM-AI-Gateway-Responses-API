@@ -20,7 +20,7 @@ internal sealed class LabOptions
     internal TimeSpan RunTimeout { get; init; } = TimeSpan.FromSeconds(600);
     internal TimeSpan RequestInterval { get; init; } = TimeSpan.FromSeconds(10);
 
-    internal static LabOptions Load(Func<string, string?> read)
+    internal static LabOptions Load(Func<string, string?> read, bool allowFaults = false)
     {
         string Required(string name)
         {
@@ -61,8 +61,9 @@ internal sealed class LabOptions
         if (effort is not ("low" or "medium" or "high"))
             throw new ConfigurationException("LAB_REASONING_EFFORT must be low, medium, or high.");
         _ = Number("LAB_MAX_RETRIES", 0, 0, 0);
-        if (read("LAB_ENABLE_FAULTS") is { } faults && faults != "false")
-            throw new ConfigurationException("Fault execution is not implemented in task 005; LAB_ENABLE_FAULTS must be absent or false.");
+        var faults = read("LAB_ENABLE_FAULTS");
+        if (allowFaults ? faults != "true" : faults is not (null or "false"))
+            throw new ConfigurationException("LAB_ENABLE_FAULTS must be true only for an explicitly authorized failure invocation; otherwise absent or false.");
 
         return new LabOptions
         {
