@@ -1,0 +1,82 @@
+{
+  "sanitized": true,
+  "verifiedDate": "2026-10-15",
+  "scope": "Disposable task 001 feasibility; not tasks 002-008",
+  "redactions": [
+    "Private subscription, resource identifiers and hostnames omitted",
+    "Credentials, cookies, response IDs, payloads and raw debugger transcripts omitted"
+  ],
+  "configuration": {
+    "resourceRegion": "westus3",
+    "apimSku": "Developer",
+    "apimUnits": 1,
+    "foundryAccounts": 2,
+    "model": "gpt-5.4-mini",
+    "modelVersion": "2026-03-17",
+    "deploymentSku": "GlobalStandard",
+    "capacityPerAccount": 20,
+    "breakerTripSeconds": 30
+  },
+  "healthyEvidence": {
+    "independentStatefulSessions": 4,
+    "turnsPerSession": 3,
+    "observedAffinityViolations": 0,
+    "completeStatelessSample": { "requests": 8, "backend-a": 4, "backend-b": 4 },
+    "concreteMemberSignal": "Allow-listed outbound context.Request.Url.Host",
+    "contextBackendIdObserved": "probe-pool",
+    "corroboration": ["Debugger request-forwarder URLs", "Workspace BackendId and BackendUrl"]
+  },
+  "finalFailureRun": [
+    { "attempt": 52, "phase": "setup", "status": 200, "backend": "backend-a" },
+    { "attempt": 53, "phase": "setup", "status": 200, "backend": "backend-b" },
+    { "attempt": 54, "phase": "real same-host path fault", "status": 404, "backend": "backend-a" },
+    { "attempt": 55, "phase": "fresh session", "status": 200, "backend": "backend-b" },
+    { "attempt": 56, "phase": "fresh session", "status": 200, "backend": "backend-b" },
+    { "attempt": 57, "phase": "fresh session", "status": 200, "backend": "backend-b" },
+    {
+      "attempt": 58,
+      "phase": "original cookie and previous_response_id while breaker open",
+      "status": 503,
+      "requestId": "ebfdd1f4-f1e1-4b66-bce8-23e3c482d4d8",
+      "responseBodyFormat": "non-json-error",
+      "workspaceBackendId": "backend-a",
+      "workspaceBackendUrl": "",
+      "workspaceBackendResponseCode": null,
+      "policyErrorReason": "CircuitBreakerIsOpen",
+      "debugPoolSelectedMember": "backend-a",
+      "debugActualForwardingSteps": 0
+    },
+    { "attempt": 59, "phase": "original cookie and previous_response_id after restore", "status": 200, "backend": "backend-a" }
+  ],
+  "accounting": {
+    "attemptLimit": 64,
+    "attemptsIncludingFailures": 59,
+    "workspaceHttpRequests": 55,
+    "workspaceStatuses": { "200": 49, "404": 4, "503": 2 },
+    "transportFailures": 4,
+    "earlierNonJson503MetadataLostBeforeParserFix": 1,
+    "capturedResponses": 54,
+    "capturedResponsesCorrelatedWithPolicyTraceRows": 54,
+    "recordedInputTokens": 1316,
+    "recordedOutputTokens": 300,
+    "estimatedRecordedInferenceUsd": 0.002337,
+    "actualInvoicedCost": "Not yet available; unknown attempt charges are not assumed zero"
+  },
+  "limitations": [
+    "Small samples are not a balancing or convergence SLA",
+    "A persistent fault can be rediscovered after the 30-second breaker expires",
+    "Failed timing and transport iterations remain included in accounting",
+    "Final focused failure run reused separate retained healthy/stateless evidence",
+    "Full .NET harness, azd/CLI parity and all-category diagnostics remain later tasks"
+  ],
+  "cleanup": {
+    "bothBackendPathsRestored": true,
+    "ownedGroupAbsenceVerifiedUtc": "2026-10-15T18:20:36Z",
+    "bothOwnedFoundryDeletedRecordsPurged": true,
+    "quotaUsedBeforeExperiment": 50,
+    "quotaUsedAfterCleanup": 50,
+    "apimDeletedRecordScheduledPurgeUtc": "2026-10-17T18:16:26Z",
+    "workspaceSoftDeleteRecoveryDays": 14,
+    "activeLabResourcesRemaining": 0
+  }
+}

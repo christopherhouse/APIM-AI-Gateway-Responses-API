@@ -8,11 +8,13 @@ Management to two Microsoft Foundry backends. It will show why a
 are distributed, and what happens when a conversation's backend becomes
 unavailable.
 
-> **Design investigation, not a runnable lab.** Bootstrap is merged. Task `001`
-> has documentation and read-only Azure evidence, but remains **blocked** on
-> the native pinned-failure and concrete-member identity contracts.
-> There are no deployment scripts, Bicep resources, APIM policies, or .NET
-> projects yet. No Azure resources have been created by this work.
+> **Design investigation, not the self-service lab.** Bootstrap is merged.
+> Task `001` completed an explicitly authorized
+> [disposable feasibility experiment](experiments/001-affinity/README.md):
+> healthy affinity, native pinned failure, concrete-member identity, recovery,
+> and workspace policy traces were verified. The temporary group is deleted.
+> The complete Bicep,
+> `azd` workflow, and .NET harness remain tasks `002`-`008`.
 
 ## 🗺️ The planned journey
 
@@ -36,23 +38,26 @@ flowchart LR
 *Conceptual architecture only.* Solid arrows show requests; dotted arrows show
 the proposed diagnostics flow. The harness keeps routing context, Foundry owns
 response state, and APIM is not a conversation-history database. Native pinning
-during failure is a design gate, not a verified capability of this lab.
+during the tested breaker-open window was verified in the disposable experiment;
+the complete self-service workflow is still planned.
 
 ## 🔎 What we know so far
 
 | Area | Current finding |
 | --- | --- |
-| Region and gateway | West US 3, Developer SKU; documented feature support, not a deployed gateway |
-| Model candidate | **GPT-5.4 mini**, version `2026-03-17`, `GlobalStandard`; read-only catalog/quota/capacity checks passed |
-| Healthy-session routing | Native cookie affinity is documented; per-session cookie isolation is the proposed harness contract |
-| Failure semantics | Existing cookie plus tripped breaker still needs authoritative confirmation or an explicitly authorized feasibility test |
-| Backend proof | Same-region labels cannot distinguish A/B; concrete gateway-derived identity must be verified |
-| Tracing | Policy trace records have a documented workspace destination; full debugger transcripts are separate |
+| Region and gateway | West US 3, Developer SKU, one unit; disposable deployment verified and deleted |
+| Model | **GPT-5.4 mini**, version `2026-03-17`, `GlobalStandard`; both temporary backends served Responses |
+| Healthy-session routing | Four independent three-turn chains stayed pinned; eight stateless calls observed A=4/B=4 |
+| Failure semantics | Existing A cookie received **503 / `CircuitBreakerIsOpen` without forwarding**, while three fresh sessions reached B; the original chain recovered on A |
+| Backend proof | Outbound effective request host identified A/B and matched debug/workspace evidence; `context.Backend.Id` reported the pool, not the member |
+| Tracing | All 54 captured responses joined to workspace rows with actual policy `TraceRecords`; full debugger transcripts remained separate |
 
 Details, exact versions, sources, verification date, budgets, and limitations
 are in the [platform evidence and design contract](docs/DESIGN.md). These
-findings do not establish live inference, runtime affinity, or diagnostic
-ingestion.
+findings include live feasibility evidence, not completion of the full lab.
+See the [sanitized run evidence](evidence/samples/task001-feasibility.json).
+The 30-second breaker can expire while a fault persists; healthy-only new
+routing is demonstrated within its open window, not promised indefinitely.
 
 Both Foundry resources are planned for **West US 3**. The selected
 `GlobalStandard` model deployment can process inference globally; resource
@@ -69,14 +74,15 @@ location does not imply West US 3-only processing.
 
 The implementation will use Bicep and APIM policy XML, a .NET 10 console
 harness, `azd` orchestration, an equivalent Azure CLI path, and Log Analytics.
-No run or deployment commands are published yet because they do not exist.
+The experiment has its own guarded probe, not the planned full-lab deployment
+workflow or .NET harness.
 
 ## 📚 Follow the work
 
 | Document | Purpose |
 | --- | --- |
 | [Lab plan](docs/PLAN.md) | Agreed requirements and mandatory design gates |
-| [Design and evidence](docs/DESIGN.md) | Verified findings, proposed contracts, and blockers B1-B2 |
+| [Design and evidence](docs/DESIGN.md) | Verified findings, selected contracts, and resolved gates B1-B2 |
 | [Task backlog](docs/TASKS.md) | Ordered work and acceptance criteria |
 | [Progress tracker](docs/PROGRESS.md) | Authorization, execution history, and PR state |
 | [Contributor instructions](.github/copilot-instructions.md) | Branch workflow, checks, and README standards |
@@ -98,8 +104,12 @@ Never commit credentials or private environment settings. `.env.example` and
 ignored `artifacts/` or `evidence/`; intentionally sanitized examples may be
 versioned under `evidence/samples/`. Azure/azd local state is not versioned.
 
-Current task `001` authorization covers design and read-only checks only.
-Writing code does not authorize Azure deployment, resource changes, controlled
-faults, or teardown. Obtain explicit authorization for those operations.
-Developer APIM, model use, and log ingestion can incur charges; no price ceiling
-or automatic resource cleanup is promised.
+Current task `001` has explicit authorization for the temporary billable
+deployment, reversible fault, evidence, and cleanup in its dedicated group.
+This does not authorize tasks `002`-`008` or operations against other resources.
+The experiment used 59 of its 64-request allowance and deleted the dedicated
+group within the three-hour bound. Both deleted Foundry accounts were purged
+and model quota returned to baseline. Azure retains normal APIM/workspace
+soft-delete recovery records; they are not a running gateway or workspace.
+The under-$5 target was an estimate, not a billing cap; the final Azure bill
+is not yet available. Later deployments still require explicit authorization.
