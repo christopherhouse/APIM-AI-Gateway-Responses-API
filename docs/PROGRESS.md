@@ -13,7 +13,7 @@
 | Azure deployment | Not attempted |
 | Solution files | Not created |
 | Base branch | `main` at empty initialization commit `846a2cb`, pushed to origin |
-| Pull request | Planning PR pending creation on `chore/lab-planning` |
+| Pull request | #1 - planning documents, open and unmerged on `chore/lab-planning` |
 
 ## Known prerequisites and open decisions
 
@@ -49,6 +49,10 @@
 - Kept the working branch on `chore/lab-planning`; no solution files were added
   to `main`, and no Azure resources were created.
 - Updated the plan and backlog to mark the initial base prerequisite resolved.
+- Committed and pushed the planning documents on `chore/lab-planning`, then
+  opened PR #1 against `main`. The PR is intentionally left unmerged.
+- Verified that remote `main` matches the empty initialization commit and is
+  the repository default branch; checked document links and whitespace.
 - Remaining task `000` bootstrap deliverables are still pending authorization.
 
 ## Update protocol
