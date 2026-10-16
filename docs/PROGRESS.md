@@ -5,11 +5,11 @@
 | Field | Value |
 | --- | --- |
 | Updated | 2026-10-16 |
-| Phase | Task `008` complete, including README/code-citation follow-up in open, unmerged PR #10 |
-| Authorization | User requested integrated README explanation with code excerpts/source-line citations on 2026-10-16; documentation-only, no new Azure operations |
+| Phase | Task `008` complete; task `009` SDK comparison documented as pending in open, unmerged PR #10 |
+| Authorization | User requested the proposed SDK/Agent Framework enhancement be written up on this branch before merging on 2026-10-16; planning only, no SDK implementation or Azure operations |
 | Planning branch | `chore/lab-planning` |
-| Current implementation task | `008` - done, including documentation follow-up on `feature/008-self-service-affinity-toggle` |
-| Next task | User review/merge of #10; no further implementation task is queued |
+| Current implementation task | `008` - done, including planning writeup on `feature/008-self-service-affinity-toggle`; no SDK implementation started |
+| Next task | User review/merge of #10, then separate authorization for pending task `009` |
 | Azure deployment | `rg-responses-walk008` verified absent; local state retired, runtime removed, recovery records retained without purge |
 | Solution files | Task `007` baseline plus default-on affinity toggle; task `008` off/on proof, 42 trace joins and unchanged 13-value rerun verified |
 | Base branch | `main` at task `007` merge `e66815a`; initial empty base `846a2cb` preserved |
@@ -19,10 +19,11 @@
 
 | Item | Owner/action | Effect |
 | --- | --- | --- |
-| Implementation authorization | Task `008` README follow-up authorized on 2026-10-16 | Explain native affinity plus harness cookie/response-ID handling with code excerpts and source-line citations; continue on the existing unmerged PR #10 branch explicitly, not as a merged dependency. |
+| Implementation authorization | Planning-only SDK comparison follow-up authorized on 2026-10-16 | Continue on existing PR #10 branch explicitly; SDK implementation, package changes and new Azure operations are not authorized. |
 | Initial base branch | Resolved with explicit user approval on 2026-10-15 | Empty commit `846a2cb` establishes `main`; subsequent work stays on work branches. |
 | Platform feasibility | Task `001`, B1-B2 resolved in `DESIGN.md` | Native original-pin rejection, outbound member evidence, and workspace policy traces verified; no workaround required. |
 | Model and authentication | Task `001` live feasibility passed | `gpt-5.4-mini` / `2026-03-17` / `GlobalStandard` served Responses through API-scoped gateway access and resource-scoped managed identity. |
+| SDK/framework compatibility | Task `009` pending, gates in `PLAN.md` | Choose concrete packages/versions, verify project-versus-model endpoint/auth compatibility and measure transport cookie isolation before adapter implementation. No out-of-the-box affinity claim is made. |
 | Live Azure operations | Prior authorized task `008` lifecycle complete; documentation follow-up authorizes none | Owned group remains verified deleted; no new reads, inference, mutations, teardown, or purge. |
 
 ## Execution log
@@ -1526,6 +1527,62 @@
   open on the correct branch. Task `008` is done; publish this follow-up to
   that PR, preserving its template and original implementation/live evidence.
   No PR merge, new Azure operation or later task is authorized or planned.
+
+### 2026-10-16 - SDK comparison planning follow-up started
+
+- User requested that the proposed Agent Framework and Foundry SDK harness
+  enhancement be written up on this branch before merging. This authorizes
+  planning/documentation only, not implementation, dependency installation,
+  Azure checks, inference, deployment, faults or teardown.
+- Confirmed clean worktree and local/remote/PR #10 head `e61dd12`; PR #10
+  remains open and unmerged against `main` at `e66815a`. Continue the task
+  `008` documentation follow-up on its existing
+  `feature/008-self-service-affinity-toggle` dependency branch explicitly.
+- Marked the current documentation follow-up `in_progress` before edits.
+  Preserve task `008` implementation, verified live outcomes and cleanup.
+  Next: record a pending next task with SDK/endpoint compatibility gates,
+  default-versus-configured cookie tests, session isolation, shared evidence
+  and separately authorized live proof; keep the README's status accurate.
+
+### 2026-10-16 - SDK comparison scope and acceptance recorded
+
+- Added pending task `009` in TASKS and the detailed comparison plan in PLAN:
+  one harness with the existing raw HTTP control, a concrete Foundry SDK mode
+  and an Agent Framework mode. Record the actual provider/SDK stack rather
+  than presenting abstraction layers as three independent transports.
+- Defined gates for package/version identity, project-versus-model endpoint
+  and authentication compatibility, service-managed response-ID chaining,
+  transport customization, cookie isolation and retries. No silent APIM
+  bypass, topology expansion, SDK substitution or local-history replay.
+- Separate measured SDK-default cookie behavior from supported session-scoped
+  configuration, including disclosure of any manual pipeline policy. Require
+  actual outbound-attempt budgets and the same interleaved off/on,
+  stateful/stateless and workspace-trace proof; extra profiles/calls are not
+  covered by the old task `008` budget.
+- Added a clearly planned/not-implemented README entry with links to the
+  design gates and acceptance criteria. Current raw HTTP commands, excerpts,
+  13 source-line citations and all earlier live evidence are unchanged.
+- Reviewed four official Microsoft references on 2026-10-16 for SDK endpoint
+  boundaries, framework sessions/storage and APIM cookie handling. They do
+  not establish that any SDK integration has been implemented or verified.
+- `python .\artifacts\009-plan-checks.py`: passed ordered task IDs `000`-`009`,
+  `000`-`008` done / `009` pending, planning-only status and proposed selectors,
+  unchanged README outside the new proposal, append-only progress history,
+  and the exact four-file documentation scope.
+- `python .\artifacts\008-readme-citations.py`: passed all 13 unchanged
+  immutable source-line citations and five excerpts, scoped files, existing
+  completed task states and repository PR-template structure.
+  `python .\artifacts\008-local-checks.py`: passed 28 branch-scoped UTF-8/LF
+  files, 105 relative links/anchors, fences, task states, privacy/ignore
+  fixtures and whitespace. `git diff --check`: passed.
+- Only README, PLAN, TASKS and this tracker changed. No package was added,
+  no SDK/framework code was implemented, and no build or Azure operation was
+  run for this planning-only update. Existing Mermaid diagrams are unchanged;
+  GitHub-rendered visual appearance was not verified.
+- Planning acceptance is complete in existing PR #10; task `009` remains
+  pending. Publish the writeup on this same branch and update the PR without
+  merging. Future implementation and exact-target live actions still need
+  their separate authorization.
 
 ## Update protocol
 

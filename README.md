@@ -343,6 +343,23 @@ stateful/stateless requests succeeded. This establishes continuity to the
 and is not an indefinite guarantee across cookie expiry, failures or topology
 changes. See the [separately verified failure/recovery behavior](#-controlled-failure-and-recovery).
 
+## 🧩 Planned: SDK and Agent Framework comparison
+
+**Task `009` is planned, not implemented or live-verified.** Keep this raw
+HTTP harness as the control, then compare a concrete Foundry SDK client and
+Microsoft Agent Framework using the same conversations and gateway evidence.
+Measure SDK-default cookie behavior separately from any configured
+per-conversation transport; do not assume that framework conversation memory
+also supplies isolated APIM affinity.
+
+The [comparison plan](docs/PLAN.md#planned-extension-sdk-and-agent-framework-comparison)
+defines SDK/project-endpoint compatibility gates, automatic versus custom cookie
+handling, service-managed response chains, actual HTTP-attempt budgets and
+off/on trace proof. [Task `009` acceptance](docs/TASKS.md#009---compare-raw-http-foundry-sdk-and-agent-framework)
+keeps implementation and new live Azure verification behind separate approvals.
+This PR records the proposal only; the current commands and verified results
+remain the raw HTTP baseline.
+
 ## 🛠️ Controlled failure and recovery
 
 Task `006` adds a separately authorized `failure` scenario. It first observes

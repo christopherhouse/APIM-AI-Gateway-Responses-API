@@ -9,9 +9,10 @@ as offline-validated code in merged PR #6. Task `005` is complete as code and
 offline validation in merged PR #7. Task `006` is complete as code and offline
 validation in merged PR #8. Task `007` completed both authorized live
 lifecycles and cleanup on 2026-10-15/16 in merged PR #9;
-task `008` delivery and its README/code-citation follow-up are complete in
+task `008` delivery and its documentation/planning follow-ups are complete in
 PR #10, left unmerged for user review on the same dependency branch.
-No new Azure operations are authorized by the documentation follow-up.
+Task `009` is pending: only its writeup is authorized on this branch, not SDK
+implementation or new Azure operations.
 IDs are stable; do not renumber completed tasks or hide blocked work.
 
 ## Status and dependency rules
@@ -41,6 +42,7 @@ new platform evidence changes an assumption.
 | 006 | Implement controlled failure, breaker, and recovery scenarios | 004, 005 | done |
 | 007 | Verify end-to-end scenarios and diagnostic evidence in Azure | 006 | done |
 | 008 | Complete self-service documentation, affinity toggle, and clean-environment walkthrough | 007 | done |
+| 009 | Compare raw HTTP, Foundry SDK, and Agent Framework in the harness | 008; separate implementation and live-operation authorization | pending |
 
 The default execution order is ascending ID. Tasks `004` and `005` can proceed
 independently once `003` is available; parallel execution is not required.
@@ -297,7 +299,8 @@ required handling APIM's transition refusal and a later credential-poll error.
 Both groups are verified absent and state retired. Per group, one APIM, two
 Foundry, and one workspace recovery record remain without purge; final exact
 model quota was 130 of 1,000 versus 50 initially.
-Task `007` is complete in merged PR #9; task `008` is in progress. See
+Task `007` is complete in merged PR #9; task `008` subsequently completed
+its own separately authorized comparison and cleanup in PR #10. See
 [sanitized evidence](../evidence/samples/task007-verification.json).
 
 Deliverables and acceptance:
@@ -364,3 +367,53 @@ Deliverables and acceptance:
 - Walk through the instructions from a clean environment and fix missing steps.
 - Update the plan and task/progress records to match delivered behavior,
   link completion PRs, and leave PRs unmerged for the user.
+
+## 009 - Compare raw HTTP, Foundry SDK, and Agent Framework
+
+**Authorization/status:** `pending`. On 2026-10-16 the user authorized writing
+up this proposal on `feature/008-self-service-affinity-toggle` before merging
+PR #10. That is planning only, not permission for SDK implementation, package
+changes, infrastructure changes, Azure reads, inference or faults. Start after
+separate implementation approval and merged `008`, or an explicitly documented
+dependency branch. Live proof needs its own target/action and aggregate-budget
+approval; task `008` resources were deleted and are not reusable live targets.
+
+**Scope:** One .NET harness with raw HTTP as the control and proposed
+`foundry-sdk` / `agent-framework` client modes. These selectors do not exist
+yet. Follow the [comparison plan and compatibility gates](PLAN.md#planned-extension-sdk-and-agent-framework-comparison);
+do not assume that a Foundry project SDK fits the current model endpoint.
+
+Deliverables and acceptance:
+
+- Resolve and document the exact SDK/framework packages and pinned versions,
+  API/endpoint/authentication contract and supported transport customization.
+  Identify any project, gateway, role or backend changes and obtain approval
+  before expanding topology; no silent SDK substitution or APIM bypass.
+- Retain the raw HTTP control and reuse the same prompts, interleaving, bounded
+  execution, evidence and assertions through small SDK/framework adapters.
+  Keep existing commands/default behavior working; document the actual stack.
+- In Agent Framework, reuse independent `AgentSession` instances with
+  service-managed Responses state. Verify continuation identifiers on the wire;
+  local-history replay is not a substitute for a server-side response chain.
+- Report pinned SDK-default cookie behavior separately from any configured
+  per-conversation transport. Demonstrate capture/resend and session isolation;
+  disclose manual pipeline policies instead of calling them SDK defaults.
+- Preserve real SDK response handling and distinguish missing cookies, invalid
+  cookies, gateway failures, backend switches and incomplete conversations.
+  Independent stateless requests carry neither response IDs nor affinity state.
+- Add focused offline tests for interleaved cookie/state isolation,
+  continuation fields, stateless behavior, error paths, cancellation and bounds;
+  run the smallest applicable build/tests/formatting and raw-mode regressions.
+- Disable retries across all layers and enforce a run-wide budget against actual
+  model HTTP attempts, including extra calls made inside SDK/framework methods.
+  Publish mode/profile/version metadata without secrets or raw cookie values.
+- Once separately authorized, demonstrate the same off/on proof for all three
+  supported modes: actual cross-backend response-state failure off, pinned
+  chains with zero violations on, both members across independent chains and
+  separately across stateless calls, and actual workspace policy-trace
+  correlation for every model attempt. Record default-profile limitations
+  separately; do not relabel policy errors or replay as proof.
+- Update README/client instructions with exact configuration, required
+  customizations, code-line references and sanitized observed results.
+  Keep planned, offline-tested and live-verified behavior distinct. Do not mark
+  this task done while compatibility or live acceptance remains unresolved.

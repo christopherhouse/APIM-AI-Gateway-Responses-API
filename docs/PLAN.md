@@ -4,12 +4,17 @@
 
 This records the agreed implementation plan and authorization history.
 Tasks `000`-`008` are complete. Task `008` delivery, live verification and its
-user-authorized README follow-up are published in PR #10, left unmerged for
+README/code-citation follow-up are published in PR #10, left unmerged for
 user review on its existing dependency branch
 `feature/008-self-service-affinity-toggle`. On 2026-10-16, the user requested
 an integrated cookie/response-ID explanation with code excerpts and source-line
 citations. This follow-up is documentation-only: no new Azure operations,
 application changes, or cost documentation.
+Later on the same date, the user authorized writing up a proposed Agent
+Framework and Foundry SDK harness comparison on this branch before merging.
+That planning follow-up is included in PR #10. Task `009` below is pending,
+not implemented; SDK implementation and any new Azure operation require
+separate authorization.
 Task `008` was authorized on 2026-10-16 after
 PR #9 merged. Work on `feature/008-self-service-affinity-toggle` excludes cost
 documentation at the user's request. Add a default-on native backend-pool
@@ -85,7 +90,7 @@ the required routing information.
 | Stateless traffic | Demonstrate distribution across both identical model deployments without conversation chaining. |
 | Stateful traffic | Multiple independent conversations, each chaining with `previous_response_id` and retaining affinity. |
 | Failure behavior | A conversation pinned to an unavailable backend fails explicitly; new conversations use a healthy backend once the breaker detects the failure. |
-| Harness | .NET 10 console application; scripted multi-turn loops, not an agent framework or tool-calling system. |
+| Harness | Implemented baseline: .NET 10 console application with scripted multi-turn loops, no model SDK or agent framework. Pending task `009` proposes SDK/framework comparison modes; no tool-calling system. |
 | Conversation script | A developer asks an Azure architecture expert about making APIM routing stateful for Responses. |
 | Console evidence | Model output plus session ID, backend identity, and trace/correlation identifiers for every turn. |
 | Summary evidence | Each session's backend set, turn counts, outcomes, affinity violations, and aggregate backend distribution. |
@@ -261,8 +266,139 @@ scoped teardown. Initial CLI deployment polling and azd teardown errors were
 reconciled through actual Azure state checks, not treated as successful command
 exits. Recovery records and associated model quota remain without purge.
 Task `007` is complete in PR #9, merged at `e66815a` on 2026-10-16.
-Task `008` is in progress on `feature/008-self-service-affinity-toggle`
-with the revised acceptance criteria and scoped live authorization above.
+Task `008` is complete in open PR #10 on
+`feature/008-self-service-affinity-toggle`, including the documentation-only
+follow-ups. The live authorization above was exercised and cleanup verified;
+it does not authorize task `009`.
+
+## Planned extension: SDK and Agent Framework comparison
+
+**Status: planning only, task `009` pending.** The user authorized this writeup
+on the existing task `008` branch on 2026-10-16 before merging PR #10.
+No SDK code, package changes, framework scaffolding, Azure reads or mutations
+are authorized by that request. Begin implementation only after separate
+approval and merged task `008`, or an explicitly documented dependency branch.
+
+### One harness, three client modes
+
+Keep the existing raw HTTP path as the control. Add small client adapters
+within the same .NET harness rather than three applications; reuse the prompts,
+interleaved schedule, request bounds, evidence and outcome assertions.
+The labels below are proposed selectors, not working command-line options:
+
+| Proposed mode | Conversation handling to demonstrate | Routing behavior to measure |
+| --- | --- | --- |
+| `http` | Existing explicit response-ID chain and per-conversation cookie storage | Current manual `Cookie` header path remains the verified control |
+| `foundry-sdk` | Concrete, named Foundry SDK client/API selected through the compatibility gate | Observe its default cookie behavior, then an explicitly configured session-isolated transport if needed |
+| `agent-framework` | Reuse an `AgentSession` with a supported Responses provider and service-managed history | Establish whether the underlying SDK transport retains the right cookie for each independent framework session |
+
+These are abstraction levels, not necessarily three independent transports.
+Record the actual framework/provider/SDK stack. The comparison must expose
+who advances the service response/conversation ID and who captures and resends
+the native affinity cookie; an application session UUID remains correlation,
+not a routing pin.
+
+### Compatibility gates before adapter implementation
+
+1. Identify the exact supported .NET packages, pin versions, and document
+   the client construction, API surface and transport extension points.
+   Define what `foundry-sdk` means; do not rename a raw HTTP wrapper or
+   substitute a different client without documenting the distinction.
+2. Verify endpoint/path, authentication and token audience, required headers,
+   `store`/response-chain semantics, and compatibility with the current
+   APIM `POST /openai/v1/responses` contract. The Foundry project SDK and a
+   direct model endpoint must not be assumed interchangeable. Inventory any
+   project discovery or other extra SDK calls and how they would be routed.
+   If projects, new routes, identities/roles or backend changes are required,
+   record the gap and obtain approval before changing the topology; never
+   bypass APIM or silently replace the requested SDK.
+3. Establish the framework's service-managed Responses history mode and
+   observe the outbound continuation identifier. Sending full local history
+   to another backend is not proof that backend-owned response state survived.
+   The existing route requires a real `previous_response_id` chain; a provider
+   using a different conversation API needs an approved contract change.
+   No tools, hosted agents, model-driven loops or history replay are in scope.
+4. Inspect and test actual cookie and retry behavior for the pinned packages.
+   Do not infer a per-conversation cookie jar from an `AgentSession` or from
+   automatic cookies on a shared HTTP client. Verify default transport sharing,
+   cookie scope/lifetime and isolation, including across independent sessions.
+
+### Default behavior versus configured behavior
+
+For each SDK/framework mode, report two distinct profiles:
+
+- **SDK default cookies:** configure the necessary endpoint, authentication,
+  lab/correlation headers, timeouts and disabled retries, but leave cookie
+  behavior at the pinned SDK's default. Observe cookie capture, resend and
+  sharing without adding the control client's manual cookie forwarding.
+  A failure or globally shared pin is a recorded finding, not a successful
+  session-isolation demonstration.
+- **Session-scoped cookies:** if the default is insufficient, demonstrate
+  supported configuration that gives each conversation its own cookie context.
+  Prefer automatic handler capture/resend when supported; otherwise label any
+  explicit transport/pipeline policy as custom cookie handling. Do not describe
+  that configured result as out-of-the-box SDK behavior.
+
+The adapter boundary must preserve each client's real SDK/framework response
+handling. Reuse the evidence/assertion logic, not a hidden raw-HTTP replacement.
+Expose the selected mode, pinned versions and cookie profile in sanitized
+results. No cookie values, credentials or raw request bodies enter diagnostics.
+
+### Comparable proof and staged authorization
+
+First implement focused offline transport tests, after code authorization:
+cookie issuance/resend, interleaved session isolation, response-ID advancement,
+stateless calls without routing state, missing/duplicate/expired cookies,
+HTTP failures, unexpected backend changes, cancellation and request bounds.
+Assert wire-level continuation fields and absence of history replay in memory;
+do not persist raw bodies as evidence.
+
+Disable SDK/provider/transport retries and count actual model HTTP attempts,
+not just `RunAsync` or SDK method calls. Account for extra framework/SDK calls;
+the existing 24-request default must not silently become 24 requests per mode
+or per profile. Stop before exceeding the approved run-wide request/token/
+time budget and report failures and unattempted work explicitly.
+
+Live proof requires a separate exact-target/action and aggregate-budget
+approval. For each supported mode, use the same model/topology, prompts and
+interleaving: four independent three-turn chains plus 12 separate stateless
+calls, with profiles/runs explicitly budgeted. Compare native affinity
+off against on. An off-mode pass still requires an actual cross-member
+backend response-state error using a real prior ID, not a missing-cookie
+policy rejection, local guard, generic HTTP error or accidental same-member
+success. The default-cookie profile may be incompatible with the lab contract;
+record that result separately and use a labeled supported profile for the
+comparable end-to-end proof.
+
+For on-mode success, require zero backend switches, independent session
+routing contexts, observations of both members across independent stateful
+chains and separately across stateless calls, and request/member/status
+matches to actual workspace policy traces. Do not promise an exact split.
+Cookie replay alone, model text and one shared global pin are insufficient
+evidence. Retain the existing
+raw-mode regression and explicit-error/no-replay behavior; new controlled
+faults are not included without separate approval.
+
+Publish exact configuration, required customizations, observed default
+behavior, SDK/framework limitations and redacted results. Offline checks
+cannot establish live routing. If a gate or live approval remains unresolved,
+leave the corresponding acceptance item pending/blocked rather than claiming
+task `009` complete. Add no new resource, SDK or Azure-operation claim to the
+current task `008` evidence.
+
+### Primary references for the compatibility gates
+
+Reviewed 2026-10-16; these establish API/state boundaries, not SDK affinity
+verification in this repository:
+
+- [Microsoft Foundry SDKs and endpoints](https://learn.microsoft.com/en-us/azure/foundry/how-to/develop/sdk-overview):
+  distinguishes project and OpenAI-compatible clients and project routes.
+- [Agent Framework conversations and sessions](https://learn.microsoft.com/en-us/agent-framework/agents/conversations/):
+  describes session reuse between invocations.
+- [Agent Framework storage](https://learn.microsoft.com/en-us/agent-framework/concepts/agents/conversations/storage):
+  distinguishes service-managed storage from local message history.
+- [APIM session awareness and cookie management](https://learn.microsoft.com/en-us/azure/api-management/backends#session-awareness):
+  requires the client to retain and return the appropriate routing cookie.
 
 ## Execution and progress
 
