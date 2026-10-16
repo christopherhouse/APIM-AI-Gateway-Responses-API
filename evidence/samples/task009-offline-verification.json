@@ -62,5 +62,7 @@
     "Record SDK-default limitations separately from configured-profile proof"
   ],
   "privacy": "Aggregate synthetic observations only; no credentials, raw cookies, private targets or request/response traces",
-  "pullRequest": null
+  "pullRequest": 11,
+  "pullRequestState": "open; intentionally unmerged",
+  "implementationCommit": "23c390540083c3df39ac3477f221cbd3846c34a7"
 }

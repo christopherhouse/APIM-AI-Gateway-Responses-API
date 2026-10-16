@@ -18,6 +18,8 @@ each scenario. Task `009` is in progress on
 `feature/009-sdk-framework-comparison`: code, dependencies, offline checks,
 documentation and PR publication only. New Azure reads, inference, resource
 changes, faults or cleanup still require separate exact-target authorization.
+The offline implementation and scenario documentation are published in open,
+unmerged PR #11; task `009` remains `in_progress` pending live acceptance.
 Task `008` was authorized on 2026-10-16 after
 PR #9 merged. Work on `feature/008-self-service-affinity-toggle` excludes cost
 documentation at the user's request. Add a default-on native backend-pool
@@ -283,6 +285,7 @@ framework implementation and scenario documentation after its merge on
 The compatibility gates below are resolved for the pinned stack; adapters and
 focused real-SDK loopback tests are implemented. No new Azure operation or
 topology expansion is authorized. Live off/on/workspace acceptance remains pending.
+Code/offline delivery is published in PR #11, intentionally left unmerged.
 
 ### One harness, three client modes
 

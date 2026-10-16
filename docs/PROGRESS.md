@@ -5,15 +5,15 @@
 | Field | Value |
 | --- | --- |
 | Updated | 2026-10-16 |
-| Phase | Task `009` in progress: compatible SDK/framework modes implemented and locally tested; final validation/documentation/PR publication |
+| Phase | Task `009` in progress: code/offline/documentation delivery published in open PR #11; live acceptance pending |
 | Authorization | On 2026-10-16 after #10 merged, user approved building task `009` plus complete README scenario explanations; code/offline/docs/PR only, no new Azure operations |
 | Planning branch | `chore/lab-planning` |
 | Current implementation task | `009` - `in_progress` on `feature/009-sdk-framework-comparison` |
-| Next task | Finish offline validation/documentation and publish task `009` PR; live off/on/workspace proof needs separate approval |
+| Next task | User review/merge of PR #11; SDK live off/on/workspace work needs separate exact-target/action/budget approval |
 | Azure deployment | `rg-responses-walk008` verified absent; local state retired, runtime removed, recovery records retained without purge |
 | Solution files | Raw HTTP baseline plus task `009` Foundry SDK/Agent Framework adapters, explicit cookie profiles, pinned packages/lock and real-SDK loopback tests |
 | Base branch | `main` at task `008` merge `99cd7b0`; initial empty base `846a2cb` preserved |
-| Pull request | #1-#10 merged; task `009` PR not yet created |
+| Pull request | #1-#10 merged; task `009` PR #11 open and intentionally unmerged |
 
 ## Known prerequisites and open decisions
 
@@ -1695,6 +1695,30 @@
   are unchanged and their raw-only live-evidence captions remain explicit.
 - Remaining action is commit/push and a template-based PR, left unmerged.
   Task `009` remains `in_progress` pending separately authorized live proof.
+
+### 2026-10-16 - Task 009 offline delivery published in PR #11
+
+- Committed the 19 reviewed task files as `23c3905` with required Copilot/
+  session trailers and pushed `feature/009-sdk-framework-comparison`.
+- Created PR #11 against `main` using the repository's exact four headings,
+  comments, checklist text and ordering. The body records actual command
+  results, preview pins, default-cookie limitations, README impact and
+  unperformed live checks. An initial verification used an unsupported
+  `gh pr view --head` flag; verification by PR number succeeded without
+  creating another PR or changing the branch.
+- Verified PR #11 is open, non-draft, targets `main`, has implementation head
+  `23c3905`, and is unmerged. Recorded the PR in the offline aggregate and
+  current task/plan/progress state; publication records are a documentation/
+  evidence-only follow-up on the same branch.
+- `python .\artifacts\009-local-checks.py --pr`: passed the local link/source/
+  status/pin/privacy checks and exact PR template structure. Staged
+  `git diff --cached --check` and UTF-8/LF/credential/private-configuration
+  checks passed before the implementation commit.
+- Code/offline/scenario-documentation work requested by the user is complete
+  and published for review. Task `009` stays `in_progress` because its full
+  live acceptance has not been authorized or performed. No Azure operation,
+  live inference, new group, fault or cleanup occurred. PR #11 is not merged
+  automatically; user review/merge and separate live authorization are next.
 
 ## Update protocol
 

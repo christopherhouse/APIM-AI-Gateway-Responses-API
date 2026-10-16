@@ -388,6 +388,8 @@ live verification. Task `009` remains `in_progress` until the separately
 authorized live acceptance below is completed.
 Current [sanitized offline evidence](../evidence/samples/task009-offline-verification.json)
 records pinned versions, actual local check outcomes and the remaining live gates.
+Code/offline/scenario-documentation delivery is published in open PR #11,
+left unmerged for user review; the live acceptance below is still pending.
 
 Deliverables and acceptance:
 
