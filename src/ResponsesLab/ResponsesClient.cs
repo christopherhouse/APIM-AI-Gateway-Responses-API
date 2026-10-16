@@ -66,7 +66,7 @@ internal sealed class ResponsesClient(HttpClient http, LabOptions options)
             return Finish(TurnOutcome.RunCancelled);
         var stateful = session.Scenario == "stateful";
         var cookies = AffinityCookies(session);
-        if (stateful && session.PreviousResponseId is not null && !ValidCookie(cookies))
+        if (stateful && options.SessionAffinityEnabled && session.PreviousResponseId is not null && !ValidCookie(cookies))
             return Finish(TurnOutcome.MissingAffinity);
 
         using var request = new HttpRequestMessage(HttpMethod.Post, options.Endpoint);
@@ -74,7 +74,7 @@ internal sealed class ResponsesClient(HttpClient http, LabOptions options)
         request.Headers.Add("X-Lab-Session-Id", session.Id.ToString("D"));
         request.Headers.Add("X-Lab-Scenario", session.Scenario);
         request.Headers.Add("x-ms-client-request-id", evidence.ClientRequestId.ToString("D"));
-        if (stateful && session.PreviousResponseId is not null)
+        if (stateful && options.SessionAffinityEnabled && session.PreviousResponseId is not null)
         {
             request.Headers.Add("Cookie", $"{options.CookieName}={cookies[0].Value}");
             evidence = evidence with { AffinityFingerprint = Fingerprint(cookies[0].Value) };
@@ -127,7 +127,8 @@ internal sealed class ResponsesClient(HttpClient http, LabOptions options)
                 return Finish(TurnOutcome.ResponseTooLarge);
             if (!response.IsSuccessStatusCode)
             {
-                evidence = evidence with { ErrorCode = ErrorCode(bytes) };
+                var httpError = ParseError(bytes);
+                evidence = evidence with { ErrorCode = httpError.Code, CrossResourceStateError = httpError.CrossResourceStateError };
                 return Finish(TurnOutcome.HttpError);
             }
             if (evidence.BackendId is null || evidence.GatewayRequestId is null || evidence.GatewayErrorReason is not null)
@@ -180,12 +181,17 @@ internal sealed class ResponsesClient(HttpClient http, LabOptions options)
             {
                 if (selected.Length > 1)
                     return Finish(TurnOutcome.InvalidAffinity);
-                foreach (var header in selected)
-                    session.Cookies.SetCookies(options.Endpoint, header);
-                cookies = AffinityCookies(session);
-                if (!ValidCookie(cookies))
-                    return Finish(TurnOutcome.MissingAffinity);
-                evidence = evidence with { AffinityFingerprint = Fingerprint(cookies[0].Value) };
+                if (options.SessionAffinityEnabled)
+                {
+                    foreach (var header in selected)
+                        session.Cookies.SetCookies(options.Endpoint, header);
+                    cookies = AffinityCookies(session);
+                    if (!ValidCookie(cookies))
+                        return Finish(TurnOutcome.MissingAffinity);
+                    evidence = evidence with { AffinityFingerprint = Fingerprint(cookies[0].Value) };
+                }
+                else if (selected.Length != 0)
+                    return Finish(TurnOutcome.InvalidAffinity);
                 session.PreviousResponseId = id;
                 session.OriginalBackend ??= backend;
             }
@@ -235,21 +241,27 @@ internal sealed class ResponsesClient(HttpClient http, LabOptions options)
         element.ValueKind == JsonValueKind.Object && element.TryGetProperty(property, out var value) &&
         value.ValueKind == JsonValueKind.String ? value.GetString() : null;
 
-    private static string? ErrorCode(byte[] bytes)
+    private static (string? Code, bool CrossResourceStateError) ParseError(byte[] bytes)
     {
         try
         {
             using var json = JsonDocument.Parse(bytes);
             if (json.RootElement.ValueKind == JsonValueKind.Object &&
-                json.RootElement.TryGetProperty("error", out var error) &&
-                Text(error, "code") is { } code && Regex.IsMatch(code, "^[a-zA-Z0-9_.-]{1,64}$"))
-                return code;
+                json.RootElement.TryGetProperty("error", out var error) && error.ValueKind == JsonValueKind.Object)
+            {
+                var code = Text(error, "code");
+                var crossResource = error.TryGetProperty("code", out var rawCode) && rawCode.ValueKind == JsonValueKind.Null &&
+                    error.TryGetProperty("param", out var param) && param.ValueKind == JsonValueKind.Null &&
+                    Text(error, "type") == "invalid_request_error" &&
+                    Text(error, "message") == "The requested item was created under a different Azure OpenAI resource. Use the same resource that created the item to access it.";
+                return (code is not null && Regex.IsMatch(code, "^[a-zA-Z0-9_.-]{1,64}$") ? code : null, crossResource);
+            }
         }
         catch (JsonException)
         {
             // HTTP errors can have non-JSON bodies; the status remains a failure.
         }
-        return null;
+        return (null, false);
     }
 
     internal static async Task<byte[]?> ReadBodyAsync(HttpResponseMessage response, CancellationToken token)

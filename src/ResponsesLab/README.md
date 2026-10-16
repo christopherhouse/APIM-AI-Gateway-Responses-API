@@ -81,7 +81,8 @@ retained; the client does not replay full conversation history.
 ## Configuration and limits
 
 The wrapper supplies `LAB_RESPONSES_ENDPOINT`, `LAB_MODEL_DEPLOYMENT`,
-`LAB_AFFINITY_COOKIE_NAME`, and `LAB_APIM_SUBSCRIPTION_KEY`. Endpoints must be
+`LAB_AFFINITY_COOKIE_NAME`, `LAB_SESSION_AFFINITY_ENABLED`, and
+`LAB_APIM_SUBSCRIPTION_KEY`. Endpoints must be
 HTTPS `/openai/v1/responses`, with no userinfo, query, fragment, or custom port.
 No endpoint is guessed. The fixed cookie name is `APIM-Backend-Affinity`.
 
@@ -105,8 +106,8 @@ Empty, malformed, and out-of-range overrides fail explicitly instead of being
 clamped or defaulted. Concurrency is one. Defaults plan **24 requests**:
 4 x 3 stateful turns plus 12 independent stateless calls. The maximum
 configuration plans **48 requests**, with at most **196,608 output tokens**
-requested across the run. These are request/token bounds, not price guarantees;
-context input and infrastructure have separate costs.
+requested across the run. These are request/token bounds; do not extend a
+run's authorization implicitly by changing them.
 
 Deadlines can stop a run before all planned work completes. No timeout extends
 automatically, no failed chain restarts, and no retry switches backends or
@@ -127,9 +128,10 @@ Each processed turn emits one JSON line with:
 | `backendId` | Only allow-listed gateway `backend-a`/`backend-b`, never model-authored claims or pool identity |
 | `affinityFingerprint` | First 12 SHA-256 hex characters of the opaque cookie, never its value |
 | `httpStatus`, `errorCode`, `gatewayErrorReason`, `outcome`, `sent` | Actual status, safe error code, fixed gateway breaker reason when present, explicit result, and whether HTTP was attempted |
+| `crossResourceStateError` | True only for the exact verified different-resource payload below; does not replace the actual `errorCode` |
 | `startedAt`, `finishedAt`, `retryAfterSeconds` | Client-observed timing and optional server pause; not invented server-side breaker timestamps |
 
-Success requires completed assistant text, a valid response ID, one gateway
+Healthy stateful success requires completed assistant text, a valid response ID, one gateway
 request UUID, a concrete member, unchanged member for an existing stateful
 chain, and a usable session-local cookie. Cookies honor domain/path/expiry
 through `CookieContainer`; an expired/missing chained cookie fails **before**
@@ -161,8 +163,58 @@ chain failure, within the same overall deadline.
 | 2 | Invalid invocation or configuration, before HTTP |
 
 Healthy runs report zero expected-failure scenarios. A 503 during a healthy run
-is still a failure. Only the separate controlled-failure workflow below can
-classify its specific observed 404 and gateway breaker rejection as expected.
+is still a failure. The explicit off-mode comparison accepts only its
+cross-backend missing-response error. The separate controlled-failure workflow
+accepts only its specific observed fault 404 and gateway breaker rejection.
+
+## Explicit affinity-off comparison
+
+Set the deployment parameter to false, provision, and use
+`@('--allow-requests', '--scenario', 'affinity-off')` through the wrapper.
+See the [complete walkthrough](../../docs/WALKTHROUGH.md) for both drivers
+and safe same-environment mode changes.
+
+The client requires exported `LAB_SESSION_AFFINITY_ENABLED=false`; healthy
+stateful/both and controlled-failure invocations require true. Stateless-only
+calls work in either mode. Malformed boolean strings are rejected.
+The normal defaults and assertions remain unchanged.
+
+The off-mode runner sends up to four three-turn stateful chains sequentially
+(12 planned attempts by default), preserves their real previous IDs, and
+sends no cookie. A returned affinity cookie is an invalid mode observation,
+not something silently discarded. A broken chain stops immediately.
+The output still labels requests `stateful`: the chain is stateful even
+though the pool's routing is not.
+Sequential scheduling models a normal immediate conversation continuation
+and avoids accidental alignment between an even interleaved session count
+and a pool's selection cycle. It does not force a member or guarantee a switch.
+
+The comparison exits zero only if at least one prior successful chain
+receives HTTP 400/404 from the *other* concrete gateway-verified backend,
+with a gateway request UUID and matching preceding
+response ID; every other chain must complete or meet the same expected-failure
+contract. Its error must have either `code=previous_response_not_found`, or
+all four fields in this actual, verified service response:
+
+```json
+{
+  "error": {
+    "code": null,
+    "type": "invalid_request_error",
+    "param": null,
+    "message": "The requested item was created under a different Azure OpenAI resource. Use the same resource that created the item to access it."
+  }
+}
+```
+
+The latter sets `crossResourceStateError=true`; the actual code remains null.
+Matching is exact, not a substring/category guess. A changed service error
+shape fails visibly and needs evidence-backed review, not a broad HTTP-400
+exception. No retries or management-plane writes are performed by this mode.
+Unrelated errors, policy cookie rejections, missing evidence, deadlines and
+successful backend switches remain failures. Accidental same-backend success
+without the required error makes the bounded run inconclusive/nonzero.
+The final report identifies expected cross-backend failures explicitly.
 
 ## Controlled failure and recovery
 

@@ -3,7 +3,23 @@
 ## Scope and authorization
 
 This records the agreed implementation plan and authorization history.
-Tasks `000`-`007` are now complete; the final self-service walkthrough is task `008`.
+Tasks `000`-`007` are now complete; the final self-service walkthrough and
+affinity on/off enhancement are task `008`, authorized on 2026-10-16 after
+PR #9 merged. Work on `feature/008-self-service-affinity-toggle` excludes cost
+documentation at the user's request. Add a default-on native backend-pool
+session-affinity parameter and compare unpinned cross-backend response-chain
+failure against pinned success. After the scoped handoff, the user approved
+the new `walk008` / `rg-responses-walk008` environment in West US 3 in the same
+active subscription: provisioning, bounded off/on inference, affinity-only
+redeployments, driver parity/reruns, evidence checks and exact owned-group
+deletion without purge. Limit execution to 64 attempts at 2,048 output tokens
+each with no transport retries; no existing application changes are authorized.
+The implemented toggle and clean walkthrough have now passed live verification:
+four unpinned cross-resource failures, 24 successful pinned/stateless requests,
+all 42 request/policy-trace joins including diagnostics, an unchanged rerun
+preserving 13 runtime values, and verified scoped deletion without purge.
+Task `008` awaits final PR publication; see
+[sanitized results](../evidence/samples/task008-verification.json).
 On 2026-10-15, the user authorized task `000` after planning PR #1 was merged,
 then task `001` after bootstrap PR #2 was merged. That authorization covered
 platform design and its read-only checks. Later on 2026-10-15 the user explicitly
@@ -59,7 +75,7 @@ the required routing information.
 | Model choice | User requires GPT-5-family or newer. Task `001` verified `gpt-5.4-mini` / `2026-03-17` / `GlobalStandard` with real Responses calls; West US 3 resources, global inference processing. |
 | Networking | Public network access enabled; authentication remains required. No existing application resources are reused. |
 | Infrastructure | Bicep with native `.bicepparam` deployment inputs, plus APIM policy XML where needed; no maintained JSON parameter files. |
-| Routing | Backend load-balancing pool, per-backend circuit breakers, and the documented session-affinity mechanism verified during design. |
+| Routing | Backend load-balancing pool, per-backend circuit breakers, and a default-on deployment parameter for the documented native session-affinity mechanism. |
 | Stateless traffic | Demonstrate distribution across both identical model deployments without conversation chaining. |
 | Stateful traffic | Multiple independent conversations, each chaining with `previous_response_id` and retaining affinity. |
 | Failure behavior | A conversation pinned to an unavailable backend fails explicitly; new conversations use a healthy backend once the breaker detects the failure. |
@@ -182,7 +198,8 @@ dedicated lab resources so the fault procedure cannot target unrelated resources
 
 The README must explain the state boundary, affinity contract, load balancing,
 circuit breakers, failure behavior, observability, authentication, prerequisites,
-cost drivers, deployment duration expectations, and known limitations.
+deployment duration expectations, and known limitations. Task `008` explicitly
+excludes cost documentation.
 
 Both deployment paths must include prerequisite checks, subscription
 confirmation, resource-group creation outside Bicep, configuration, deployment,
@@ -190,9 +207,8 @@ harness execution, evidence queries, troubleshooting, and scoped teardown.
 Document whether `azd down` removes the externally created group or whether
 explicit group deletion is required; avoid orphaned resources.
 
-Keep workloads and token budgets small and configurable. Do not claim a price
-or cost ceiling without current pricing evidence. Developer SKU does not by
-itself guarantee a low-cost lab.
+Keep workloads, capacity, and token budgets small and configurable. Document
+cleanup responsibilities without adding cost estimates or pricing guidance.
 
 ## Repository workflow
 
@@ -238,7 +254,9 @@ recovery, correlated workspace diagnostics, unchanged reruns, and verified
 scoped teardown. Initial CLI deployment polling and azd teardown errors were
 reconciled through actual Azure state checks, not treated as successful command
 exits. Recovery records and associated model quota remain without purge.
-Task `007` is complete in PR #9, left unmerged; task `008` is pending.
+Task `007` is complete in PR #9, merged at `e66815a` on 2026-10-16.
+Task `008` is in progress on `feature/008-self-service-affinity-toggle`
+with the revised acceptance criteria and scoped live authorization above.
 
 ## Execution and progress
 

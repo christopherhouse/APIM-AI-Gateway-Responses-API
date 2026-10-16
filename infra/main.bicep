@@ -58,6 +58,9 @@ param modelDeploymentName string = 'responses-chat'
 ])
 param affinityCookieName string = 'APIM-Backend-Affinity'
 
+@description('Enable native backend-pool cookie affinity. Disable only for the explicit unpinned response-chain comparison.')
+param sessionAffinityEnabled bool = true
+
 @description('Selected global deployment SKU. Resource placement remains West US 3.')
 @allowed([
   'GlobalStandard'
@@ -253,6 +256,7 @@ module routing 'gateway.bicep' = {
     foundryBEndpoint: accounts[1].properties.endpoints['OpenAI Language Model Instance API']
     modelDeploymentName: modelDeploymentName
     affinityCookieName: affinityCookieName
+    sessionAffinityEnabled: sessionAffinityEnabled
   }
   dependsOn: [apim, foundries, gatewayGrants]
 }
@@ -275,3 +279,4 @@ output backendAId string = routing.outputs.backendAId
 output backendBId string = routing.outputs.backendBId
 output apimSubscriptionResourceId string = routing.outputs.apimSubscriptionResourceId
 output affinityCookieName string = affinityCookieName
+output sessionAffinityEnabled bool = sessionAffinityEnabled

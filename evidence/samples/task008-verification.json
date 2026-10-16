@@ -1,0 +1,130 @@
+{
+  "sanitized": true,
+  "verifiedDate": "2026-10-16",
+  "taskStatus": "in_progress",
+  "scope": "Task 008 clean-environment native affinity off/on comparison",
+  "consoleSample": "task008-console.md",
+  "redactions": [
+    "Subscription, resource identifiers, hostnames and operator information omitted",
+    "Credentials, native cookies, fingerprints, response and correlation identifiers omitted",
+    "Console excerpts use consistent aliases; raw logs and workspace records remain private"
+  ],
+  "configuration": {
+    "resourceRegion": "westus3",
+    "apimSku": "Developer",
+    "apimUnits": 1,
+    "apimIdentityType": "UserAssigned",
+    "attachedIdentityCount": 1,
+    "systemAssignedIdentityEnabled": false,
+    "explicitPolicyClientIdMatches": true,
+    "foundryScopedOpenAiUserGrants": 2,
+    "foundryAccounts": 2,
+    "model": "gpt-5.4-mini",
+    "modelVersion": "2026-03-17",
+    "deploymentSku": "GlobalStandard",
+    "capacityPerAccount": 20,
+    "sessionAffinityDefault": true,
+    "nativePoolAndPolicyVerifiedInBothModes": true,
+    "apiDiagnosticSamplingAndCaptureVerified": true
+  },
+  "limits": {
+    "authorizedHttpAttempts": 64,
+    "actualHttpAttempts": 42,
+    "maxOutputTokensPerAttempt": 2048,
+    "transportRetries": 0
+  },
+  "provisioning": {
+    "initialDriver": "Azd",
+    "providerValidationAndWhatIf": "PASS",
+    "preview": "PASS after explicit authentication retry",
+    "initialDeployment": "Failed because ARM boolean conversion emitted invalid C# @(False)",
+    "permanentFix": "Explicit lowercase true/false Bicep substitution, with both emitted branches tested",
+    "correctedSameTargetDeployment": "PASS",
+    "azdReportedProvisionSeconds": 130,
+    "affinityOnUpdateDriver": "Cli",
+    "affinityOnlyInputGuard": "PASS",
+    "affinityOnUpdate": "PASS"
+  },
+  "initialComparison": {
+    "result": "FAIL, preserved rather than relabeled",
+    "requests": 8,
+    "statuses": { "200": 4, "400": 4 },
+    "reason": "The assumed explicit missing-response error code was absent"
+  },
+  "boundedErrorShapeDiagnostic": {
+    "requests": 2,
+    "statuses": { "200": 1, "400": 1 },
+    "observedCrossBackendError": {
+      "code": null,
+      "type": "invalid_request_error",
+      "param": null,
+      "message": "The requested item was created under a different Azure OpenAI resource. Use the same resource that created the item to access it."
+    },
+    "classification": "Only that exact four-field payload sets crossResourceStateError; actual errorCode remains null"
+  },
+  "affinityOff": {
+    "result": "PASS",
+    "nativeSessionAffinityProperty": "Absent",
+    "requests": 8,
+    "statuses": { "200": 4, "400": 4 },
+    "independentChains": 4,
+    "successfulFirstTurnMember": "backend-a",
+    "failedContinuationMember": "backend-b",
+    "exactDifferentResourceErrors": 4,
+    "unattemptedThirdTurns": 4,
+    "cookiesSent": false,
+    "previousSuccessfulResponseIdsUsed": true,
+    "historyReplayOrForcedRouting": false
+  },
+  "affinityOn": {
+    "result": "PASS",
+    "nativeSessionAffinityProperty": "Named cookie",
+    "requests": 24,
+    "statuses": { "200": 24 },
+    "statefulSessions": 4,
+    "turnsPerSession": 3,
+    "sessionBackendSets": [
+      ["backend-a"],
+      ["backend-b"],
+      ["backend-a"],
+      ["backend-b"]
+    ],
+    "completedStatefulTurns": 12,
+    "affinityViolations": 0,
+    "statefulDistribution": { "backend-a": 6, "backend-b": 6 },
+    "statelessRequests": 12,
+    "statelessDistribution": { "backend-a": 6, "backend-b": 6 }
+  },
+  "workspaceEvidence": {
+    "result": "PASS",
+    "capturedRequests": 42,
+    "correlatedRequests": 42,
+    "actualPolicyTraceRows": 42,
+    "statuses": { "200": 33, "400": 9 },
+    "initialComparisonRows": 8,
+    "diagnosticRows": 2,
+    "passingOffRows": 8,
+    "healthyOnRows": 24,
+    "concreteBackendHostsMatch": true,
+    "exactSessionMemberStatusTracesMatch": true,
+    "allRowsIngestedWithinTenMinutesAfterTheirScenario": true,
+    "apimBodyCredentialCookieAndClientIpCaptureViolations": 0
+  },
+  "unchangedRerun": {
+    "result": "PASS",
+    "driver": "Azd",
+    "azdReportedProvisionSeconds": 119,
+    "unchangedNonSecretRuntimeValues": 13
+  },
+  "cleanup": {
+    "result": "PASS",
+    "driver": "Azd",
+    "groupAbsent": true,
+    "localStateRetired": true,
+    "runtimeAndOutputsRemoved": true,
+    "recoveryJournalRemaining": false,
+    "retainedRecoveryRecords": { "APIM": 1, "Foundry": 2, "Workspace": 1 },
+    "modelQuotaAfterDeletion": { "current": 170, "limit": 1000 },
+    "purgeRequested": false
+  }
+}

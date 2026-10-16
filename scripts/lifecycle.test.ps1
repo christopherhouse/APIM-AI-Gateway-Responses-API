@@ -18,7 +18,10 @@ $synthetic = @{
     LAB_MODEL_DEPLOYMENT = 'responses-chat'
     LAB_MODEL_SKU = 'GlobalStandard'
     LAB_MODEL_CAPACITY = '20'
+    LAB_SESSION_AFFINITY_ENABLED = 'true'
     LAB_ALLOW_AZURE = 'false'
+    LAB_ALLOW_DEPLOY = 'false'
+    LAB_ALLOW_AFFINITY_CHANGE = 'false'
 }
 foreach ($key in $synthetic.Keys) {
     $oldEnvironment[$key] = [Environment]::GetEnvironmentVariable($key, 'Process')
@@ -54,8 +57,10 @@ try {
         param($TestRoot, $Compiled)
         $script:TestRoot = $TestRoot
         $script:Compiled = Get-Content -LiteralPath $Compiled -Raw
+        $script:OriginalCompiled = $script:Compiled
         $script:Sequence = 0
         function script:Reset-Fixture {
+            $script:Compiled = $script:OriginalCompiled
             $script:Sequence++
             $contextRoot = Join-Path $script:TestRoot "case-$script:Sequence"
             $script:Context = Get-LabContext $contextRoot offline '11111111-1111-4111-8111-111111111111' rg-responses-offline
@@ -95,6 +100,7 @@ try {
                 apimGatewayUrl = @{ value = 'https://offline.example.invalid' }
                 modelDeploymentName = @{ value = 'responses-chat' }
                 affinityCookieName = @{ value = 'APIM-Backend-Affinity' }
+                sessionAffinityEnabled = @{ value = $true }
                 apimResourceId = @{ value = "$id/providers/Microsoft.ApiManagement/service/gateway" }
                 apimIdentityResourceId = @{ value = "$id/providers/Microsoft.ManagedIdentity/userAssignedIdentities/gateway-identity" }
                 apimSubscriptionResourceId = @{ value = "$id/providers/Microsoft.ApiManagement/service/gateway/subscriptions/lab-access" }
@@ -196,6 +202,30 @@ try {
         & $module { $script:Context.State.parameterHash = 'different-prior-input-hash' }
         Test-Fails { & $module { Get-LabParameters $script:Context } } 'Deployment inputs changed'
     }
+    Test-Case 'affinity-only updates require explicit deployment opt-in and unchanged other inputs' {
+        & $module {
+            $null = Get-LabParameters $script:Context
+            $parameters = $script:Compiled | ConvertFrom-Json -AsHashtable
+            $parameters.parameters.sessionAffinityEnabled.value = $false
+            $script:Compiled = $parameters | ConvertTo-Json -Depth 20
+        }
+        Test-Fails { & $module { Get-LabParameters $script:Context } } 'Deployment inputs changed'
+        $env:LAB_ALLOW_DEPLOY = 'true'
+        $env:LAB_ALLOW_AFFINITY_CHANGE = 'true'
+        try {
+            & $module {
+                $result = Get-LabParameters $script:Context
+                Assert-Lab (-not $result.sessionAffinityEnabled.value) 'Affinity did not change'
+                $parameters = $script:Compiled | ConvertFrom-Json -AsHashtable
+                $parameters.parameters.modelCapacity.value = 19
+                $script:Compiled = $parameters | ConvertTo-Json -Depth 20
+            }
+            Test-Fails { & $module { Get-LabParameters $script:Context } } 'Deployment inputs changed'
+        } finally {
+            $env:LAB_ALLOW_DEPLOY = 'false'
+            $env:LAB_ALLOW_AFFINITY_CHANGE = 'false'
+        }
+    }
     Test-Case 'foreign group cannot be adopted even if empty' {
         & $module { $script:Fixture.exists = $true; $script:Fixture.group.tags['lab-owner'] = 'foreign' }
         Test-Fails { & $module { Invoke-LabPreflight $script:Context -CreateGroup } } 'not owned'
@@ -286,7 +316,13 @@ try {
     }
     Test-Case 'runtime export is allow-listed and validates target identifiers' {
         $runtime = & $module { Set-OwnedFixture; Export-LabRuntime $script:Context }
-        Test-Assert ($runtime.Count -eq 12 -and $runtime.ContainsKey('LAB_APIM_IDENTITY_RESOURCE_ID') -and -not $runtime.ContainsKey('LAB_APIM_SUBSCRIPTION_KEY')) 'Unsafe runtime export'
+        Test-Assert ($runtime.Count -eq 13 -and $runtime.ContainsKey('LAB_APIM_IDENTITY_RESOURCE_ID') -and $runtime.LAB_SESSION_AFFINITY_ENABLED -ceq 'true' -and -not $runtime.ContainsKey('LAB_APIM_SUBSCRIPTION_KEY')) 'Unsafe runtime export'
+        & $module { $script:Outputs.sessionAffinityEnabled.value = $false }
+        $runtime = & $module { Export-LabRuntime $script:Context }
+        Test-Assert ($runtime.LAB_SESSION_AFFINITY_ENABLED -ceq 'false') 'False affinity output was lost or coerced'
+        & $module { $script:Outputs.sessionAffinityEnabled.value = 'false' }
+        Test-Fails { & $module { Export-LabRuntime $script:Context } } 'Missing boolean'
+        & $module { $script:Outputs.sessionAffinityEnabled.value = $true }
         & $module { $script:Outputs.backendAId.value = '/subscriptions/foreign/resourceGroups/other/providers/foo/bar' }
         Test-Fails { & $module { Export-LabRuntime $script:Context } } 'outside the exact owned group'
     }
@@ -313,6 +349,7 @@ try {
                 Initialize-LabAzd $script:Context
                 Assert-Lab ($script:Fixture.azdEnvironment.LAB_MODEL_NAME -ceq 'gpt-5.4-mini') 'Stale azd model was retained'
                 Assert-Lab ($script:Fixture.azdEnvironment.LAB_MODEL_CAPACITY -ceq '20') 'Capacity was not synchronized'
+                Assert-Lab ($script:Fixture.azdEnvironment.LAB_SESSION_AFFINITY_ENABLED -ceq 'true') 'Affinity was not synchronized as lowercase boolean'
                 Assert-Lab (-not $script:Fixture.azdEnvironment.ContainsKey('LAB_APIM_SUBSCRIPTION_KEY')) 'Key was saved to azd'
                 Assert-Lab (@($script:Calls | Where-Object { $_.Tool -eq 'azd' -and ($_.Arguments -join ' ') -match '^auth token .*--output json$' }).Count -eq 1) 'Default plain-text azd token output was requested instead of JSON'
                 Initialize-LabAzd $script:Context -RequireExisting
@@ -407,6 +444,7 @@ try {
         $entry = Join-Path $PSScriptRoot 'Invoke-Lab.ps1'
         Test-Fails { & $entry -Action Preflight -EnvironmentName offline -SubscriptionId '11111111-1111-4111-8111-111111111111' } 'require -AllowAzure'
         Test-Fails { & $entry -Action Provision -EnvironmentName offline -SubscriptionId '11111111-1111-4111-8111-111111111111' -AllowAzure } 'requires -AllowDeploy'
+        Test-Fails { & $entry -Action Preflight -EnvironmentName offline -SubscriptionId '11111111-1111-4111-8111-111111111111' -AllowAzure -AllowDeploy -AllowAffinityChange } 'Affinity changes require Provision'
         Test-Fails { & $entry -Action Down -EnvironmentName offline -SubscriptionId '11111111-1111-4111-8111-111111111111' -AllowAzure } 'requires -AllowDelete'
         Test-Fails { & $entry -Action Run -EnvironmentName offline -SubscriptionId '11111111-1111-4111-8111-111111111111' -AllowAzure } 'requires -AllowCredentialRead'
         Test-Fails { & $entry -Action Run -EnvironmentName offline -SubscriptionId '11111111-1111-4111-8111-111111111111' -AllowAzure -AllowCredentialRead -ClientArguments @('--allow-requests', '--scenario', 'failure') } 'requires -AllowFaults'

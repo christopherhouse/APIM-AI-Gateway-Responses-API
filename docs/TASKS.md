@@ -8,8 +8,8 @@ is complete as code and local validation in merged PR #5. Task `004` is complete
 as offline-validated code in merged PR #6. Task `005` is complete as code and
 offline validation in merged PR #7. Task `006` is complete as code and offline
 validation in merged PR #8. Task `007` completed both authorized live
-lifecycles and cleanup on 2026-10-15/16 in PR #9, left unmerged;
-task `008` remains pending.
+lifecycles and cleanup on 2026-10-15/16 in merged PR #9;
+task `008` is in progress after that merge.
 IDs are stable; do not renumber completed tasks or hide blocked work.
 
 ## Status and dependency rules
@@ -38,7 +38,7 @@ new platform evidence changes an assumption.
 | 005 | Implement .NET 10 conversation harness and evidence model | 003 | done |
 | 006 | Implement controlled failure, breaker, and recovery scenarios | 004, 005 | done |
 | 007 | Verify end-to-end scenarios and diagnostic evidence in Azure | 006 | done |
-| 008 | Complete self-service documentation and clean-environment walkthrough | 007 | pending |
+| 008 | Complete self-service documentation, affinity toggle, and clean-environment walkthrough | 007 | in_progress |
 
 The default execution order is ascending ID. Tasks `004` and `005` can proceed
 independently once `003` is available; parallel execution is not required.
@@ -295,7 +295,7 @@ required handling APIM's transition refusal and a later credential-poll error.
 Both groups are verified absent and state retired. Per group, one APIM, two
 Foundry, and one workspace recovery record remain without purge; final exact
 model quota was 130 of 1,000 versus 50 initially.
-Task `007` is complete in PR #9; task `008` remains pending. See
+Task `007` is complete in merged PR #9; task `008` is in progress. See
 [sanitized evidence](../evidence/samples/task007-verification.json).
 
 Deliverables and acceptance:
@@ -319,6 +319,23 @@ Deliverables and acceptance:
 
 ## 008 - Complete self-service documentation and walkthrough
 
+**Authorization:** On 2026-10-16, after PR #9 merged, the user authorized task
+`008` on `feature/008-self-service-affinity-toggle`. Cost documentation is
+explicitly excluded. The added enhancement is a simple backend-pool session
+affinity parameter, enabled by default, with an off/on response-chain
+comparison. After the exact target/action handoff, the user approved a new
+environment in West US 3 in the same subscription: `walk008` /
+`rg-responses-walk008`, bounded off/on inference, affinity-only redeployment,
+driver parity/reruns, verification and scoped deletion without purge.
+The ceiling is 64 attempts at 2,048 output tokens each, without retries.
+
+**Verified result:** Native off/on configuration, four genuine cross-resource
+state failures, 24 successful affinity-on requests, all 42 trace joins including
+diagnostics, unchanged 13-value rerun, and scoped cleanup/retired state passed.
+Actual redacted turn output and complete final tables are in the
+[console sample](../evidence/samples/task008-console.md). Final PR publication
+is pending; this task remains `in_progress` until the PR exists.
+
 Deliverables and acceptance:
 
 - Complete the root README with prerequisites, architecture, state ownership,
@@ -327,7 +344,13 @@ Deliverables and acceptance:
   expectations, Log Analytics queries, troubleshooting, and scoped teardown.
 - Include example redacted per-turn output and final summary from a real
   verified run; label illustrative samples if any are not actual run evidence.
-- Explain cost drivers, token/capacity controls, and cleanup responsibilities.
+- Explain token/capacity controls and cleanup responsibilities; cost
+  documentation is excluded by the user's task `008` scope change.
+- Add a deployment parameter that enables/disables native backend-pool session
+  affinity, defaulting to enabled, through both deployment drivers.
+- Demonstrate an unpinned cross-backend response-chain failure versus successful
+  pinned chains. Do not treat missing client cookies, a policy rejection, or
+  accidental same-backend routing as proof of a backend response-state failure.
 - Walk through the instructions from a clean environment and fix missing steps.
 - Update the plan and task/progress records to match delivered behavior,
   link completion PRs, and leave PRs unmerged for the user.

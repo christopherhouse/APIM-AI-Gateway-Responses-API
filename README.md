@@ -8,23 +8,54 @@ Management to two Microsoft Foundry backends. It shows why a
 are distributed, and what happens when a conversation's backend becomes
 unavailable.
 
-> **Implemented and live-verified through both deployment paths.** Bootstrap is merged.
-> Task `001` completed an explicitly authorized
-> [disposable feasibility experiment](experiments/001-affinity/README.md):
-> healthy affinity, native pinned failure, concrete-member identity, recovery,
-> and workspace policy traces were verified. The temporary group is deleted.
-> Task `002` adds the [Bicep infrastructure foundation](infra/README.md) with
-> native `.bicepparam` inputs and resource diagnostics. Task `003` adds
-> [gateway routing and policy diagnostics](infra/policies/README.md).
-> Task `004` adds [guarded azd and Azure CLI lifecycle scripts](scripts/README.md).
-> Task `005` adds the [bounded .NET 10 conversation harness](src/ResponsesLab/README.md).
-> Task `006` adds [guarded fault and recovery automation](src/ResponsesLab/README.md#controlled-failure-and-recovery).
-> Task `007` verified clean azd and CLI deployments with their dedicated
-> user-assigned identity, healthy affinity/distribution, controlled failure,
-> original-chain recovery, and correlated workspace policy traces.
-> Both unchanged reruns and scoped cleanups passed. Recovery records remain
-> without purge; task `007` is complete in PR #9, left unmerged for review.
-> The final clean walkthrough is task `008`.
+> **Start with the [step-by-step walkthrough](docs/WALKTHROUGH.md).**
+> Choose azd or Azure CLI, deploy the same Bicep, and compare affinity **off**
+> versus **on** using real response-ID chains. Native affinity is **on by
+> default**; the off-mode demo is explicit and never fabricates a failure.
+> Both original deployment paths, pinned failure/recovery, trace correlation,
+> reruns, and scoped cleanup were live-verified in merged PR #9.
+> Task `008` live-proved the toggle: four real cross-backend failures with
+> affinity off, then 24 successful requests with affinity on. Its
+> [sanitized results](evidence/samples/task008-verification.json) and
+> [actual console examples](evidence/samples/task008-console.md) preserve
+> outcomes and trace proof. The unchanged rerun preserved all 13 runtime
+> values; the disposable lab is verified deleted without purge.
+
+## 🚀 Start here
+
+Use **PowerShell 7**, Git, Azure CLI **2.83.0+** with Bicep, and the **.NET 10
+SDK**. Add azd **1.36.0+** only for the azd driver. You need an enabled AzureCloud
+subscription, registered providers, model quota, and permission to create/delete
+the dedicated group, deploy its resources, assign the two narrow roles, read
+the API-scoped gateway key, and query its workspace.
+
+The [walkthrough](docs/WALKTHROUGH.md) covers sign-in, exact target checks,
+publisher configuration, **both complete deployment paths**, publishing/running
+the client, affinity comparison, diagnostic queries, troubleshooting, and
+verified teardown. Commands run from the repository root; no global
+subscription switch, hidden sign-in, or existing-resource adoption occurs.
+
+The switch is a native Bicep parameter, not a client-side pinning trick:
+
+```bicep
+param sessionAffinityEnabled bool = true // false omits native pool sessionAffinity
+```
+
+For either guarded deployment driver, set the process configuration:
+
+```powershell
+$env:LAB_SESSION_AFFINITY_ENABLED = 'false' # unpinned comparison
+# Set 'true' for normal operation. Changing an existing lab also requires
+# Provision -AllowDeploy -AllowAffinityChange; every other input stays fixed.
+```
+
+With affinity **off**, independent pool choices can send a valid
+`previous_response_id` to the other account, which does not own that response.
+A same-backend continuation can still succeed: the demo only passes when it
+observes an actual correlated cross-backend response-state lookup failure,
+including the service's verified different-resource error.
+With affinity **on**, the client returns each session's native cookie and
+requires every completed turn to stay on that session's original member.
 
 ## 🗺️ Architecture in code
 
@@ -32,7 +63,7 @@ unavailable.
 flowchart LR
     Client[".NET 10 harness<br/>Isolated sessions and response IDs"]
     Gateway["Bicep: APIM Developer<br/>Responses policy XML"]
-    Pool["Bicep: native backend pool<br/>Cookie affinity and circuit breakers"]
+    Pool["Bicep: native backend pool<br/>Affinity parameter on/off + circuit breakers"]
     A["Bicep: Foundry A<br/>Response state A"]
     B["Bicep: Foundry B<br/>Response state B"]
     Logs["Bicep: Log Analytics<br/>Native policy trace configuration"]
@@ -45,13 +76,13 @@ flowchart LR
     B -.-> Logs
 ```
 
-*Implemented components; both azd and CLI runtime, rerun, and cleanup checks
-passed on October 15-16, 2026.*
+*Implemented components; task `007` verified both deployment lifecycles on
+October 15-16, 2026. Task `008` additionally verified native affinity off/on.*
 Solid arrows show requests; dotted arrows show diagnostics. The harness keeps
 routing context, Foundry owns response state, and APIM is not a
 conversation-history database. Native pinning
 during the tested breaker-open window was verified in the disposable experiment;
-the complete self-service walkthrough is still pending.
+the off/on walkthrough is tracked separately from that earlier proof.
 
 ## 🔎 What we know so far
 
@@ -62,13 +93,15 @@ the complete self-service walkthrough is still pending.
 | Healthy-session routing | In each environment, four independent three-turn chains stayed pinned; 12 stateless calls observed A=6/B=6 |
 | Failure semantics | Existing A cookie received **503 / `CircuitBreakerIsOpen` without forwarding**, while three fresh sessions reached B; the original chain recovered on A |
 | Backend proof | Outbound effective request host identified A/B and matched workspace backend URLs and policy traces; model text is not routing evidence |
-| Tracing | All 64 task requests joined to workspace rows with actual policy `TraceRecords`; both native 503s showed no forwarding |
-| Lifecycle | Unchanged reruns preserved all 12 runtime values; both owned groups are verified absent, with recovery records retained |
+| Tracing | Task `007`: 64/64 requests joined to actual policy `TraceRecords`; task `008`: another 42/42 joined, including off-mode failures |
+| Lifecycle | Task `007` reruns preserved all 12 original runtime values; both owned groups are absent with recovery records retained. Task `008` rerun preserved all 13 current values |
+| Native affinity switch | Off: four A-to-B chains broke with the exact different-resource error. On: four three-turn chains stayed pinned, and 12 stateless calls reached both members |
 
 Details, exact versions, sources, verification date, budgets, and limitations
 are in the [platform evidence and design contract](docs/DESIGN.md). These
 findings distinguish the earlier disposable feasibility experiment from
-[current task `007` evidence](evidence/samples/task007-verification.json).
+[task `007` baseline evidence](evidence/samples/task007-verification.json) and
+the [task `008` affinity comparison](evidence/samples/task008-verification.json).
 The [task `001` sample](evidence/samples/task001-feasibility.json) remains historical.
 The 30-second breaker can expire while a fault persists; healthy-only new
 routing is demonstrated within its open window, not promised indefinitely.
@@ -82,6 +115,7 @@ location does not imply West US 3-only processing.
 | Scenario | Success means |
 | --- | --- |
 | Stateful conversations | Each independent response-ID chain stays on its original backend |
+| Affinity off | A valid chained response ID reaches the other backend and receives its actual missing-response error; no switch means inconclusive |
 | Stateless distribution | Independent calls observe both backends; no promised perfect split |
 | Controlled failure | The pinned conversation fails explicitly while fresh sessions reach a healthy backend |
 | Recovery and evidence | The backend is restored, recovery is observed, and gateway/policy records correlate with the run |
@@ -121,7 +155,7 @@ The gateway returns `X-Lab-Request-Id` and a host-verified
 Log Analytics with zero body capture and no credential/cookie header capture.
 The policy never retries a broken chain onto another backend.
 
-In both live samples, APIM captured no bodies, credential/cookie headers,
+In both task `007` samples and the task `008` comparison, APIM captured no bodies, credential/cookie headers,
 or client IP. Workspace/table retention was 30 days except `Usage` at 90 days.
 Query audits can contain operator/query metadata. Azure Policy also configured
 central Foundry logging: that external destination was neither queried nor
@@ -129,7 +163,8 @@ modified, and its privacy/retention is not controlled by this lab.
 
 **Evidence boundary:** local Bicep, XML, compiled-expression, and contract
 checks do not establish live behavior. Task `007` separately records actual
-provisioning through both drivers, routing, and ingestion. No new Azure operations were performed
+provisioning through both drivers, routing, and ingestion; task `008` records
+the additional off/on proof and its actual service-error contract. No new Azure operations were performed
 for tasks `002`-`006`; running the lifecycle scripts or inference still requires separate
 target/action authorization.
 
@@ -151,8 +186,8 @@ what-if before deployment. Neither silently changes subscription or region.
 
 Use **PowerShell 7**, Azure CLI 2.83.0+ with Bicep, and azd 1.36.0+ for the
 `Azd` path. The [lifecycle guide](scripts/README.md) covers local publisher
-configuration, both command paths, immutable environment records, non-secret
-client handoff, reruns, failure handling, costs, and scoped teardown.
+configuration, both command paths, guarded environment records, non-secret
+client handoff, affinity-only updates, reruns, failure handling, and scoped teardown.
 Use its wrapper rather than bare `azd` commands.
 
 Task `007` verified both drivers' provisioning, process-only key handoff,
@@ -221,6 +256,7 @@ The task used 64 of its initial 96 allowed attempts, with no transport retries.
 
 | Document | Purpose |
 | --- | --- |
+| [Start-to-finish walkthrough](docs/WALKTHROUGH.md) | Prerequisites, either driver, real off/on comparison, queries, and cleanup |
 | [Lab plan](docs/PLAN.md) | Agreed requirements and mandatory design gates |
 | [Design and evidence](docs/DESIGN.md) | Verified findings, selected contracts, and resolved gates B1-B2 |
 | [Infrastructure reference](infra/README.md) | Native parameters, pinned modules, diagnostics inventory, outputs, and offline checks |
@@ -257,6 +293,5 @@ The experiment used 59 of its 64-request allowance and deleted the dedicated
 group within the three-hour bound. Both deleted Foundry accounts were purged
 and model quota returned to baseline. Azure retains normal APIM/workspace
 soft-delete recovery records; they are not a running gateway or workspace.
-The under-$5 target was an estimate, not a billing cap; the final Azure bill
-is not yet available. Tasks `002`-`006` have separate code-only authorization; later
+Tasks `002`-`006` had separate code-only authorization; later
 deployments still require explicit authorization.

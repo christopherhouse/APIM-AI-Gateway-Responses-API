@@ -67,6 +67,7 @@ $expressionNodes = $policy.SelectNodes('//@*[starts-with(., "@")] | //message[st
 $methods = for ($i = 0; $i -lt $expressionNodes.Count; $i++) {
     $node = $expressionNodes[$i]
     $expression = if ($node -is [System.Xml.XmlAttribute]) { $node.Value } else { $node.InnerText }
+    $expression = $expression.Replace('__SESSION_AFFINITY_ENABLED__', 'true')
     $body = if ($expression.StartsWith('@{')) { $expression.Substring(1) } else { '{ return ' + $expression.Substring(1) + '; }' }
     "public static object Expression$i(PolicyContext context) $body"
 }
@@ -89,6 +90,7 @@ function New-Request([string]$Scenario = 'stateful') {
         $context.Request.Body.Value = $context.Request.Body.Value.Replace('"store":true', '"store":false')
     }
     $context.Variables['labModel'] = 'responses-chat'
+    $context.Variables['labAffinityEnabled'] = $true
     $context.Variables['labHostA'] = 'a.example.invalid'
     $context.Variables['labHostB'] = 'b.example.invalid'
     return $context
@@ -118,6 +120,16 @@ $chain.Request.Headers['Cookie'] = @('__AFFINITY_COOKIE__=first; __AFFINITY_COOK
 Assert-Validation $chain 'DuplicateAffinityCookie'
 $chain.Request.Headers['Cookie'] = @('__AFFINITY_COOKIE__=first', '__AFFINITY_COOKIE__=second')
 Assert-Validation $chain 'DuplicateAffinityCookie'
+
+$unpinned = New-Request
+$unpinned.Variables['labAffinityEnabled'] = $false
+$unpinned.Request.Body.Value = $unpinned.Request.Body.Value.Replace('"input"', '"previous_response_id":"resp_synthetic","input"')
+Assert-Validation $unpinned ''
+$unpinned.Request.Headers['Cookie'] = @('__AFFINITY_COOKIE__=stale-pin')
+Assert-Validation $unpinned 'AffinityCookieDisabled'
+$unpinned.Request.Headers.Remove('Cookie') | Out-Null
+$unpinned.Request.Body.Value = $unpinned.Request.Body.Value.Replace('"previous_response_id":"resp_synthetic"', '"previous_response_id":null')
+Assert-Validation $unpinned 'InvalidPreviousResponseId'
 
 $unexpected = New-Request
 $unexpected.Request.Headers['Cookie'] = @('__AFFINITY_COOKIE__=opaque-value')

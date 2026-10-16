@@ -60,8 +60,9 @@ Maintain deployment inputs as **`.bicepparam` files**, not JSON parameter files.
 publisher metadata only. The supported lifecycle drivers both use
 [`deploy.bicepparam`](deploy.bicepparam): it targets the same Bicep and reads
 local non-secret metadata/model inputs from the process environment.
-The wrapper fixes target/region/ownership inputs and checks an immutable
-compiled-input hash. For direct lower-level experimentation only, a copy of
+The wrapper fixes target/region/ownership inputs and checks the compiled-input
+hash; only an explicitly opted-in affinity-only change can reuse a lab with
+matching saved non-affinity inputs. For direct lower-level experimentation only, a copy of
 the placeholder file can live at ignored `infra\main.local.bicepparam`;
 it is not consumed by the wrappers. Never put credentials in parameters.
 
@@ -73,6 +74,7 @@ it is not consumed by the wrappers. Never put credentials in parameters.
 | `apimName`, `foundryAName`, `foundryBName`, `workspaceName` | Deterministic environment/group-based defaults; optional explicit names |
 | `modelName`, `modelVersion`, `modelDeploymentName` | `gpt-5.4-mini`, `2026-03-17`, `responses-chat` |
 | `affinityCookieName` | Fixed `APIM-Backend-Affinity`; exported name only, never an opaque value |
+| `sessionAffinityEnabled` | Boolean, default `true`; `false` omits native pool `sessionAffinity` and permits the explicit unpinned chain contract |
 | `modelDeploymentSku`, `modelCapacity` | `GlobalStandard`; 1-20 per account, default 20 |
 | `logRetentionDays`, `logDailyQuotaGb` | 30-90 days, default 30; 1-5 GB/day, default 1 |
 | `tags` | Additional approved tags; required `azd-env-name` and `purpose` ownership values win |
@@ -92,7 +94,14 @@ environment or explicit names can create additional billable resources on a
 rerun; incremental deployment does not remove the old resources. The task `004`
 wrappers reject changed inputs/targets and verify the externally
 created group's ownership tags and parent inventory before reuse or deletion.
-Workspace caps can overshoot and are not billing caps.
+Workspace ingestion caps can overshoot.
+
+Both supported drivers read `LAB_SESSION_AFFINITY_ENABLED` from the process
+environment. Its actual boolean output is exported to the client as lowercase
+`true`/`false`. This is a deployment switch: it does not use the application
+UUID as a routing key or force a backend in policy.
+See the [affinity-only update guard](../scripts/README.md#affinity-only-configuration-changes)
+and [off/on walkthrough](../docs/WALKTHROUGH.md).
 
 ## Diagnostics inventory and privacy
 
@@ -159,7 +168,7 @@ The entry point returns `resourceGroupName`, `apimResourceId`, `apimGatewayUrl`,
 `apimPrincipalId` (the attached user-assigned identity's principal),
 `apimIdentityResourceId`, `foundryAResourceId`, `foundryBResourceId`,
 `foundryAEndpoint`, `foundryBEndpoint`, `workspaceResourceId`,
-`workspaceCustomerId`, and `modelDeploymentName`. URLs are read from actual
+`workspaceCustomerId`, `modelDeploymentName`, and boolean `sessionAffinityEnabled`. URLs are read from actual
 service properties, not assembled from assumed DNS suffixes. Explicit module
 dependencies prevent reading those properties before provisioning finishes.
 

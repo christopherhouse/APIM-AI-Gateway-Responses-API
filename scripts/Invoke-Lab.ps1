@@ -9,6 +9,7 @@ param(
     [string]$ResourceGroupName = "rg-responses-$EnvironmentName",
     [switch]$AllowAzure,
     [switch]$AllowDeploy,
+    [switch]$AllowAffinityChange,
     [switch]$AllowDelete,
     [switch]$AllowCredentialRead,
     [switch]$AllowFaults,
@@ -21,6 +22,9 @@ $ErrorActionPreference = 'Stop'
 Import-Module (Join-Path $PSScriptRoot 'Lab.psm1') -Force
 Assert-Lab $AllowAzure 'All live operations, including preflight reads, require -AllowAzure.'
 if ($Action -eq 'Provision') { Assert-Lab $AllowDeploy 'Provision requires -AllowDeploy.' }
+if ($AllowAffinityChange) {
+    Assert-Lab ($Action -eq 'Provision' -and $AllowDeploy) 'Affinity changes require Provision -AllowDeploy -AllowAffinityChange.'
+}
 if ($Action -eq 'Down') {
     Assert-Lab ($AllowDelete -and $ConfirmResourceGroup -ceq $ResourceGroupName) 'Down requires -AllowDelete and the exact -ConfirmResourceGroup.'
 }
@@ -44,11 +48,12 @@ try {
     $context = Get-LabContext $root $EnvironmentName $SubscriptionId $ResourceGroupName -RequireExisting:($Action -in @('Export', 'Run', 'Down'))
     Save-LabState $context
     $previous = Set-LabProcessEnvironment $context
-    foreach ($key in @('LAB_ALLOW_AZURE', 'LAB_ALLOW_DEPLOY', 'LAB_ALLOW_DELETE', 'LAB_CONFIRM_RESOURCE_GROUP')) {
+    foreach ($key in @('LAB_ALLOW_AZURE', 'LAB_ALLOW_DEPLOY', 'LAB_ALLOW_AFFINITY_CHANGE', 'LAB_ALLOW_DELETE', 'LAB_CONFIRM_RESOURCE_GROUP')) {
         $previous[$key] = [Environment]::GetEnvironmentVariable($key, 'Process')
     }
     $env:LAB_ALLOW_AZURE = 'true'
     $env:LAB_ALLOW_DEPLOY = $AllowDeploy.ToString().ToLowerInvariant()
+    $env:LAB_ALLOW_AFFINITY_CHANGE = $AllowAffinityChange.ToString().ToLowerInvariant()
     $env:LAB_ALLOW_DELETE = $AllowDelete.ToString().ToLowerInvariant()
     $env:LAB_CONFIRM_RESOURCE_GROUP = $ConfirmResourceGroup
     switch ($Action) {

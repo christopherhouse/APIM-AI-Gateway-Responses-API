@@ -37,6 +37,7 @@ internal sealed record TurnEvidence(
     public string? ResponseStatus { get; init; }
     public string? OutputText { get; init; }
     public string? ErrorCode { get; init; }
+    public bool CrossResourceStateError { get; init; }
     public string? GatewayErrorReason { get; init; }
     public double? RetryAfterSeconds { get; init; }
     public TurnOutcome Outcome { get; init; }
