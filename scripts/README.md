@@ -198,6 +198,11 @@ request/evidence/affinity/distribution failures. The
 [harness guide](../src/ResponsesLab/README.md) defines bounds and evidence.
 Publishing/help and mocked tests passed locally. Task `007` also exercised
 this management-key handoff and real inference through both environments.
+Task `009` adds `--client http|foundry-sdk|agent-framework` and SDK
+`--cookie-profile sdk-default|session-scoped` inside the same argument array;
+see the [mode/profile reference](../src/ResponsesLab/README.md#client-modes-and-cookie-profiles).
+The wrapper passes these selectors unchanged and does not expand the request
+budget or authorize new live runs. SDK/framework live proof remains pending.
 
 ### Affinity-only configuration changes
 
@@ -232,7 +237,8 @@ See the [complete off/on comparison](../docs/WALKTHROUGH.md#3-affinity-off-demon
 ### Separately authorized fault run
 
 Task `006` adds the `failure` scenario with **both** wrapper and client fault
-opt-ins and the exact group confirmation:
+opt-ins and the exact group confirmation. It remains raw HTTP only; do not add
+SDK selectors to its exact argument sequence:
 
 ```powershell
 & .\scripts\Invoke-Lab.ps1 -Action Run -EnvironmentName $environment -SubscriptionId $subscription -ResourceGroupName $group -AllowAzure -AllowCredentialRead -AllowFaults -ConfirmResourceGroup $group -ClientPath $client -ClientArguments @('--allow-requests', '--scenario', 'failure', '--allow-faults', '--confirm-resource-group', $group)

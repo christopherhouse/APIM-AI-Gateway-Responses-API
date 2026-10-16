@@ -16,7 +16,8 @@ internal enum TurnOutcome
     ResponseTooLarge,
     RequestTimeout,
     TransportError,
-    RunCancelled
+    RunCancelled,
+    SdkContractViolation
 }
 
 internal sealed record TurnEvidence(
@@ -42,6 +43,9 @@ internal sealed record TurnEvidence(
     public double? RetryAfterSeconds { get; init; }
     public TurnOutcome Outcome { get; init; }
     public bool Sent { get; init; }
+    public string ClientMode { get; init; } = "http";
+    public string CookieProfile { get; init; } = "manual";
+    public int WireAttempts { get; init; }
 
     internal bool IsControlledFault(string? member) =>
         Outcome == TurnOutcome.HttpError && Sent && GatewayRequestId is not null &&
