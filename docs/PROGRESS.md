@@ -5,10 +5,10 @@
 | Field | Value |
 | --- | --- |
 | Updated | 2026-10-16 |
-| Phase | Task `008` complete in PR #10, left open and unmerged for user review |
-| Authorization | Task `008` approved on 2026-10-16; new `walk008` / `rg-responses-walk008`, same active subscription / West US 3, bounded off/on inference and scoped cleanup, no purge |
+| Phase | Task `008` complete, including README/code-citation follow-up in open, unmerged PR #10 |
+| Authorization | User requested integrated README explanation with code excerpts/source-line citations on 2026-10-16; documentation-only, no new Azure operations |
 | Planning branch | `chore/lab-planning` |
-| Current implementation task | `008` - done on `feature/008-self-service-affinity-toggle` |
+| Current implementation task | `008` - done, including documentation follow-up on `feature/008-self-service-affinity-toggle` |
 | Next task | User review/merge of #10; no further implementation task is queued |
 | Azure deployment | `rg-responses-walk008` verified absent; local state retired, runtime removed, recovery records retained without purge |
 | Solution files | Task `007` baseline plus default-on affinity toggle; task `008` off/on proof, 42 trace joins and unchanged 13-value rerun verified |
@@ -19,11 +19,11 @@
 
 | Item | Owner/action | Effect |
 | --- | --- | --- |
-| Implementation authorization | Task `008` authorized on 2026-10-16 after PR #9 merged | Documentation and default-on pool affinity parameter/comparison; cost documentation excluded. User approved the new same-subscription West US 3 environment after the scoped handoff. |
+| Implementation authorization | Task `008` README follow-up authorized on 2026-10-16 | Explain native affinity plus harness cookie/response-ID handling with code excerpts and source-line citations; continue on the existing unmerged PR #10 branch explicitly, not as a merged dependency. |
 | Initial base branch | Resolved with explicit user approval on 2026-10-15 | Empty commit `846a2cb` establishes `main`; subsequent work stays on work branches. |
 | Platform feasibility | Task `001`, B1-B2 resolved in `DESIGN.md` | Native original-pin rejection, outbound member evidence, and workspace policy traces verified; no workaround required. |
 | Model and authentication | Task `001` live feasibility passed | `gpt-5.4-mini` / `2026-03-17` / `GlobalStandard` served Responses through API-scoped gateway access and resource-scoped managed identity. |
-| Live Azure operations | Authorized task `008` new lab, bounded off/on demonstration, reruns and cleanup | Only `rg-responses-walk008`, same active subscription / West US 3; no existing application changes, target substitution, or purge. |
+| Live Azure operations | Prior authorized task `008` lifecycle complete; documentation follow-up authorizes none | Owned group remains verified deleted; no new reads, inference, mutations, teardown, or purge. |
 
 ## Execution log
 
@@ -1477,6 +1477,55 @@
   consistently in PLAN, TASKS, DESIGN, this tracker and the sanitized sample.
 - All planned tasks are complete. No PR was merged; no additional Azure
   operation or inference is planned. Next action belongs to user review of #10.
+
+### 2026-10-16 - Task 008 README/code-citation follow-up started
+
+- User requested a README section connecting the native affinity switch,
+  explicit harness cookie capture/resend and response-ID chain, with code
+  excerpts and line-of-code citations. This is documentation-only authorization.
+- Confirmed clean worktree, fetched origin, and verified PR #10 remains open
+  and unmerged. `main` is still task `007` merge `e66815a`; local and remote
+  task `008` heads both match `ca8188c`.
+- Continue this coherent task `008` follow-up on its existing
+  `feature/008-self-service-affinity-toggle` dependency branch and PR #10,
+  explicitly without treating that open PR as merged or creating later work.
+- Marked task `008` `in_progress` for the new acceptance item before README
+  edits. Prior implementation/live evidence and cleanup remain complete.
+- Read the required plan/task/progress records, repository PR template, and
+  actual Bicep, policy, conversation model and HTTP client. No source or Azure
+  changes are needed. Next: add the integrated section and verify excerpts,
+  line citations, links, formatting, scope and generated-state ignore rules.
+
+### 2026-10-16 - Task 008 integrated README explanation validated
+
+- Added the README section "How affinity and response chaining connect" and
+  a jump link from the initial affinity switch explanation. It distinguishes
+  the native routing cookie, Foundry response ID, and application correlation
+  UUID, then connects the pool configuration to session-local storage,
+  explicit `Set-Cookie` capture and subsequent `Cookie`/response-ID transport.
+- Included five implementation excerpts and 13 immutable GitHub source-line
+  citations across five unchanged source files at reviewed revision `ca8188c`.
+  Explained disabled automatic HTTP cookies, independent stateless calls,
+  missing-cookie/backend evidence guards, real off/on evidence, and logical
+  backend continuity rather than physical worker placement or an eternal pin.
+- `python .\artifacts\008-readme-citations.py`: passed all 13 line ranges and
+  five exact excerpts (common indentation normalized); pinned source content
+  matches the current implementation. The new validator remains ignored.
+  Its first run caught an incorrect expected citation count in the local
+  checker (14 versus the actual 13); corrected that checker and reran.
+- `python .\artifacts\008-local-checks.py`: passed 28 branch-scoped UTF-8/LF
+  files, 102 relative links/anchors, fences, task states, private-value
+  exclusions, relevant ignore fixtures and whitespace. `git diff --check`
+  passed. Reviewed the four-file follow-up diff and README presentation source.
+- Only `README.md`, PLAN, TASKS and this tracker changed. Existing command
+  examples and Mermaid diagrams are untouched. No Bicep, policy, harness or
+  lifecycle behavior changed; builds, inference, Azure checks and live
+  validation were not rerun for this documentation-only change.
+  GitHub-rendered visual appearance was not verified.
+- The added acceptance item is complete and the existing PR #10 is confirmed
+  open on the correct branch. Task `008` is done; publish this follow-up to
+  that PR, preserving its template and original implementation/live evidence.
+  No PR merge, new Azure operation or later task is authorized or planned.
 
 ## Update protocol
 

@@ -9,7 +9,9 @@ as offline-validated code in merged PR #6. Task `005` is complete as code and
 offline validation in merged PR #7. Task `006` is complete as code and offline
 validation in merged PR #8. Task `007` completed both authorized live
 lifecycles and cleanup on 2026-10-15/16 in merged PR #9;
-task `008` is complete in PR #10, left unmerged for user review.
+task `008` delivery and its README/code-citation follow-up are complete in
+PR #10, left unmerged for user review on the same dependency branch.
+No new Azure operations are authorized by the documentation follow-up.
 IDs are stable; do not renumber completed tasks or hide blocked work.
 
 ## Status and dependency rules
@@ -328,6 +330,11 @@ environment in West US 3 in the same subscription: `walk008` /
 `rg-responses-walk008`, bounded off/on inference, affinity-only redeployment,
 driver parity/reruns, verification and scoped deletion without purge.
 The ceiling is 64 attempts at 2,048 output tokens each, without retries.
+On the same date, the user requested a documentation-only follow-up in the
+README explaining the native affinity setting, per-conversation cookie
+capture/resend, and response-ID chain with code excerpts and source-line
+citations. Continue on the existing PR #10 dependency branch; no new Azure
+operation or application change is included.
 
 **Verified result:** Native off/on configuration, four genuine cross-resource
 state failures, 24 successful affinity-on requests, all 42 trace joins including
@@ -340,6 +347,9 @@ Deliverables and acceptance:
 
 - Complete the root README with prerequisites, architecture, state ownership,
   affinity lifecycle, auth, policies, breakers, and limitations.
+- Tie the native affinity setting to actual harness cookie capture/resend and
+  `previous_response_id` handling using accurate code excerpts and source-line
+  citations; explain session isolation, stateless calls, and failure guards.
 - Document both complete deployment paths, harness commands and scenario
   expectations, Log Analytics queries, troubleshooting, and scoped teardown.
 - Include example redacted per-turn output and final summary from a real

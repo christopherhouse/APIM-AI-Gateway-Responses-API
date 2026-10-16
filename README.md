@@ -56,6 +56,7 @@ observes an actual correlated cross-backend response-state lookup failure,
 including the service's verified different-resource error.
 With affinity **on**, the client returns each session's native cookie and
 requires every completed turn to stay on that session's original member.
+See [how the setting, cookie, and response chain connect in code](#-how-affinity-and-response-chaining-connect).
 
 ## 🗺️ Architecture in code
 
@@ -220,6 +221,127 @@ documents publishing, the exact guarded run command, configuration bounds,
 evidence fields, privacy, and exit codes. Offline checks do not replace the
 separately recorded live evidence. Generated explanations can be inaccurate;
 only gateway-derived member evidence and correlated records establish routing.
+
+## 🔗 How affinity and response chaining connect
+
+**The gateway creates the pin; the harness carries it forward; Foundry owns
+the response state.** Enabling affinity is not enough if a client drops the
+cookie. These three identifiers have different jobs:
+
+| Value | Owner and purpose | Does it pin routing? |
+| --- | --- | --- |
+| `APIM-Backend-Affinity` cookie | APIM issues an opaque routing cookie; the client returns it for that conversation | Yes, with native pool affinity enabled |
+| `previous_response_id` | Foundry returns a response ID; the client supplies it to continue that response chain | No; it references backend-owned response state |
+| `X-Lab-Session-Id` | Harness-generated application UUID used to correlate turns and traces | No; it is not a backend-selection key |
+
+The excerpts below are from the implementation, not standalone programs.
+Source links are pinned to the reviewed revision so their line numbers remain
+stable.
+
+### Enable the gateway's native cookie affinity
+
+The default-on [`sessionAffinityEnabled` parameter (`main.bicep:61-62`)](https://github.com/christopherhouse/APIM-AI-Gateway-Responses-API/blob/ca8188cdb51bd405f7daf0c943ba31fc9e499f25/infra/main.bicep#L61-L62)
+controls this part of the pool configuration. When false, the `sessionAffinity`
+property is omitted rather than replaced with custom routing:
+
+```bicep
+}, sessionAffinityEnabled ? {
+  sessionAffinity: {
+    sessionId: {
+      name: affinityCookieName
+      source: 'cookie'
+    }
+  }
+} : {})
+```
+
+Source: [`gateway.bicep:85-92`](https://github.com/christopherhouse/APIM-AI-Gateway-Responses-API/blob/ca8188cdb51bd405f7daf0c943ba31fc9e499f25/infra/gateway.bicep#L85-L92).
+The [request policy selects `responses-pool` (`responses.xml:68`)](https://github.com/christopherhouse/APIM-AI-Gateway-Responses-API/blob/ca8188cdb51bd405f7daf0c943ba31fc9e499f25/infra/policies/responses.xml#L68);
+it does not maintain a response-ID-to-backend lookup.
+
+### Keep each conversation's routing context separate
+
+Each `Conversation` owns its own cookie container, latest response ID, and
+original backend observation:
+
+```csharp
+internal CookieContainer Cookies { get; } = new();
+internal string? PreviousResponseId { get; set; }
+internal string? OriginalBackend { get; set; }
+```
+
+Source: [`Conversation.cs:57-59`](https://github.com/christopherhouse/APIM-AI-Gateway-Responses-API/blob/ca8188cdb51bd405f7daf0c943ba31fc9e499f25/src/ResponsesLab/Conversation.cs#L57-L59).
+Independent conversations can therefore pin to different members without
+sharing cookies or response IDs. `OriginalBackend` is an assertion target,
+not a client-chosen route.
+
+### First turn: receive and retain APIM's cookie
+
+The first stateful request sends `store: true`, but no cookie or
+`previous_response_id`. APIM selects a pool member and issues the native
+affinity cookie. The harness [selects the named `Set-Cookie` header
+(`ResponsesClient.cs:115-117`)](https://github.com/christopherhouse/APIM-AI-Gateway-Responses-API/blob/ca8188cdb51bd405f7daf0c943ba31fc9e499f25/src/ResponsesLab/ResponsesClient.cs#L115-L117)
+and, after validating a successful completed response, retains it in that
+conversation's container:
+
+```csharp
+foreach (var header in selected)
+    session.Cookies.SetCookies(options.Endpoint, header);
+cookies = AffinityCookies(session);
+if (!ValidCookie(cookies))
+    return Finish(TurnOutcome.MissingAffinity);
+```
+
+Source: [`ResponsesClient.cs:186-190`](https://github.com/christopherhouse/APIM-AI-Gateway-Responses-API/blob/ca8188cdb51bd405f7daf0c943ba31fc9e499f25/src/ResponsesLab/ResponsesClient.cs#L186-L190).
+It then [saves the returned response ID and first backend observation
+(`ResponsesClient.cs:195-196`)](https://github.com/christopherhouse/APIM-AI-Gateway-Responses-API/blob/ca8188cdb51bd405f7daf0c943ba31fc9e499f25/src/ResponsesLab/ResponsesClient.cs#L195-L196).
+Cookie handling is explicit: [the shared HTTP transport has `UseCookies = false`
+(`ResponsesClient.cs:14-18`)](https://github.com/christopherhouse/APIM-AI-Gateway-Responses-API/blob/ca8188cdb51bd405f7daf0c943ba31fc9e499f25/src/ResponsesLab/ResponsesClient.cs#L14-L18),
+preventing an automatic shared cookie jar from mixing conversations.
+
+### Later turns: send the cookie and response ID together
+
+For an affinity-on continuation, the harness explicitly adds the cookie header:
+
+```csharp
+if (stateful && options.SessionAffinityEnabled && session.PreviousResponseId is not null)
+{
+    request.Headers.Add("Cookie", $"{options.CookieName}={cookies[0].Value}");
+    evidence = evidence with { AffinityFingerprint = Fingerprint(cookies[0].Value) };
+}
+```
+
+Source: [`ResponsesClient.cs:77-81`](https://github.com/christopherhouse/APIM-AI-Gateway-Responses-API/blob/ca8188cdb51bd405f7daf0c943ba31fc9e499f25/src/ResponsesLab/ResponsesClient.cs#L77-L81).
+Separately, it adds the latest response ID to the JSON body:
+
+```csharp
+if (stateful && session.PreviousResponseId is not null)
+    body["previous_response_id"] = session.PreviousResponseId;
+```
+
+Source: [`ResponsesClient.cs:93-94`](https://github.com/christopherhouse/APIM-AI-Gateway-Responses-API/blob/ca8188cdb51bd405f7daf0c943ba31fc9e499f25/src/ResponsesLab/ResponsesClient.cs#L93-L94).
+APIM uses the cookie to route back to the member; that Foundry account resolves
+the response ID. Each successful turn advances the saved response ID. Evidence
+records a cookie fingerprint, not its raw value.
+
+### Check the pin; do not silently repair a broken chain
+
+In affinity-on mode, the client [refuses a continuation without a valid cookie
+(`ResponsesClient.cs:67-70`)](https://github.com/christopherhouse/APIM-AI-Gateway-Responses-API/blob/ca8188cdb51bd405f7daf0c943ba31fc9e499f25/src/ResponsesLab/ResponsesClient.cs#L67-L70)
+and [fails missing gateway evidence or a successful response from a different
+member (`ResponsesClient.cs:134-137`)](https://github.com/christopherhouse/APIM-AI-Gateway-Responses-API/blob/ca8188cdb51bd405f7daf0c943ba31fc9e499f25/src/ResponsesLab/ResponsesClient.cs#L134-L137).
+Stateless calls send `store: false`, no response ID and no affinity cookie;
+the same [request construction (`ResponsesClient.cs:67-94`)](https://github.com/christopherhouse/APIM-AI-Gateway-Responses-API/blob/ca8188cdb51bd405f7daf0c943ba31fc9e499f25/src/ResponsesLab/ResponsesClient.cs#L67-L94)
+leaves them independent. The explicit affinity-off comparison still sends
+the real previous response ID but deliberately omits the cookie.
+
+The [live comparison](evidence/samples/task008-verification.json) observed four
+cross-resource continuation failures with affinity off, versus four pinned
+three-turn chains with zero affinity violations when on; all 24 on-mode
+stateful/stateless requests succeeded. This establishes continuity to the
+**configured backend endpoint/account**, not a physical internal Foundry worker,
+and is not an indefinite guarantee across cookie expiry, failures or topology
+changes. See the [separately verified failure/recovery behavior](#-controlled-failure-and-recovery).
 
 ## 🛠️ Controlled failure and recovery
 

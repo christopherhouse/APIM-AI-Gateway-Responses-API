@@ -3,8 +3,13 @@
 ## Scope and authorization
 
 This records the agreed implementation plan and authorization history.
-Tasks `000`-`008` are complete. The final self-service walkthrough and native
-affinity toggle are published in PR #10, left unmerged for user review.
+Tasks `000`-`008` are complete. Task `008` delivery, live verification and its
+user-authorized README follow-up are published in PR #10, left unmerged for
+user review on its existing dependency branch
+`feature/008-self-service-affinity-toggle`. On 2026-10-16, the user requested
+an integrated cookie/response-ID explanation with code excerpts and source-line
+citations. This follow-up is documentation-only: no new Azure operations,
+application changes, or cost documentation.
 Task `008` was authorized on 2026-10-16 after
 PR #9 merged. Work on `feature/008-self-service-affinity-toggle` excludes cost
 documentation at the user's request. Add a default-on native backend-pool
@@ -19,7 +24,7 @@ The implemented toggle and clean walkthrough have now passed live verification:
 four unpinned cross-resource failures, 24 successful pinned/stateless requests,
 all 42 request/policy-trace joins including diagnostics, an unchanged rerun
 preserving 13 runtime values, and verified scoped deletion without purge.
-Task `008` is complete in open PR #10; see
+Task `008` live verification is complete in open PR #10; see
 [sanitized results](../evidence/samples/task008-verification.json).
 On 2026-10-15, the user authorized task `000` after planning PR #1 was merged,
 then task `001` after bootstrap PR #2 was merged. That authorization covered
