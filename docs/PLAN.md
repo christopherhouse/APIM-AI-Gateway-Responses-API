@@ -2,7 +2,8 @@
 
 ## Scope and authorization
 
-This is the agreed implementation plan, not an implemented solution.
+This records the agreed implementation plan and authorization history.
+Tasks `000`-`007` are now complete; the final self-service walkthrough is task `008`.
 On 2026-10-15, the user authorized task `000` after planning PR #1 was merged,
 then task `001` after bootstrap PR #2 was merged. That authorization covered
 platform design and its read-only checks. Later on 2026-10-15 the user explicitly
@@ -85,7 +86,7 @@ Backend load-balancing pool
 Supported resource diagnostics and gateway evidence --> Log Analytics
 ```
 
-This is a logical design, not an implemented system. [DESIGN.md](DESIGN.md)
+This is a logical overview of the implemented system. [DESIGN.md](DESIGN.md)
 records task `001` source-backed choices and live disposable feasibility
 evidence as of 2026-10-15. B1/B2 are resolved: native pinned-breaker rejection
 and concrete outbound host evidence passed. Task `002` implements the
@@ -93,12 +94,16 @@ infrastructure foundation in merged PR #4. Task `003` adds gateway routing,
 affinity, and diagnostic policies on `feature/003-gateway-routing-policies`.
 Task `004` implements guarded azd/CLI orchestration for those templates;
 both drivers share native `deploy.bicepparam` inputs and external group
-ownership. This is offline-validated code, not a deployed self-service lab.
+ownership. These were code-only deliveries; runtime evidence was not claimed
+until the separately authorized task `007`.
 Task `005` adds the bounded .NET 10 client, isolated response chains, and
 per-turn/session evidence; its HTTP transport tests are offline only.
 Task `006` adds the opt-in same-host backend-path fault, bounded breaker/
 fresh-session observations, conditional restoration, and original-chain recovery.
-It too is offline-validated code, not live fault/routing evidence.
+Task `007` subsequently exercised both healthy and fault workflows against
+clean azd and CLI environments, including actual workspace policy traces,
+unchanged reruns, and verified scoped cleanup. Those results are separate from
+the earlier tasks' offline checks.
 The selected trace contract is verified native policy trace records plus
 correlated gateway logs, not full debugger transcripts.
 
@@ -227,12 +232,13 @@ Its implementation and offline validation are complete in PR #8, merged at
 `721d299` on 2026-10-15. Task `007` began on
 `feature/007-live-verification` after approval to start live verification.
 Read-only preparation and cold validation corrected real lifecycle contracts;
-draft PR #9 preserves those fixes and the dedicated user-assigned identity.
-The first azd lab has passed provisioning, healthy routing, controlled failure/
-recovery, correlated workspace diagnostics, and an unchanged rerun. Its scoped
-teardown is verified, with recovery records retained without purge. The clean
-CLI environment is provisioning; its scenarios and lifecycle remain outstanding. This is
-not task `007` completion; task `008` is pending.
+PR #9 preserves those fixes and the dedicated user-assigned identity.
+Both clean labs passed provisioning, healthy routing, controlled failure/
+recovery, correlated workspace diagnostics, unchanged reruns, and verified
+scoped teardown. Initial CLI deployment polling and azd teardown errors were
+reconciled through actual Azure state checks, not treated as successful command
+exits. Recovery records and associated model quota remain without purge.
+Task `007` is complete in PR #9, left unmerged; task `008` is pending.
 
 ## Execution and progress
 

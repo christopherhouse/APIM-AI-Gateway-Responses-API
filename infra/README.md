@@ -1,7 +1,7 @@
 # Infrastructure and gateway configuration - tasks 002/003/004
 
-This infrastructure was **deployed and exercised through azd in task `007`**;
-the separate clean CLI lifecycle remains in progress. It creates
+This infrastructure was **deployed and exercised through both azd and CLI in
+task `007`**, including unchanged reruns and verified cleanup. It creates
 resources inside an existing dedicated resource group; it never creates or
 selects that group. No Azure deployment or live validation was performed for
 tasks `002`-`004`. Task `004` adds the external group lifecycle in
@@ -135,7 +135,7 @@ bytes in both directions. Header capture is empty except gateway-written
 request/member response IDs. Compact `responses-lab` traces exclude payloads,
 credentials, cookies, and raw URLs. Resource diagnostics plus this API
 configuration select the native `TraceRecords` path. Task `007` correlated all
-32 first-environment requests with actual native traces and verified no APIM
+64 requests across both environments with actual native traces and verified no APIM
 body, credential/cookie-header, or client-IP capture in those records.
 No Application Insights/extra collector is added.
 
@@ -143,7 +143,7 @@ Task `007` also compared live categories/settings for all four parents and
 checked 13 identity/child/control-plane types: no additional independent
 categories were supported. Foundry request/usage/audit records and workspace
 `LAQueryLogs` were emitted; quiet workloads were not fabricated.
-The workspace and gateway/diagnostic/metric/query-audit tables retained
+In each environment, the workspace and gateway/diagnostic/metric/query-audit tables retained
 30 days, while the service's `Usage` table retained 90 days. Query audits can
 identify operators and queries; raw records are not safe publication samples.
 
@@ -205,7 +205,7 @@ ARM expression interpreter, or provider-side validation**.
 
 ARM `validate`/`what-if` were not run under tasks `002`-`004`'s code-only
 authorization. Task `007` subsequently passed actual Provider validation and
-what-if before the first deployment and its unchanged rerun.
+what-if before both clean deployments and their unchanged reruns.
 Before any future deployment,
 obtain authorization and use the actual dedicated group and local
 `.bicepparam` file for ARM validation and resource-level what-if review.
@@ -218,8 +218,9 @@ and the exact expanded policy's routing/error behavior and trace ingestion.
 Task `004` implements azd/CLI lifecycle orchestration using this entry point;
 its offline checks do not establish real provisioning or teardown.
 Task `005` adds the [offline-tested .NET harness](../src/ResponsesLab/README.md).
-Task `006` adds guarded fault/recovery automation with offline checks only.
-The first environment passed healthy routing, real backend failure, native
+Task `006` adds guarded fault/recovery automation with offline checks; task
+`007` separately exercised it live.
+Both environments passed healthy routing, real backend failure, native
 breaker error correlation, and original-chain recovery. Exhaustive invalid-input
 rejection paths were not sent live; their local fixtures are not live evidence.
 Do not count the old experiment as verification of the new templates.

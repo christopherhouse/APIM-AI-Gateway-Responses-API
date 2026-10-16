@@ -3,12 +3,12 @@
 Task `000` is complete and PR #2 is merged. Task `001` completed the authorized
 disposable feasibility test and cleanup; B1/B2 are resolved in
 [DESIGN.md](DESIGN.md), with evidence in merged PR #3. Task `002` is complete
-as code and local validation in merged PR #4; it is not deployed. Task `003`
+as code and local validation in merged PR #4. Task `003`
 is complete as code and local validation in merged PR #5. Task `004` is complete
 as offline-validated code in merged PR #6. Task `005` is complete as code and
 offline validation in merged PR #7. Task `006` is complete as code and offline
-validation in merged PR #8. Task `007` live verification is in progress after
-the explicit target/action continuation on 2026-10-15;
+validation in merged PR #8. Task `007` completed both authorized live
+lifecycles and cleanup on 2026-10-15/16 in PR #9, left unmerged;
 task `008` remains pending.
 IDs are stable; do not renumber completed tasks or hide blocked work.
 
@@ -37,7 +37,7 @@ new platform evidence changes an assumption.
 | 004 | Implement deployment orchestration and Azure CLI parity | 003 | done |
 | 005 | Implement .NET 10 conversation harness and evidence model | 003 | done |
 | 006 | Implement controlled failure, breaker, and recovery scenarios | 004, 005 | done |
-| 007 | Verify end-to-end scenarios and diagnostic evidence in Azure | 006 | in_progress |
+| 007 | Verify end-to-end scenarios and diagnostic evidence in Azure | 006 | done |
 | 008 | Complete self-service documentation and clean-environment walkthrough | 007 | pending |
 
 The default execution order is ascending ID. Tasks `004` and `005` can proceed
@@ -276,23 +276,26 @@ new dedicated identity in each owned group, not an existing identity or any
 broader role grant. Validate its attachment, policy client ID, role scopes,
 ownership checks, and teardown with the rest of the lab.
 
-**Preparation result:** Fixed two actual CLI contract defects: nullable model
+**Preparation result (historical):** Fixed two actual CLI contract defects: nullable model
 catalog minimum/step and default plain-text `azd auth token` output. All 33
 offline lifecycle cases and the real read-only model/provider/capacity preflight
 passed. The supported isolated azd-to-CLI delegated identity was verified in
-memory. Preparation fixes are published in draft PR #9, not a completed
-task `007` delivery. Provider validation/what-if will run against the authorized
-empty owned group before service provisioning; preparation results are not
+memory. Preparation fixes were initially published in draft PR #9, not then a
+completed task `007` delivery. Provider validation/what-if subsequently ran
+against each authorized owned group; preparation results alone are not
 deployment or scenario evidence.
 
-**First live environment:** Guarded azd provisioning, dedicated user-assigned
+**Live result:** Guarded azd and CLI provisioning, dedicated user-assigned
 identity/policy/two-grant checks, 24 healthy calls, an eight-attempt conditional
 fault/restoration/recovery run, and all 32 correlated native policy traces
-passed. Live category/privacy/retention checks and an unchanged rerun passed.
-Scoped deletion required handling APIM's transition refusal and reconciling a
-later azd credential-poll error; the group is verified absent and state retired.
-One APIM, two Foundry, and one workspace recovery record remain without purge.
-The clean CLI deployment is now running; task `007` is not complete. See
+passed in each environment. Live category/privacy/retention checks and both
+unchanged reruns passed. Initial CLI provisioning polling failed after ARM
+success; fresh state checks and guarded export reconciled it. Azd deletion
+required handling APIM's transition refusal and a later credential-poll error.
+Both groups are verified absent and state retired. Per group, one APIM, two
+Foundry, and one workspace recovery record remain without purge; final exact
+model quota was 130 of 1,000 versus 50 initially.
+Task `007` is complete in PR #9; task `008` remains pending. See
 [sanitized evidence](../evidence/samples/task007-verification.json).
 
 Deliverables and acceptance:

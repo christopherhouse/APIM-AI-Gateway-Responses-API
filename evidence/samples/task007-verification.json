@@ -1,7 +1,7 @@
 {
   "sanitized": true,
-  "verifiedDate": "2026-10-15",
-  "taskStatus": "in_progress",
+  "verifiedDate": "2026-10-16",
+  "taskStatus": "done",
   "scope": "Task 007 live verification; not task 008",
   "redactions": [
     "Subscription, resource identifiers, hostnames and operator information omitted",
@@ -24,12 +24,14 @@
     "deploymentSku": "GlobalStandard",
     "capacityPerAccount": 20,
     "breakerTripSeconds": 30,
+    "proofWindowMeasurement": "Forwarded-fault observation start to pinned-breaker observation completion",
     "maxOutputTokensPerAttempt": 2048,
     "wholeTaskInitialAttemptLimit": 96
   },
   "environments": [
     {
       "driver": "Azd",
+      "verifiedDate": "2026-10-15",
       "provisioning": {
         "result": "PASS",
         "providerValidationAndWhatIf": "PASS",
@@ -135,21 +137,134 @@
         "modelQuotaAfterDeletion": { "current": 90, "limit": 1000 },
         "purgeRequested": false
       }
+    },
+    {
+      "driver": "Cli",
+      "verifiedDate": "2026-10-16",
+      "provisioning": {
+        "result": "PASS with explicit command-error reconciliation",
+        "providerValidationAndWhatIf": "PASS",
+        "actualArmResult": "Succeeded",
+        "actualArmDeploymentSeconds": 1832.384,
+        "originalCommand": "Polling exited with ExpiredAuthenticationToken after ARM had succeeded",
+        "reconciliation": "Fresh authentication and latest successful ARM deployment verified before guarded Export",
+        "guardedExportAndIdentityModelChecks": "PASS",
+        "ownedParentResourceCount": 5
+      },
+      "healthy": {
+        "result": "PASS",
+        "requests": 24,
+        "statuses": { "200": 24 },
+        "statefulSessions": 4,
+        "turnsPerSession": 3,
+        "completedStatefulTurns": 12,
+        "affinityViolations": 0,
+        "sessionBackendSets": [
+          ["backend-a"],
+          ["backend-b"],
+          ["backend-a"],
+          ["backend-b"]
+        ],
+        "statefulDistribution": { "backend-a": 6, "backend-b": 6 },
+        "statelessRequests": 12,
+        "statelessDistribution": { "backend-a": 6, "backend-b": 6 }
+      },
+      "failure": {
+        "result": "PASS",
+        "attempts": 8,
+        "faultMember": "backend-a",
+        "phases": [
+          { "phase": "healthy-setup", "attempts": 2, "statuses": [200, 200], "members": ["backend-a", "backend-b"] },
+          { "phase": "real same-host path fault", "attempts": 1, "status": 404, "member": "backend-a" },
+          { "phase": "fresh-during-fault", "attempts": 3, "statuses": [200, 200, 200], "members": ["backend-b", "backend-b", "backend-b"] },
+          { "phase": "original pin while breaker open", "attempts": 1, "status": 503, "reason": "CircuitBreakerIsOpen", "executedMember": null, "forwarded": false },
+          { "phase": "original chain after restoration", "attempts": 1, "status": 200, "member": "backend-a" }
+        ],
+        "conservativeProofWindowSeconds": 18.34,
+        "proofWindowLimitSeconds": 30,
+        "expectedFailureAssertionsPassed": 2,
+        "freshHealthySessions": 3,
+        "originalResponseIdAndCookiePreserved": true,
+        "restorationVerified": true,
+        "recoveryJournalRemaining": false
+      },
+      "workspaceEvidence": {
+        "result": "PASS",
+        "capturedRequests": 32,
+        "correlatedRequests": 32,
+        "actualPolicyTraceRows": 32,
+        "statuses": { "200": 30, "404": 1, "503": 1 },
+        "concreteBackendHostsMatch": true,
+        "pinnedBreakerNoForwardingCorroborated": true,
+        "allGatewayRowsIngestedWithinTenMinutesAfterScenario": true,
+        "foundryEmittedCategories": ["RequestResponse", "AzureOpenAIRequestUsage", "Audit"],
+        "foundryRequestResponseRows": { "backend-a": 14, "backend-b": 16 },
+        "foundryUsageRows": { "backend-a": 14, "backend-b": 16 },
+        "foundryAuditRows": { "backend-a": 3, "backend-b": 3 },
+        "workspaceAuditTable": "LAQueryLogs",
+        "workspaceAuditRowsAtCollection": 4,
+        "metricSourcesObserved": ["APIM", "Foundry A"],
+        "apimCapturedBodyHeaderCookieOrClientIpViolations": 0,
+        "foundryNonemptyContentOrCredentialFieldNamesObserved": [],
+        "diagnosticEmissionLookbackHours": 24,
+        "lookbackReason": "Initial three-hour category query excluded deployment-time Audit records; the owned-workspace lifetime query found them without generating extra workloads"
+      },
+      "diagnosticConfiguration": {
+        "allInventoriedParentCategoriesEnabled": true,
+        "allLabSettingsTargetOwnedWorkspace": true,
+        "unsupportedChildAndIdentityTypesChecked": 13,
+        "unsupportedServiceCode": "ResourceTypeNotSupported",
+        "inheritedAdditionalFoundrySettings": {
+          "destinationOutsideLab": true,
+          "settingsPerAccount": 1,
+          "modifiedByLab": false,
+          "externalWorkspaceQueried": false
+        },
+        "workspaceReturnedDestinationFlag": null,
+        "workspaceAuditDestinationVerifiedByEmission": true,
+        "workspaceDefaultRetentionDays": 30,
+        "dailyQuotaGb": 1,
+        "observedTableRetentionDays": {
+          "ApiManagementGatewayLogs": 30,
+          "AzureDiagnostics": 30,
+          "AzureMetrics": 30,
+          "LAQueryLogs": 30,
+          "Usage": 90
+        }
+      },
+      "unchangedRerun": {
+        "result": "PASS",
+        "providerValidationAndWhatIf": "PASS",
+        "actualCliCommandExitCode": 0,
+        "unchangedNonSecretRuntimeValues": 12
+      },
+      "cleanup": {
+        "result": "PASS",
+        "deletionDriver": "Cli",
+        "actualCliCommandExitCode": 0,
+        "groupAbsent": true,
+        "localStateRetired": true,
+        "runtimeAndOutputsRemoved": true,
+        "recoveryJournalRemaining": false,
+        "retainedRecoveryRecords": { "APIM": 1, "Foundry": 2, "Workspace": 1 },
+        "modelQuotaAfterDeletion": { "current": 130, "limit": 1000 },
+        "purgeRequested": false
+      }
     }
   ],
   "accounting": {
-    "attemptsSoFar": 32,
-    "statusesSoFar": { "200": 30, "404": 1, "503": 1 },
+    "attemptsSoFar": 64,
+    "statusesSoFar": { "200": 60, "404": 2, "503": 2 },
     "automaticTransportRetries": 0,
     "additionalInferenceRuns": 0,
     "actualInvoicedCost": "Not available; request, token and ingestion limits are not a monetary cap"
   },
   "limitations": [
-    "The separate CLI environment is provisioning; its scenarios, diagnostics, rerun and cleanup remain incomplete",
     "Observed 6/6 samples do not establish a balancing SLA",
     "Fresh-session and pinned-rejection proof is bounded to the breaker-open window",
     "Quiet log categories were enabled but their workloads were not fabricated to force emission",
     "Workspace AllMetrics is configured; workspace metric emission was not observed in this snapshot",
+    "CLI Foundry B AllMetrics is configured; its metric emission was not observed in the collection snapshot, while both accounts' request, usage and Audit logs were observed",
     "Generated model explanations can be inaccurate; member headers, native errors and correlated workspace records provide routing evidence",
     "Inherited central logging remains governed externally and is not covered by the lab workspace's privacy or retention claims"
   ]

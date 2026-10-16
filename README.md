@@ -2,13 +2,13 @@
 
 **One conversation. One backend. Evidence for every turn.**
 
-A hands-on lab under construction, exploring conversation-aware routing through Azure API
-Management to two Microsoft Foundry backends. It will show why a
+A hands-on lab demonstrating conversation-aware routing through Azure API
+Management to two Microsoft Foundry backends. It shows why a
 `previous_response_id` chain needs routing continuity, how independent requests
 are distributed, and what happens when a conversation's backend becomes
 unavailable.
 
-> **Implemented lab; end-to-end verification in progress.** Bootstrap is merged.
+> **Implemented and live-verified through both deployment paths.** Bootstrap is merged.
 > Task `001` completed an explicitly authorized
 > [disposable feasibility experiment](experiments/001-affinity/README.md):
 > healthy affinity, native pinned failure, concrete-member identity, recovery,
@@ -19,12 +19,12 @@ unavailable.
 > Task `004` adds [guarded azd and Azure CLI lifecycle scripts](scripts/README.md).
 > Task `005` adds the [bounded .NET 10 conversation harness](src/ResponsesLab/README.md).
 > Task `006` adds [guarded fault and recovery automation](src/ResponsesLab/README.md#controlled-failure-and-recovery).
-> Task `007` has now verified the first azd deployment with its dedicated
+> Task `007` verified clean azd and CLI deployments with their dedicated
 > user-assigned identity, healthy affinity/distribution, controlled failure,
 > original-chain recovery, and correlated workspace policy traces.
-> Its unchanged rerun and scoped cleanup are verified; the separate CLI path
-> is provisioning. Recovery records remain without purge;
-> the final clean walkthrough is task `008`.
+> Both unchanged reruns and scoped cleanups passed. Recovery records remain
+> without purge; task `007` is complete in PR #9, left unmerged for review.
+> The final clean walkthrough is task `008`.
 
 ## 🗺️ Architecture in code
 
@@ -45,8 +45,8 @@ flowchart LR
     B -.-> Logs
 ```
 
-*Implemented components; the azd runtime and cleanup checks passed.* CLI
-lifecycle parity is still being verified.
+*Implemented components; both azd and CLI runtime, rerun, and cleanup checks
+passed on October 15-16, 2026.*
 Solid arrows show requests; dotted arrows show diagnostics. The harness keeps
 routing context, Foundry owns response state, and APIM is not a
 conversation-history database. Native pinning
@@ -57,12 +57,13 @@ the complete self-service walkthrough is still pending.
 
 | Area | Current finding |
 | --- | --- |
-| Region and gateway | West US 3, Developer SKU, one unit; first task `007` azd deployment verified |
+| Region and gateway | West US 3, Developer SKU, one unit; clean azd and CLI deployments verified |
 | Identity and model | Dedicated user-assigned identity, two resource-scoped grants; **GPT-5.4 mini** / `2026-03-17` / `GlobalStandard` |
-| Healthy-session routing | Four independent three-turn chains stayed pinned; 12 stateless calls observed A=6/B=6 |
+| Healthy-session routing | In each environment, four independent three-turn chains stayed pinned; 12 stateless calls observed A=6/B=6 |
 | Failure semantics | Existing A cookie received **503 / `CircuitBreakerIsOpen` without forwarding**, while three fresh sessions reached B; the original chain recovered on A |
 | Backend proof | Outbound effective request host identified A/B and matched workspace backend URLs and policy traces; model text is not routing evidence |
-| Tracing | All 32 first-environment requests joined to workspace rows with actual policy `TraceRecords`; the native 503 showed no forwarding |
+| Tracing | All 64 task requests joined to workspace rows with actual policy `TraceRecords`; both native 503s showed no forwarding |
+| Lifecycle | Unchanged reruns preserved all 12 runtime values; both owned groups are verified absent, with recovery records retained |
 
 Details, exact versions, sources, verification date, budgets, and limitations
 are in the [platform evidence and design contract](docs/DESIGN.md). These
@@ -76,7 +77,7 @@ Both Foundry resources are configured for **West US 3**. The selected
 `GlobalStandard` model deployment can process inference globally; resource
 location does not imply West US 3-only processing.
 
-## 🧪 Scenarios we intend to prove
+## 🧪 Verified scenarios
 
 | Scenario | Success means |
 | --- | --- |
@@ -87,8 +88,8 @@ location does not imply West US 3-only processing.
 
 The lab now has Bicep and APIM policy XML, `azd` orchestration, an equivalent
 Azure CLI path, Log Analytics configuration, and the .NET 10 console harness.
-Task `006` implements the opt-in fault workflow; first-environment scenario
-verification passed and the separate CLI environment remains in progress.
+Task `006` implements the opt-in fault workflow; both environments passed
+healthy and failure/recovery verification in task `007`.
 The experiment has its own guarded probe, separate from the full-lab lifecycle
 and .NET client.
 
@@ -120,7 +121,7 @@ The gateway returns `X-Lab-Request-Id` and a host-verified
 Log Analytics with zero body capture and no credential/cookie header capture.
 The policy never retries a broken chain onto another backend.
 
-In the first live sample, APIM captured no bodies, credential/cookie headers,
+In both live samples, APIM captured no bodies, credential/cookie headers,
 or client IP. Workspace/table retention was 30 days except `Usage` at 90 days.
 Query audits can contain operator/query metadata. Azure Policy also configured
 central Foundry logging: that external destination was neither queried nor
@@ -128,7 +129,7 @@ modified, and its privacy/retention is not controlled by this lab.
 
 **Evidence boundary:** local Bicep, XML, compiled-expression, and contract
 checks do not establish live behavior. Task `007` separately records actual
-first-environment provisioning, routing, and ingestion. No new Azure operations were performed
+provisioning through both drivers, routing, and ingestion. No new Azure operations were performed
 for tasks `002`-`006`; running the lifecycle scripts or inference still requires separate
 target/action authorization.
 
@@ -154,10 +155,11 @@ configuration, both command paths, immutable environment records, non-secret
 client handoff, reruns, failure handling, costs, and scoped teardown.
 Use its wrapper rather than bare `azd` commands.
 
-The first task `007` azd run verified provisioning, process-only key handoff,
+Task `007` verified both drivers' provisioning, process-only key handoff,
 healthy/fault scenarios, diagnostic ingestion, unchanged rerun, and scoped
-group deletion. Clean CLI parity remains in progress; no result is inferred
-from the offline tests.
+group deletion. Initial deployment polling errors required explicit
+authentication/state reconciliation; they are recorded rather than hidden.
+No result is inferred from the offline tests.
 
 ## 💬 Conversation harness
 
@@ -202,7 +204,7 @@ flowchart LR
     Restore --> Recover["After breaker pause<br/>Recover original ID/cookie chain"]
 ```
 
-*The first task `007` azd failure/recovery run passed.* Every HTTP attempt has
+*Both task `007` failure/recovery runs passed.* Every HTTP attempt has
 phase/timing/correlation evidence. The gateway exposes a fixed
 `CircuitBreakerIsOpen` reason only for that actual policy error, without
 inventing an executed backend. A missed window or unrelated error fails.
@@ -211,8 +213,9 @@ failed verification retain a non-secret recovery journal and fail visibly.
 
 The [fault guide](src/ResponsesLab/README.md#controlled-failure-and-recovery)
 documents exact opt-ins, ownership/ETag checks, budgets, recovery, hard-stop
-limitations, and manual reconciliation. The separate CLI lifecycle remains
-a task `007` acceptance criterion.
+limitations, and manual reconciliation. The conservative proof windows were
+16.83 seconds (azd) and 18.34 seconds (CLI), both below 30 seconds.
+The task used 64 of its initial 96 allowed attempts, with no transport retries.
 
 ## 📚 Follow the work
 

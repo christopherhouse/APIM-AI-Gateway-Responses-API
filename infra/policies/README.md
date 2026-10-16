@@ -1,10 +1,10 @@
 # Gateway contract - task 003
 
 [`responses.xml`](responses.xml) and [`gateway.bicep`](../gateway.bicep) implement
-the gateway configuration. The first task `007` azd environment **deployed and
+the gateway configuration. Both task `007` azd and CLI environments **deployed and
 exercised this policy**, including healthy chains/distribution, explicit pinned
-failure, recovery, and native workspace trace correlation. The separate CLI
-environment remains in progress. Task `001`'s experiment is historical, not
+failure, recovery, and native workspace trace correlation. Both environments
+are now deleted, with recovery records retained. Task `001`'s experiment is historical, not
 substitute evidence for these templates. No subscription keys are generated
 locally, retrieved, or exported by these files.
 
@@ -78,7 +78,7 @@ healthy member inside the open window. This is not a promise of indefinite
 healthy-only routing or a global availability SLA. Controlled fault scripts
 are implemented by task `006` in the
 [guarded fault workflow](../../src/ResponsesLab/README.md#controlled-failure-and-recovery);
-the first live task `007` run passed with this policy.
+both live task `007` runs passed with this policy.
 
 ## Trustworthy evidence and credentials
 
@@ -162,7 +162,7 @@ Task `007` must deploy the exact expanded policy and prove request path/body
 preservation, subscription enforcement/secret stripping, identity propagation,
 opaque-cookie behavior, member evidence, real HTTP errors, native breaker
 rejection/recovery, policy rejection/error correlation, and workspace
-ingestion/privacy. The first environment passed the healthy/fault/native-error
+ingestion/privacy. Both environments passed the healthy/fault/native-error
 and trace-correlation assertions; exhaustive invalid-input and unauthenticated
 request paths were not exercised live. No local check substitutes for a live
 assertion. Bounded results are in the

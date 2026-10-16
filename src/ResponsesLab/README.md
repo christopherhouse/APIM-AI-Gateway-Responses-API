@@ -1,13 +1,13 @@
 # Conversation harness - tasks 005 and 006
 
-**Implemented and exercised against the first task `007` azd lab.** This .NET 10 console
+**Implemented and exercised against both task `007` azd and CLI labs.** This .NET 10 console
 application runs a small developer/architecture-expert script through the
 deployed gateway. It is not an agent framework or tool-calling loop. Task `006`
 adds the separately guarded endpoint-fault scenario below. No real inference,
 credentials, or Azure changes were used for tasks `005`/`006`.
 Task `007` separately verified 24 healthy calls and an eight-attempt
-failure/restoration/recovery run, with every request correlated to actual
-workspace policy traces. The separate CLI environment remains in progress.
+failure/restoration/recovery run per environment, with all 64 requests
+correlated to actual workspace policy traces. Both labs are now deleted.
 See [sanitized results](../../evidence/samples/task007-verification.json).
 
 ## Build and check without Azure
@@ -277,9 +277,11 @@ If those checks cannot be made safely, leave the journal and report the blocker.
 The offline checks and console pass/fail do not establish live provisioning,
 native pool behavior, actual model memory/answer quality, APIM policy runtime,
 or workspace ingestion. The gateway request UUID is a correlation identifier,
-not a full debug trace or proof of a workspace row. Task `007` must run this
-exact client and fault workflow against the deployed gateway and correlate
-actual policy traces. Offline fault tests are not a new live experiment.
+not a full debug trace or proof of a workspace row. Task `007` ran this
+exact client and fault workflow against both deployed gateways and separately
+correlated actual policy traces. Generated model explanations can still be
+inaccurate; a passing client is not a factual-quality evaluation of its answers.
+Offline fault tests are not a new live experiment.
 
 ## Official references (inspected 2026-10-15)
 

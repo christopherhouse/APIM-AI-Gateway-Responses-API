@@ -1,10 +1,11 @@
 # Deployment lifecycle - task 004
 
-**Implemented; first azd environment live-verified in task `007`.** These scripts
+**Implemented; both clean azd and CLI lifecycles live-verified in task `007`.** These scripts
 operate on a new, dedicated lab group only. Task `005` now provides the
 [.NET harness](../src/ResponsesLab/README.md); task `006` adds guarded
-fault/recovery automation. The separate CLI lifecycle remains task `007`; the final self-service
-walkthrough remains task `008`.
+fault/recovery automation. Both environments passed scenarios, diagnostics,
+unchanged reruns, and scoped cleanup; the final self-service walkthrough
+remains task `008`.
 Do not run the live examples without explicit target/action authorization.
 
 ## Prerequisites and target
@@ -131,7 +132,11 @@ infrastructure, not a guaranteed low-cost SKU. APIM runtime, two model
 allocations/inference, and diagnostics are cost drivers; quotas and ingestion
 limits are not a monetary cap. No provisioning-duration or cost ceiling is
 guaranteed. The first task `007` azd deployment took approximately 32 minutes
-30 seconds; another deployment need not take the same time.
+30 seconds; the CLI ARM deployment took approximately 30 minutes 32 seconds.
+Another deployment need not take the same time. The initial CLI process later
+failed deployment polling with an expired token even though ARM had succeeded;
+fresh state checks and guarded export reconciled that result. The unchanged
+CLI rerun exited successfully and preserved all 12 runtime values.
 
 ## Configuration and credentials
 
@@ -191,7 +196,7 @@ rather than a nested `pwsh -File` call. The client accepts
 request/evidence/affinity/distribution failures. The
 [harness guide](../src/ResponsesLab/README.md) defines bounds and evidence.
 Publishing/help and mocked tests passed locally. Task `007` also exercised
-this management-key handoff and real inference through the azd environment.
+this management-key handoff and real inference through both environments.
 
 ### Separately authorized fault run
 
@@ -216,8 +221,8 @@ independent cleanup timeout, and hard-stop limitations. An ignored
 `artifacts\lab\<environment>\fault-recovery.json` is written before mutation
 and removed only after verified restoration. An unresolved journal blocks a new
 failure run; follow the guide's manual reconciliation rather than deleting it
-or overwriting concurrent configuration. Task `007` passed the first live
-azd failure/restoration/recovery run; see the
+or overwriting concurrent configuration. Task `007` passed both live
+azd/CLI failure/restoration/recovery runs; see the
 [sanitized evidence](../evidence/samples/task007-verification.json).
 
 ## Scoped teardown
@@ -268,11 +273,11 @@ for Bicep and gateway contracts.
 The test needs both CLIs installed for executable discovery, although only the
 local `az bicep build-params` command is actually executed.
 
-Task `007` must exercise both clean-environment drivers, real catalog/API/RBAC
+Task `007` exercised both clean-environment drivers, real catalog/API/RBAC
 shapes, Provider validation/what-if, provisioning/reruns, identity propagation,
 key handoff to the task `005` client, diagnostics/privacy, and teardown plus
 recovery records. Offline mocks, source inspection, and the old disposable
-experiment do not satisfy those live acceptance criteria.
+experiment do not substitute for the separately recorded live results.
 
 | Failure | Safe response |
 | --- | --- |
@@ -282,6 +287,7 @@ experiment do not satisfy those live acceptance criteria.
 | Native command failure with output withheld | The command failed and stopped the operation; check sign-in/permissions and separately authorized validation without credential/debug logging |
 | APIM `ServiceLocked` during teardown | The service can report `Succeeded` while refusing deletion as transitioning; inspect the exact group's state/activity and retry only the same guarded teardown after the transition. Do not bypass ownership checks or purge |
 | Deletion poll fails after Azure accepted it | Recheck authentication and exact group existence; rerun guarded `Down` to verify absence and retire state if Azure already deleted the group. A poll error alone proves neither deletion nor survival |
+| Provisioning poll fails with an expired token | Recheck authentication and the exact latest ARM deployment. Only after verified success, use guarded `Export`; never infer success from existing resources or reuse outputs from a failed/latest deployment |
 | Partial provisioning or azd state failure | Retain local ownership files; use the exact guarded CLI teardown when approved |
 | Operation lock in use | Wait for the other wrapper invocation; do not bypass the lock |
 
