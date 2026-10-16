@@ -96,6 +96,7 @@ try {
                 modelDeploymentName = @{ value = 'responses-chat' }
                 affinityCookieName = @{ value = 'APIM-Backend-Affinity' }
                 apimResourceId = @{ value = "$id/providers/Microsoft.ApiManagement/service/gateway" }
+                apimIdentityResourceId = @{ value = "$id/providers/Microsoft.ManagedIdentity/userAssignedIdentities/gateway-identity" }
                 apimSubscriptionResourceId = @{ value = "$id/providers/Microsoft.ApiManagement/service/gateway/subscriptions/lab-access" }
                 backendAId = @{ value = "$id/providers/Microsoft.ApiManagement/service/gateway/backends/backend-a" }
                 backendBId = @{ value = "$id/providers/Microsoft.ApiManagement/service/gateway/backends/backend-b" }
@@ -109,6 +110,7 @@ try {
             $script:Fixture.exists = $true
             $script:Fixture.resources = @(
                 @{ id = $script:Outputs.apimResourceId.value; type = 'Microsoft.ApiManagement/service'; name = 'gateway'; tags = $script:Fixture.group.tags },
+                @{ id = $script:Outputs.apimIdentityResourceId.value; type = 'Microsoft.ManagedIdentity/userAssignedIdentities'; name = 'gateway-identity'; tags = $script:Fixture.group.tags },
                 @{ id = $script:Outputs.foundryAResourceId.value; type = 'Microsoft.CognitiveServices/accounts'; name = 'ai-a'; tags = $script:Fixture.group.tags },
                 @{ id = $script:Outputs.foundryBResourceId.value; type = 'Microsoft.CognitiveServices/accounts'; name = 'ai-b'; tags = $script:Fixture.group.tags },
                 @{ id = $script:Outputs.workspaceResourceId.value; type = 'Microsoft.OperationalInsights/workspaces'; name = 'logs'; tags = $script:Fixture.group.tags }
@@ -157,6 +159,7 @@ try {
                         Microsoft.CognitiveServices { 'accounts' }
                         Microsoft.OperationalInsights { 'workspaces' }
                         Microsoft.Insights { 'diagnosticSettings' }
+                        Microsoft.ManagedIdentity { 'userAssignedIdentities' }
                     }
                     return @{ registrationState = $(if ($script:Fixture.providerRegistered) { 'Registered' } else { 'NotRegistered' }); resourceTypes = @(@{ resourceType = $type; locations = @($script:Fixture.providerRegion) }) }
                 }
@@ -201,6 +204,19 @@ try {
         & $module { Set-OwnedFixture; $script:Fixture.resources[0].tags = @{} }
         Test-Fails { & $module { Get-LabOwnedResources $script:Context } } 'lacks this environment ownership'
     }
+    Test-Case 'identity inventory rejects duplicates and substitution after export' {
+        & $module {
+            Set-OwnedFixture
+            $script:Fixture.resources += $script:Fixture.resources[1].Clone()
+        }
+        Test-Fails { & $module { Get-LabOwnedResources $script:Context } } 'Unexpected additional lab resource'
+        & $module {
+            Set-OwnedFixture
+            $null = Export-LabRuntime $script:Context
+            $script:Fixture.resources[1].id += '-other'
+        }
+        Test-Fails { & $module { Get-LabOwnedResources $script:Context } } 'differs from the last successful deployment inventory'
+    }
     Test-Case 'unknown resources block deletion' {
         & $module { Set-OwnedFixture; $script:Fixture.resources += @{ type = 'Microsoft.Sql/servers'; id = 'foreign' } }
         Test-Fails { & $module { Assert-LabDeletion $script:Context rg-responses-offline } } 'Unexpected resource type'
@@ -218,6 +234,30 @@ try {
     Test-Case 'exact catalog version and Responses support are required' {
         & $module { $script:Fixture.models[0].model.capabilities.responses = 'false' }
         Test-Fails { & $module { Invoke-LabPreflight $script:Context } } 'Responses support'
+    }
+    Test-Case 'nullable catalog minimum and step still require Provider validation' {
+        & $module {
+            $script:Fixture.models[0].model.skus[0].capacity = @{ minimum = $null; step = $null; maximum = 10000000; default = 10 }
+            Invoke-LabPreflight $script:Context -CreateGroup
+        }
+        $calls = & $module { $script:Calls | ForEach-Object { $_.Arguments -join ' ' } }
+        Test-Assert (($calls -join "`n") -match 'validate --validation-level Provider') 'Nullable bounds skipped Provider validation'
+        Test-Assert (($calls -join "`n") -match 'what-if --validation-level Provider') 'Nullable bounds skipped what-if'
+    }
+    Test-Case 'missing catalog maximum fails before group creation' {
+        & $module { $script:Fixture.models[0].model.skus[0].capacity = @{ minimum = $null; step = $null; maximum = $null } }
+        Test-Fails { & $module { Invoke-LabPreflight $script:Context -CreateGroup } } 'catalog maximum'
+        Test-Assert (-not (& $module { $script:Fixture.exists })) 'Missing maximum caused a write'
+    }
+    Test-Case 'declared catalog minimum step and allowed values remain enforced' {
+        & $module { $script:Fixture.models[0].model.skus[0].capacity.minimum = 21 }
+        Test-Fails { & $module { Invoke-LabPreflight $script:Context } } 'catalog minimum'
+        & $module { $script:Fixture.models[0].model.skus[0].capacity.minimum = 1; $script:Fixture.models[0].model.skus[0].capacity.step = 2 }
+        Test-Fails { & $module { Invoke-LabPreflight $script:Context } } 'catalog step'
+        & $module { $script:Fixture.models[0].model.skus[0].capacity.step = 0 }
+        Test-Fails { & $module { Invoke-LabPreflight $script:Context } } 'Catalog step is invalid'
+        & $module { $script:Fixture.models[0].model.skus[0].capacity.step = 1; $script:Fixture.models[0].model.skus[0].capacity.allowedValues = @(10, 30) }
+        Test-Fails { & $module { Invoke-LabPreflight $script:Context } } 'allowed catalog value'
     }
     Test-Case 'provider registration and region cannot silently fall back' {
         & $module { $script:Fixture.providerRegistered = $false }
@@ -246,7 +286,7 @@ try {
     }
     Test-Case 'runtime export is allow-listed and validates target identifiers' {
         $runtime = & $module { Set-OwnedFixture; Export-LabRuntime $script:Context }
-        Test-Assert ($runtime.Count -eq 11 -and -not $runtime.ContainsKey('LAB_APIM_SUBSCRIPTION_KEY')) 'Unsafe runtime export'
+        Test-Assert ($runtime.Count -eq 12 -and $runtime.ContainsKey('LAB_APIM_IDENTITY_RESOURCE_ID') -and -not $runtime.ContainsKey('LAB_APIM_SUBSCRIPTION_KEY')) 'Unsafe runtime export'
         & $module { $script:Outputs.backendAId.value = '/subscriptions/foreign/resourceGroups/other/providers/foo/bar' }
         Test-Fails { & $module { Export-LabRuntime $script:Context } } 'outside the exact owned group'
     }
@@ -274,6 +314,7 @@ try {
                 Assert-Lab ($script:Fixture.azdEnvironment.LAB_MODEL_NAME -ceq 'gpt-5.4-mini') 'Stale azd model was retained'
                 Assert-Lab ($script:Fixture.azdEnvironment.LAB_MODEL_CAPACITY -ceq '20') 'Capacity was not synchronized'
                 Assert-Lab (-not $script:Fixture.azdEnvironment.ContainsKey('LAB_APIM_SUBSCRIPTION_KEY')) 'Key was saved to azd'
+                Assert-Lab (@($script:Calls | Where-Object { $_.Tool -eq 'azd' -and ($_.Arguments -join ' ') -match '^auth token .*--output json$' }).Count -eq 1) 'Default plain-text azd token output was requested instead of JSON'
                 Initialize-LabAzd $script:Context -RequireExisting
             } finally { Restore-LabProcessEnvironment $previous }
         }
@@ -309,6 +350,10 @@ try {
             $validateIndex = [array]::FindIndex($calls, [Predicate[string]] { param($c) $c -match '^az deployment group validate ' })
             $deployIndex = [array]::FindIndex($calls, [Predicate[string]] { param($c) $c -match '^azd provision |^az deployment group create ' })
             Test-Assert ($createIndex -ge 0 -and $validateIndex -gt $createIndex -and $deployIndex -gt $validateIndex) "$driver deployment bypassed preflight ordering"
+            $muted = @(& $module { $script:Calls | Where-Object { $_.Tool -eq 'az' -and ($_.Arguments -join ' ') -match '^deployment group (validate|create) ' } })
+            foreach ($call in $muted) {
+                Test-Assert (-not $call.Json -and ($call.Arguments -join ' ') -match '--output none --only-show-errors') 'Unused deployment output must not parse Bicep installer text or print private parameters'
+            }
             Test-Assert ((& $module { Test-Path -LiteralPath (Join-Path $script:Context.Directory 'runtime.json') })) "$driver did not export runtime configuration"
         }
     }

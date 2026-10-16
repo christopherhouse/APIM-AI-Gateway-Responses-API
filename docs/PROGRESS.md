@@ -4,26 +4,26 @@
 
 | Field | Value |
 | --- | --- |
-| Updated | 2026-10-15 |
-| Phase | Task `006` code/offline validation complete in open PR #8; no live faults authorized |
-| Authorization | Task `006` code, offline checks, documentation, and PR approved on 2026-10-15; no new Azure operations |
+| Updated | 2026-10-16 |
+| Phase | Task `007` both clean live lifecycles, diagnostics, unchanged reruns, and scoped cleanups complete |
+| Authorization | Explicit 16:31 CDT continuation on 2026-10-15 covers the two new stated targets, bounded inference, reversible fault/restoration, reruns, and scoped cleanup |
 | Planning branch | `chore/lab-planning` |
-| Current implementation task | `006` - done on `feature/006-controlled-failure-recovery`, PR #8 open |
-| Next task | User review/merge of #8; task `007` requires separate live-operation authorization; `008` pending |
-| Azure deployment | Temporary group deleted and verified absent; Foundry tombstones purged and quota restored; APIM/workspace recovery records retained normally |
-| Solution files | Task `001` experiment, task `002` Bicep, task `003` gateway, task `004` lifecycle, task `005` harness, and task `006` fault/recovery automation; full live verification pending |
-| Base branch | `main` at harness merge `dadd598`; initial empty base `846a2cb` preserved |
-| Pull request | #1-#7 merged; #8 open for task `006` |
+| Current implementation task | `007` - done on `feature/007-live-verification`, PR #9 |
+| Next task | `008` pending; await user review/merge and separate authorization |
+| Azure deployment | Both task `007` groups verified absent and local state retired; four recovery records per environment retained without purge |
+| Solution files | Tasks `002`-`006` exercised through both drivers; 64 request/policy-trace joins and original-chain recovery verified |
+| Base branch | `main` at fault/recovery merge `721d299`; initial empty base `846a2cb` preserved |
+| Pull request | #1-#8 merged; #9 is the task `007` delivery PR, left unmerged |
 
 ## Known prerequisites and open decisions
 
 | Item | Owner/action | Effect |
 | --- | --- | --- |
-| Implementation authorization | Task `006` code-only work authorized on 2026-10-15 | No new deployment, faults, teardown, credential retrieval, inference, or live subscription checks; tasks `007`-`008` pending. |
+| Implementation authorization | Task `007` live target/action continuation authorized on 2026-10-15 at 16:31 CDT | New `rg-responses-verify007-azd`, then `rg-responses-verify007-cli`, unchanged subscription / West US 3; bounded inference, reversible fault/restoration, reruns, cleanup. Task `008` remains pending. |
 | Initial base branch | Resolved with explicit user approval on 2026-10-15 | Empty commit `846a2cb` establishes `main`; subsequent work stays on work branches. |
 | Platform feasibility | Task `001`, B1-B2 resolved in `DESIGN.md` | Native original-pin rejection, outbound member evidence, and workspace policy traces verified; no workaround required. |
 | Model and authentication | Task `001` live feasibility passed | `gpt-5.4-mini` / `2026-03-17` / `GlobalStandard` served Responses through API-scoped gateway access and resource-scoped managed identity. |
-| Live Azure operations | Temporary task `001` deployment/fault/cleanup approved | New dedicated owned group only; no existing resource changes or target substitution. |
+| Live Azure operations | Authorized task `007` deployment/fault/rerun/cleanup complete | Both exact owned groups are absent; no existing resources changed, target substitution, or purge. |
 
 ## Execution log
 
@@ -866,6 +866,414 @@
   faults, workspace queries, teardown, or purge were performed. Tasks `007` and
   `008` remain pending. Next: user review/merge of #8 and separate explicit
   target/action authorization before task `007` live verification.
+
+### 2026-10-15 - Task 007 live verification started
+
+- User reported PR #8 merged and approved starting live verification. Confirmed
+  merge commit `721d299`, fast-forwarded clean `main`, and created
+  `feature/007-live-verification` before tracked changes.
+- Read task `007` acceptance and the existing azd/CLI entry points. The
+  supported deployment command is the guarded wrapper, not bare `azd up`.
+  Preserve the fixed region/SKU/model, externally owned groups, process-only
+  credentials, independent failure restoration, and explicit teardown gates.
+- Read-only CLI discovery confirmed the same enabled AzureCloud subscription
+  used for the feasibility experiment. No subscription was changed. azd
+  `1.36.0` is installed; no azd environments exist yet.
+- Requested subscription/region confirmation through the user-input tool.
+  The user was unavailable; no confirmation was inferred and no resource
+  changes were made. Continue preparation while keeping live mutations gated.
+- The ignored deployment-plan file contained archived task `002`/`001` records;
+  added a task `007` planning section without replacing that historical proof.
+  No prior validation result is treated as current task `007` validation.
+- An initial CLI version query had a Windows quoting error; no Azure write
+  occurred. Retry tool-version discovery with JSON parsing before validation.
+- Next: read-only quota/capacity/permission checks, complete target/action
+  approval, validate the existing artifacts, then provision and collect actual
+  scenario/diagnostic/rerun/cleanup evidence. Task `007` is not complete.
+
+### 2026-10-15 - Task 007 read-only preparation and real contract fixes
+
+- Proposed two new clean environments: `verify007-azd` /
+  `rg-responses-verify007-azd`, then `verify007-cli` /
+  `rg-responses-verify007-cli`, in the unchanged active subscription and West
+  US 3. Both exact groups returned absent. No group was created.
+- Confirmed Azure CLI `2.83.0`, Bicep `0.47.16`, PowerShell `7.6.7`, and azd
+  `1.36.0`. Installed the missing `quota` extension only after `az quota list`
+  failed for the missing command. CognitiveServices, ApiManagement, and
+  OperationalInsights quota scopes then returned `BadRequest`; those results
+  are unsupported APIs, not unlimited or zero quota.
+- Read-only model catalog exposes the approved GA Responses model/version/SKU
+  with maximum 10,000,000 and default 10, but null minimum/step. The wrapper
+  incorrectly required both fields and rejected capacity 20 before any write.
+  Now enforce supplied constraints and require a declared maximum, log omitted
+  minimum/step without inventing defaults, and retain mandatory Provider
+  validation/what-if. Three focused cases cover the nullable shape, missing
+  maximum, and enforcement of declared constraints.
+- Found a second real contract defect while checking identity: pinned azd
+  `1.36.0` returns plain text from `auth token` unless JSON is explicitly
+  requested. Added `--output json` and a regression assertion in the existing
+  initialization case; verified the format against the actual CLI and pinned
+  official source. No token was printed or persisted.
+- The default azd profile is not signed in. Verified the supported alternative
+  using `auth.useAzCliAuth=true` in isolated ignored
+  `artifacts\007-azd-config`, with process-only `AZD_CONFIG_DIR`. Actual azd/
+  Azure CLI tenant/operator claims matched in memory. No global configuration,
+  sign-in, subscription, operator permission, or repository credential change.
+- `pwsh -NoProfile -File .\scripts\lifecycle.test.ps1`: all 33 offline cases
+  passed after both fixes. `git diff --check`: passed. Updated the lifecycle
+  README with nullable catalog behavior, explicit token format, and optional
+  isolated delegated authentication.
+- Retried the actual guarded `Preflight` with local, previously approved
+  publisher metadata: passed model/version/Responses, quota/capacity, provider
+  registration/region, and group-create permission checks; explicitly created
+  no group. Exact model usage was 50 of 1,000; available regional capacity 950,
+  compared with 40 additional units per environment.
+- Resource Graph aggregate counts showed West US 3 has two APIM instances,
+  one AI services account, and two workspaces; no existing resource was adopted
+  or changed. Effective group create/delete, deployment and role-assignment
+  grants passed. Policy inventory returned only the three existing Defender
+  relational database/SQL/storage initiatives; none was changed. These checks
+  do not replace Provider validation against the actual new group.
+- Presented the completed first-target plan through the user-input tool with
+  separate provisioning/rerun, bounded key/inference, reversible fault, and
+  exact-group deletion confirmations. The user was unavailable again; no
+  affirmative target/action confirmation was inferred.
+- Task `007` is blocked, not done. No new group/service, real gateway-key
+  retrieval, inference, backend fault, or teardown was performed. The private
+  plan remains Planning, not Validated. Resume after exact target/action
+  approval, then validate before provisioning. Task `008` remains pending.
+- Final preparation hygiene passed for seven scoped UTF-8/no-BOM/LF text files,
+  45 relative Markdown links/anchors, balanced fences, blocked task `007` /
+  pending `008` consistency, and five private/generated-state ignore fixtures.
+  Inspected the focused lifecycle diff and repository PR template; final staged
+  scope/secrets review and a draft handoff PR follow. This is not completion of
+  the live-verification acceptance criteria.
+
+### 2026-10-15 - Task 007 preparation preserved in draft PR #9
+
+- Reviewed/staged exactly seven preparation/lifecycle/documentation files.
+  Staged UTF-8/LF/whitespace, branch/scope, credential-shaped-content and
+  private/generated-state checks passed. No credentials, private publisher
+  metadata, local ownership/configuration, or raw traces were staged.
+- Committed as `9653f75`, pushed `feature/007-live-verification`, and created
+  draft PR #9 against `main` using the repository template. Verified open/draft
+  state, correct head/base, and the implementation head. No PR was merged.
+- Recorded the draft and blocker in PLAN/TASKS/PROGRESS without marking task
+  `007` done. These are preparation fixes only; all actual deployment/scenario/
+  workspace/rerun/teardown acceptance remains outstanding.
+- Resume from the exact-target confirmation gate. azd can use the verified
+  isolated delegated CLI identity, so the user does not need to run `azd up`
+  or sign in again for that supported configuration.
+
+### 2026-10-15 - Task 007 exact-target continuation authorized
+
+- After the exact first-target/action handoff, the user explicitly instructed
+  autonomous continuation at 16:31 CDT. This new instruction resolves the
+  earlier approval blocker; unavailable prompts remain recorded as unavailable,
+  not retroactively treated as approval.
+- Continue on `feature/007-live-verification` and draft PR #9. Execute the new
+  `rg-responses-verify007-azd` lab first, then the separate
+  `rg-responses-verify007-cli` lab, in the unchanged active subscription and
+  West US 3. Scope includes bounded inference, reversible fault/restoration,
+  unchanged reruns, and exact owned-group cleanup. No existing app resources,
+  region/SKU/model substitutions, unapproved purges, or task `008`.
+- Initial inference budget is at most 96 HTTP attempts across both environments:
+  one healthy run (24) and one bounded failure run (at most 24) each, with
+  2,048 output tokens per request. Further troubleshooting requires cumulative
+  budget review; this is not a monetary spending guarantee.
+- Official Azure MCP schema validation of existing `azure.yaml` passed.
+  Provider validation/what-if and actual service deployment remain pending.
+- Updated PLAN/TASKS/PROGRESS and README status before any task `007` Azure
+  mutation. Next: validate the authorized owned group and existing templates,
+  then execute the guarded azd path.
+
+### 2026-10-15 - Task 007 cold validation corrections and identity amendment
+
+- Created only the exact tagged, owned `rg-responses-verify007-azd` group.
+  No service resources, inference, gateway-key retrieval, or faults yet.
+- Actual Azure CLI `2.83.0` prints a Bicep installation notice before JSON
+  for native `.bicepparam` deployment commands. Provider validation succeeded
+  but JSON parsing failed. Validation and CLI creation now request no unused
+  result body (`--output none`) and check the command exit status; commands
+  that consume JSON still parse strictly. This avoids exposing parameter
+  metadata and retains the Provider gate.
+- Cold Provider what-if then rejected the account AVM's non-null
+  `roleAssignments[0].principalId` because the new gateway principal was not
+  available during nested parameter evaluation. Moved the two grants to
+  account-scoped extension resources with explicit runtime dependencies.
+  Provider validation/what-if then passed with 21 planned creates; azd preview
+  also passed. No services were provisioned by either check.
+- The user then explicitly requested a **user-assigned managed identity for
+  APIM**. Added a dedicated owned identity through exact AVM pin `0.6.0`,
+  attached it without a system-assigned identity, selected its client ID in
+  `authentication-managed-identity`, and kept the two OpenAI User grants at
+  the exact Foundry scopes. Earlier preview proof predates this amendment;
+  repeat live validation before provisioning.
+- Updated ownership inventory, required-provider checks, non-secret runtime
+  export, scoped deletion fixtures, design/plan/task records, and READMEs for
+  the additional identity. It is not an existing identity adoption or an
+  authorization to broaden permissions.
+- After the identity change, Bicep build/lint/native parameters, 11 compiled
+  infrastructure contracts, and 19 C# policy expressions / 42 fixtures passed.
+  All 33 lifecycle cases passed before adding the focused identity
+  duplicate/substitution case; rerun that suite next. The unchanged .NET
+  Release build passed with zero warnings/errors.
+- Next: finish identity ownership checks and repeat Provider/azd preview for
+  the amended configuration, then provision the guarded azd lab.
+
+### 2026-10-15 - Task 007 user-assigned identity validation passed
+
+- The amended Bicep/native parameters, all 11 compiled infrastructure
+  contracts, 19 policy expressions / 42 fixtures, and all 34 lifecycle cases
+  passed. The added identity case rejects duplicate and substituted resources
+  before reuse or deletion.
+- Guarded `Preflight` passed on `rg-responses-verify007-azd`, including
+  `Microsoft.ManagedIdentity` registration/regional support and actual
+  Provider validation/what-if. Planned changes: 22 creates, including the
+  dedicated identity; no service resources were created.
+- `azd provision --preview --environment verify007-azd --no-prompt` passed
+  against the amended templates. The isolated delegated CLI identity and
+  existing environment were reused; no login/subscription/global config change.
+- Recorded current azure-validate recipe proof in the ignored deployment plan;
+  Aspire/Docker/azd service packaging are not applicable to this
+  infrastructure-only azd project and local harness. Marked that plan Validated.
+- Next: guarded azd provisioning, then actual identity/RBAC/policy verification
+  and bounded scenarios. No inference, faults, or service deployment success
+  is claimed yet.
+
+### 2026-10-15 - Task 007 guarded azd provisioning started
+
+- Started the supported `Invoke-Lab.ps1 -Action Provision -Driver Azd` flow
+  with explicit live/deploy opt-ins, the exact authorized target, isolated
+  delegated azd configuration, and previously approved local publisher
+  metadata. The attached command remains in progress; do not start another
+  operation against this environment.
+- Source configuration includes the dedicated user-assigned identity and
+  passed fresh Provider/what-if/preview gates before this invocation.
+  No completed deployment, runtime routing, inference, or fault result is
+  claimed at this checkpoint.
+- Reviewed the scoped implementation/test diff and 16-file change list.
+  `git diff --check`, UTF-8/no-BOM/LF/final-newline checks, all 65 relative
+  Markdown links/anchors, fences, task `007` in-progress / `008` pending,
+  and five private-state ignore checks passed.
+- All 11 compiled infrastructure contracts also passed after adding the
+  explicit policy client-ID substitution assertions. Current draft PR #9
+  will record this ongoing run, not falsely mark task `007` done.
+
+### 2026-10-15 - Task 007 azd runtime and diagnostic evidence
+
+- Guarded azd provisioning completed in approximately 32 minutes 30 seconds.
+  Verified five owned parent resources in the exact group/region, the one
+  attached user-assigned identity with no system identity, its explicit policy
+  client ID, both exact Foundry-scoped OpenAI User grants, and both approved
+  model/version/SKU/capacity configurations.
+- Healthy `Run` passed all 24 requests: four three-turn chains with zero
+  affinity violations and six turns per backend; 12 stateless calls split
+  A=6/B=6. These observed counts are not a balancing SLA.
+- Initial fault preparation exposed two real ARM wire shapes: APIM reports
+  location as `West US 3`, and management JSON can carry a UTF-8 BOM.
+  Updated `BackendFault.cs` to recognize the exact normalized region and strip
+  only that preamble before strict JSON parsing. Added focused tests rejecting
+  another/missing region and exercising BOM-prefixed conditional fault/restore.
+  No fault or extra inference was attempted by these preparation failures.
+- The bounded live failure run then passed in eight HTTP attempts: two healthy
+  setup calls, a real same-host-path 404 on A, three fresh healthy B sessions,
+  original-pin 503 / `CircuitBreakerIsOpen` without forwarding, and original
+  chain recovery on A after verified restoration. The conservative proof
+  window was 16.83 seconds against the 30-second limit; no journal remained.
+- All 32 requests correlated with owned-workspace gateway rows and actual
+  `responses-lab` policy traces. Concrete backend URLs matched the client
+  evidence; the native breaker row corroborated no forwarding. All gateway
+  rows arrived within ten minutes after the scenario. Foundry emitted
+  `RequestResponse`, `AzureOpenAIRequestUsage`, and `Audit`; workspace query
+  audits appeared in `LAQueryLogs`; APIM and both Foundries emitted metrics.
+- Actual APIM records contained no captured body, credential/cookie headers,
+  or client IP. Reviewed Foundry metadata contained no nonempty content/
+  credential field names checked by the collector. This is a bounded sample,
+  not a guarantee about every service diagnostic field. Query audits include
+  operator/query metadata and remain private.
+- Compared all four parents' live categories/settings with the inventory;
+  every category targeted the owned workspace. Thirteen identity/child/group
+  types returned no supported categories / `ResourceTypeNotSupported`.
+  Azure Policy also created additional Foundry settings targeting a central
+  workspace. Left them unchanged and did not query that external destination;
+  lab retention/privacy claims do not cover it.
+- Workspace default retention and daily quota were 30 days / 1 GB. Observed
+  gateway, diagnostics, metrics, and query-audit tables retained 30 days;
+  `Usage` retained 90 days. Workspace `AllMetrics` was configured, but its own
+  metric emission and quiet categories were not fabricated or claimed.
+- An unchanged guarded azd `Provision` rerun passed Provider validation/
+  what-if; azd skipped deployment with no changes and all 12 non-secret
+  runtime values stayed identical. Preserved private runtime/state manifests
+  before the authorized exact-group `Down -Driver Azd`, now running with
+  `--purge=false`. No purge or existing resource modification was authorized.
+- Added partial sanitized task `007` evidence and updated README status.
+  Cumulative inference: 32 of the initial 96 allowed attempts. Next: confirm
+  group absence and retained recovery records, then the separate clean CLI
+  deployment, scenarios, diagnostics, unchanged rerun, and scoped cleanup.
+
+### 2026-10-15 - Task 007 azd teardown transition refusal
+
+- The first authorized guarded azd `Down` failed with HTTP 409
+  `ResourceGroupDeletionBlocked`: APIM returned `ServiceLocked` / transitioning
+  throughout the resource-group deletion attempt. This is not successful
+  cleanup, and local environment retirement was correctly withheld.
+- Followed Azure MCP azd error-troubleshooting guidance. Read-only inspection
+  of the exact group showed only its original APIM remained, reporting
+  `Succeeded`; the activity log confirmed successful deletion of both
+  Foundries, both role assignments, the user-assigned identity, and workspace,
+  alongside APIM delete failures. No existing resources were touched.
+- Retried the same guarded `Down -Driver Azd` with unchanged exact target,
+  ownership validation, isolated azd configuration, and purge disabled. The
+  retry is in progress; the separate CLI deployment has not started.
+- Release build passed with zero warnings/errors; all 117 .NET cases and
+  formatting verification passed after the two ARM wire-shape fixes.
+- Updated the affected guides and design to distinguish actual first-lab
+  proof, unobserved quiet diagnostics, inherited central logging, table
+  retention, and the remaining lifecycle criteria. Next: verify the retry,
+  record residual recovery records, then begin the clean CLI path.
+
+### 2026-10-15 - Task 007 azd cleanup verified; clean CLI provisioning started
+
+- The azd deletion retry initiated deletion but exited with
+  `AzureCLICredential: exit status 1` while polling. Fresh CLI and isolated azd
+  management-token checks both passed without sign-in or context changes;
+  the exact group then returned absent. Do not misreport the poll error as
+  an uninterrupted successful azd command.
+- Repeated the guarded `Down -Driver Azd` against the same target. Its
+  already-absent path verified absence, retired local state, removed active
+  runtime/output configuration, and retained ownership metadata.
+- Exact-name/group recovery queries found one APIM, two Foundry, and one
+  workspace soft-delete record. No purge was requested. Model quota remained
+  90 of 1,000 rather than returning to the initial 50; no quota release or
+  empty recovery inventory is claimed.
+- Only after cleanup verification, started guarded `Provision -Driver Cli`
+  for new `rg-responses-verify007-cli`, with the same approved region/SKU/
+  model/capacity, dedicated user-assigned identity, and local publisher
+  metadata. Fresh Provider validation/what-if passed with 22 creates;
+  service deployment remains running. No azd sign-in/configuration is needed
+  for this second driver; no second-environment inference has been sent.
+- Next: verify CLI deployment and identity/grants, run its bounded healthy/
+  fault scenarios, collect correlated diagnostics/privacy/retention evidence,
+  exercise unchanged rerun, and perform exact-group cleanup. Task `007`
+  remains in progress, task `008` pending, and PR #9 draft/unmerged.
+
+### 2026-10-15 - Task 007 first-environment publication checks
+
+- `dotnet build .\ResponsesLab.slnx --configuration Release --no-restore
+  --nologo` passed with zero warnings/errors; `dotnet test
+  .\ResponsesLab.slnx --configuration Release --no-build --no-restore
+  --nologo` passed all 117 cases; `dotnet format .\ResponsesLab.slnx
+  --verify-no-changes --no-restore --verbosity quiet` passed.
+- `git diff --check` and the private local checker passed for all 20 files
+  changed on this branch: UTF-8/no-BOM/LF/final newlines, 74 relative Markdown
+  links/anchors, fences, task `007` in-progress / `008` pending, sanitized
+  evidence counts, private configuration absence, and generated-state ignores.
+  The new evidence sample initially used CRLF; normalized it to repository LF
+  before the successful check.
+- Reviewed README instructions/diagram labels and documented actual versus
+  unverified behavior. GitHub-rendered Markdown/Mermaid appearance was not
+  verified. No new infrastructure/policy change occurred after their recorded
+  Bicep/contracts/expression/lifecycle validation.
+- Preserving the two ARM wire-shape fixes and first-environment evidence in
+  draft PR #9 while the authorized CLI deployment runs. Task `007` completion
+  and making the PR ready remain gated on the second lifecycle's actual results.
+
+### 2026-10-16 - Task 007 CLI provisioning reconciled and scenarios verified
+
+- The original guarded CLI `Provision` process failed with
+  `ExpiredAuthenticationToken` while polling. Fresh authentication and exact
+  ARM deployment reads showed actual `lab-verify007-cli` provisioning had
+  succeeded on October 15 at 20:17 CDT, in 30 minutes 32 seconds, with all
+  nested deployments and five parents successful. This is not a claim that
+  the original command exited successfully.
+- Guarded `Export -Driver Cli` verified that latest successful deployment
+  before producing runtime configuration. Actual reads confirmed APIM's sole
+  dedicated user-assigned identity, explicit policy client ID, exactly two
+  Foundry-scoped OpenAI User grants, and the approved identical models.
+  The private collector needed case-insensitive ARM ID comparison and a
+  BOM-safe direct policy read; these were collector issues, not identity drift.
+- Healthy `Run -Driver Cli -AllowAzure -AllowCredentialRead` with the published
+  client and `@('--allow-requests')` passed all 24 calls: four independent
+  three-turn chains, zero affinity violations, and A=6/B=6 in each separate
+  stateful/stateless distribution.
+- The exact guarded failure invocation from the lifecycle guide passed in
+  eight attempts: two healthy setup calls, actual A-path 404, three fresh
+  healthy B sessions, original-pin 503 / `CircuitBreakerIsOpen` without
+  forwarding, verified conditional restoration, and original-chain recovery
+  on A. Its conservative proof window was 18.34 seconds against 30 seconds.
+  No recovery journal remained.
+- The same explicit bounds applied: 2,048 output tokens per attempt, 60-second
+  request / 600-second scenario / independent 180-second restoration limits,
+  concurrency one, and no transport retries. Combined task usage is 64 of the
+  initial 96 allowed HTTP attempts: 60 HTTP 200, two controlled 404, and two
+  native breaker 503. No further inference was needed.
+
+### 2026-10-16 - Task 007 CLI diagnostics, rerun, and cleanup complete
+
+- Read-only live diagnostic inventory passed for all four parents, all
+  configured categories/destinations, 13 unsupported identity/child/control-plane
+  types, and explicit API body/header/client-IP capture settings. Both Foundries
+  again had one inherited setting targeting an external central destination;
+  neither those settings nor that destination was modified or queried.
+- All 32 CLI request IDs correlated with actual native policy traces, status,
+  concrete backend host, and native breaker/no-forwarding evidence. All gateway
+  rows were ingested within ten minutes after the scenario. APIM capture
+  violations were zero and reviewed Foundry content/credential field names
+  were empty, subject to the documented bounded-sample privacy limitation.
+- An initial three-hour category query excluded deployment-time Foundry Audit
+  records. A 24-hour query against this owned workspace found three Audit rows
+  per account without fabricating workload; the original exact-request trace
+  deadline remained unchanged. Request/usage rows were A=14/B=16, and
+  `LAQueryLogs` contained four query-audit rows at collection. Raw audit/operator
+  metadata remains ignored and private.
+- CLI metric evidence showed APIM and Foundry A, not Foundry B, in the snapshot;
+  B's enabled `AllMetrics` setting is not an emission claim. Workspace own
+  metrics and quiet workloads were likewise not claimed. Retention/quota
+  checks passed: 30-day workspace, 1 GB/day, four observed diagnostic tables at
+  30 days and `Usage` at 90 days.
+- Repeated unchanged `Provision -Driver Cli` with the same native parameters:
+  Provider validation/what-if passed, the CLI exited zero, and all 12 exported
+  non-secret runtime values stayed identical. The what-if's 16 modify / six
+  unchanged entries included service-returned defaults/read-only noise, not a
+  different requested model, identity, region, or SKU.
+- Saved a private runtime/state cleanup manifest, then executed guarded
+  `Down -Driver Cli -AllowAzure -AllowDelete -ConfirmResourceGroup` with the
+  exact owned group. It passed; the group is verified absent, local state
+  retired, active runtime/outputs removed, and no recovery journal remained.
+  Exact recovery reads found one APIM, two Foundry, and one workspace record.
+  No purge was performed; final model quota remained 130 of 1,000, versus 50
+  before task `007`, so no quota release or empty recovery inventory is claimed.
+- Updated the sanitized sample, README and affected guides, design, plan,
+  backlog, and checkpoint. Both task `007` lifecycles and required evidence
+  are complete with PR #9 already existing; marked `007` done. Task `008`
+  remains pending. Final documentation/staged-scope checks and publication
+  follow; no PR is merged automatically.
+
+### 2026-10-16 - Task 007 final evidence consistency and publication handoff
+
+- The final private consistency checker passed against the actual healthy/
+  failure JSON lines, workspace summaries, identity results, unchanged-rerun
+  results, retired local state, and cleanup verification for both environments.
+  The public sample's counts and outcomes match those records; no raw IDs,
+  credentials, operator information, or external destination was published.
+- Precision review caught PowerShell date-to-string truncation in a private
+  aggregate. Recomputed the conservative interval from the fault observation's
+  original `startedAt` to the pinned observation's `observedAt`, matching the
+  harness's clock boundary: azd 16.83 seconds, CLI 18.34 seconds. Corrected the
+  unpublished CLI aggregate before publication; both remain below 30 seconds.
+- `python .\artifacts\007-local-checks.py` passed all 20 branch-scoped files'
+  UTF-8/no-BOM/LF/newline checks, 74 relative links/anchors, fences, task/
+  evidence consistency, actual-record comparisons, private-value checks,
+  generated-state ignore fixtures, and whitespace checks. This is a private
+  local checker, not new solution CI or a substitute for recorded live proof.
+- Reviewed affected README instructions, links, status labels and diagram
+  source. GitHub-rendered Markdown/Mermaid appearance remains unverified.
+  Source code has not changed since the recorded 117-case build/test/format
+  pass; this final wave changes documentation and sanitized evidence only.
+- All live acceptance criteria and scoped cleanup are complete. Publishing
+  these final records to existing PR #9 and making it ready for user review is
+  the remaining handoff; do not merge it or begin task `008`.
 
 ## Update protocol
 

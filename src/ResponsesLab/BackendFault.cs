@@ -55,7 +55,8 @@ internal sealed class ManagementClient(HttpClient http, string groupId, Func<Can
             throw new BackendControlException("Management response exceeded the body limit.");
         try
         {
-            return new ManagementResponse(JsonNode.Parse(bytes) as JsonObject ??
+            var offset = bytes.AsSpan().StartsWith(Encoding.UTF8.Preamble) ? Encoding.UTF8.Preamble.Length : 0;
+            return new ManagementResponse(JsonNode.Parse(bytes.AsSpan(offset)) as JsonObject ??
                 throw new BackendControlException("Management response is not an object."), response.Headers.ETag?.ToString());
         }
         catch (JsonException)
@@ -272,7 +273,8 @@ internal sealed class BackendFault(ManagementClient management, FaultOptions opt
     private void Owned(JsonObject resource, string id)
     {
         if (!string.Equals(Text(resource["id"]), id, StringComparison.OrdinalIgnoreCase) ||
-            Text(resource["location"]) != "westus3" ||
+            !string.Equals(Text(resource["location"])?.Replace(" ", "", StringComparison.Ordinal),
+                "westus3", StringComparison.OrdinalIgnoreCase) ||
             Text(resource["tags"]?["lab-owner"]) != options.Owner ||
             Text(resource["tags"]?["azd-env-name"]) != options.Environment ||
             Text(resource["tags"]?["purpose"]) != "apim-responses-affinity-lab")

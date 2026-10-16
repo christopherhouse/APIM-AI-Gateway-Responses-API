@@ -66,7 +66,7 @@
     <trace source="responses-lab" severity="information">
       <message>@("inbound:" + context.RequestId.ToString() + ":" + (string)context.Variables["labSession"] + ":" + (string)context.Variables["labScenario"])</message>
     </trace>
-    <authentication-managed-identity resource="https://cognitiveservices.azure.com" ignore-error="false" />
+    <authentication-managed-identity resource="https://cognitiveservices.azure.com" client-id="__MANAGED_IDENTITY_CLIENT_ID__" ignore-error="false" />
   </inbound>
   <backend>
     <forward-request timeout="60" follow-redirects="false" fail-on-error-status-code="false" />

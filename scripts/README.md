@@ -1,10 +1,11 @@
 # Deployment lifecycle - task 004
 
-**Implemented and offline-tested; not deployed or live-verified.** These scripts
+**Implemented; both clean azd and CLI lifecycles live-verified in task `007`.** These scripts
 operate on a new, dedicated lab group only. Task `005` now provides the
 [.NET harness](../src/ResponsesLab/README.md); task `006` adds guarded
-fault/recovery automation. The clean-environment Azure walkthrough remains
-tasks `007`-`008`.
+fault/recovery automation. Both environments passed scenarios, diagnostics,
+unchanged reruns, and scoped cleanup; the final self-service walkthrough
+remains task `008`.
 Do not run the live examples without explicit target/action authorization.
 
 ## Prerequisites and target
@@ -18,8 +19,12 @@ Resource-group-scoped `azd` deployment is documented as beta.
 Sign in beforehand with `az login`; for the `Azd` driver, also use
 `azd auth login` as the same operator/tenant. The scripts do not log in, change
 the active subscription, register providers, or choose another region.
-The `Azd` driver compares identity claims from short-lived management tokens
-held in memory; it does not print or persist those tokens.
+The `Azd` driver explicitly requests JSON token output and compares identity
+claims from short-lived management tokens held in memory; it does not print
+or persist those tokens. For automation, azd's supported Azure CLI delegated
+authentication is also usable: configure `auth.useAzCliAuth` in an isolated
+`AZD_CONFIG_DIR` under ignored `artifacts/`, leaving global azd settings
+unchanged. The same operator/tenant check still applies.
 
 The operator needs subscription-scope group-create permission and sufficient
 resource deployment/read permissions at the new group, including role
@@ -32,7 +37,7 @@ permissions do not override Azure Policy, deny assignments, or locks.
 
 Required registered providers: `Microsoft.ApiManagement`,
 `Microsoft.CognitiveServices`, `Microsoft.OperationalInsights`, and
-`Microsoft.Insights`. Preflight refuses missing registration or regional
+`Microsoft.Insights`, and `Microsoft.ManagedIdentity`. Preflight refuses missing registration or regional
 support rather than registering or falling back.
 
 Replace these placeholders locally before any live command:
@@ -64,7 +69,11 @@ Never reuse another application's group, even if empty.
 | Resource names and diagnostics | Deterministic Bicep defaults; 30-day workspace retention, 1 GB/day ingestion quota |
 
 Model overrides must still be GPT-5-family or newer, exactly available with
-Responses support and an acceptable catalog lifecycle/capacity step.
+Responses support and an acceptable catalog lifecycle/capacity configuration.
+The wrapper requires a declared maximum and enforces supplied minimum, step,
+and allowed values. Some model catalog entries omit minimum/step; it prints
+that limitation without inventing defaults. Provider validation and what-if
+remain mandatory before either driver deploys.
 The SKU cannot change; capacity is bounded to 1-20 per account. Only the
 default model/version/capacity has task `001` live feasibility evidence.
 This wrapper intentionally does not expose all lower-level Bicep overrides.
@@ -122,7 +131,12 @@ start another operation against the same environment. This is billable
 infrastructure, not a guaranteed low-cost SKU. APIM runtime, two model
 allocations/inference, and diagnostics are cost drivers; quotas and ingestion
 limits are not a monetary cap. No provisioning-duration or cost ceiling is
-claimed for these undeployed scripts.
+guaranteed. The first task `007` azd deployment took approximately 32 minutes
+30 seconds; the CLI ARM deployment took approximately 30 minutes 32 seconds.
+Another deployment need not take the same time. The initial CLI process later
+failed deployment polling with an expired token even though ARM had succeeded;
+fresh state checks and guarded export reconciled that result. The unchanged
+CLI rerun exited successfully and preserved all 12 runtime values.
 
 ## Configuration and credentials
 
@@ -130,7 +144,7 @@ claimed for these undeployed scripts.
 | --- | --- |
 | `artifacts\lab\<environment>\state.json` | Wrapper target, random ownership UUID, parameter hash, last successful output inventory, retirement status; no keys |
 | `artifacts\lab\<environment>\compiled-parameters.json` | Generated native-parameter compiler output, never a maintained JSON parameter source |
-| `artifacts\lab\<environment>\runtime.json` | Eleven allow-listed, non-secret client values |
+| `artifacts\lab\<environment>\runtime.json` | Twelve allow-listed, non-secret client/ownership values |
 | `artifacts\lab\<environment>\operation.lock` | Exclusive per-environment wrapper lock |
 | `.azure\<environment>\` | azd-managed settings/state, including local publisher metadata and ordinary deployment outputs; never a credential store |
 
@@ -147,7 +161,7 @@ a template-version lock. Do not run concurrent tools outside the wrapper.
 
 After successful provisioning, both drivers export these names from ARM outputs:
 `LAB_RESPONSES_ENDPOINT`, `LAB_MODEL_DEPLOYMENT`, `LAB_AFFINITY_COOKIE_NAME`,
-`LAB_APIM_RESOURCE_ID`, `LAB_APIM_SUBSCRIPTION_RESOURCE_ID`, `LAB_BACKEND_A_ID`,
+`LAB_APIM_RESOURCE_ID`, `LAB_APIM_IDENTITY_RESOURCE_ID`, `LAB_APIM_SUBSCRIPTION_RESOURCE_ID`, `LAB_BACKEND_A_ID`,
 `LAB_BACKEND_B_ID`, `LAB_FOUNDRY_A_RESOURCE_ID`, `LAB_FOUNDRY_B_RESOURCE_ID`,
 `LAB_WORKSPACE_RESOURCE_ID`, and `LAB_WORKSPACE_CUSTOMER_ID`.
 No endpoint guessing or key retrieval is needed for export. A newer failed or
@@ -181,8 +195,8 @@ rather than a nested `pwsh -File` call. The client accepts
 `--scenario both|stateful|stateless`, defaults to both, and exits nonzero for
 request/evidence/affinity/distribution failures. The
 [harness guide](../src/ResponsesLab/README.md) defines bounds and evidence.
-Publishing/help and mocked tests passed locally; this end-to-end management
-key handoff and inference have **not** been exercised against Azure.
+Publishing/help and mocked tests passed locally. Task `007` also exercised
+this management-key handoff and real inference through both environments.
 
 ### Separately authorized fault run
 
@@ -207,7 +221,9 @@ independent cleanup timeout, and hard-stop limitations. An ignored
 `artifacts\lab\<environment>\fault-recovery.json` is written before mutation
 and removed only after verified restoration. An unresolved journal blocks a new
 failure run; follow the guide's manual reconciliation rather than deleting it
-or overwriting concurrent configuration. This workflow is offline-tested only.
+or overwriting concurrent configuration. Task `007` passed both live
+azd/CLI failure/restoration/recovery runs; see the
+[sanitized evidence](../evidence/samples/task007-verification.json).
 
 ## Scoped teardown
 
@@ -257,11 +273,11 @@ for Bicep and gateway contracts.
 The test needs both CLIs installed for executable discovery, although only the
 local `az bicep build-params` command is actually executed.
 
-Task `007` must exercise both clean-environment drivers, real catalog/API/RBAC
+Task `007` exercised both clean-environment drivers, real catalog/API/RBAC
 shapes, Provider validation/what-if, provisioning/reruns, identity propagation,
 key handoff to the task `005` client, diagnostics/privacy, and teardown plus
 recovery records. Offline mocks, source inspection, and the old disposable
-experiment do not satisfy those live acceptance criteria.
+experiment do not substitute for the separately recorded live results.
 
 | Failure | Safe response |
 | --- | --- |
@@ -269,6 +285,9 @@ experiment do not satisfy those live acceptance criteria.
 | Provider, quota, region, model, policy, or permission refusal | Resolve the named prerequisite through an authorized operator; do not substitute targets or suppress checks |
 | Changed inputs, owner, or inventory | Investigate local/Azure drift; do not edit the ownership record to force adoption or deletion |
 | Native command failure with output withheld | The command failed and stopped the operation; check sign-in/permissions and separately authorized validation without credential/debug logging |
+| APIM `ServiceLocked` during teardown | The service can report `Succeeded` while refusing deletion as transitioning; inspect the exact group's state/activity and retry only the same guarded teardown after the transition. Do not bypass ownership checks or purge |
+| Deletion poll fails after Azure accepted it | Recheck authentication and exact group existence; rerun guarded `Down` to verify absence and retire state if Azure already deleted the group. A poll error alone proves neither deletion nor survival |
+| Provisioning poll fails with an expired token | Recheck authentication and the exact latest ARM deployment. Only after verified success, use guarded `Export`; never infer success from existing resources or reuse outputs from a failed/latest deployment |
 | Partial provisioning or azd state failure | Retain local ownership files; use the exact guarded CLI teardown when approved |
 | Operation lock in use | Wait for the other wrapper invocation; do not bypass the lock |
 

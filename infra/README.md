@@ -1,6 +1,7 @@
 # Infrastructure and gateway configuration - tasks 002/003/004
 
-This is infrastructure code, **not a deployed or callable lab**. It creates
+This infrastructure was **deployed and exercised through both azd and CLI in
+task `007`**, including unchanged reruns and verified cleanup. It creates
 resources inside an existing dedicated resource group; it never creates or
 selects that group. No Azure deployment or live validation was performed for
 tasks `002`-`004`. Task `004` adds the external group lifecycle in
@@ -10,7 +11,8 @@ tasks `002`-`004`. Task `004` adds the external group lifecycle in
 
 | Resource | Exact AVM Bicep module | Configuration |
 | --- | --- | --- |
-| Gateway | `avm/res/api-management/service:0.15.0` | Developer, one unit; system-assigned identity; public endpoint; no VNet |
+| Gateway | `avm/res/api-management/service:0.15.0` | Developer, one unit; dedicated user-assigned identity only; public endpoint; no VNet |
+| Gateway identity | `avm/res/managed-identity/user-assigned-identity:0.6.0` | New owned identity in the same group/region; no federated credentials or extra role grants |
 | Two Foundry accounts | `avm/res/cognitive-services/account:0.13.2` | `AIServices` / `S0`; separate custom subdomains; public endpoints; local/key authentication disabled |
 | Model in each account | Same account module | `gpt-5.4-mini` / `2026-03-17`; `GlobalStandard`, capacity 20 each; `NoAutoUpgrade` |
 | Log Analytics | `avm/res/operational-insights/workspace:0.16.1` | `PerGB2018`; 30-day default retention; 1 GB/day ingestion quota; public query/ingestion; local authentication disabled |
@@ -39,9 +41,17 @@ dependency cycle; it does not create a second APIM service. See the
 evidence headers, native traces, and live-verification limits.
 
 All regional resources are fixed to `westus3`. Model inference can run globally.
-APIM's system identity receives only **Cognitive Services OpenAI User** at each
+APIM's dedicated user-assigned identity receives only **Cognitive Services OpenAI User** at each
 of the two account scopes. The template does not grant operator, harness, or
 evidence-reader permissions, and it does not retrieve gateway subscription keys.
+The two grants are direct account-scoped extension resources: a cold Provider
+what-if rejected the AVM account module's non-null `roleAssignments` parameter
+when the new APIM principal was not yet known. Keeping the runtime reference
+on the actual grant preserves the role, scopes, and predeployment validation.
+The user subsequently required the dedicated user-assigned identity; the same
+runtime-principal constraint applies to its cold deployment. APIM has no
+system-assigned identity. The policy explicitly selects the user-assigned
+identity's client ID rather than relying on a default credential.
 
 ## Native deployment parameters
 
@@ -107,6 +117,8 @@ No fresh category discovery is claimed for task `002`.
 diagnostic settings, nested ARM deployment records, and the externally managed
 group have no independently established resource log categories. Future APIM
 APIs/backends/policies/subscriptions share their parent's resource diagnostics.
+The new user-assigned identity is included in the task `007` live diagnostic
+capability inventory; do not assume it can emit diagnostic settings.
 Activity Log changes are separate; this RG-scoped template does not export
 subscription Activity Logs or create a workspace data-export pipeline.
 
@@ -122,13 +134,30 @@ sampling at `information` verbosity, all errors, no client IP, and zero body
 bytes in both directions. Header capture is empty except gateway-written
 request/member response IDs. Compact `responses-lab` traces exclude payloads,
 credentials, cookies, and raw URLs. Resource diagnostics plus this API
-configuration select the native `TraceRecords` path; actual ingestion is still
-unverified for these templates. No Application Insights/extra collector is added.
+configuration select the native `TraceRecords` path. Task `007` correlated all
+64 requests across both environments with actual native traces and verified no APIM
+body, credential/cookie-header, or client-IP capture in those records.
+No Application Insights/extra collector is added.
+
+Task `007` also compared live categories/settings for all four parents and
+checked 13 identity/child/control-plane types: no additional independent
+categories were supported. Foundry request/usage/audit records and workspace
+`LAQueryLogs` were emitted; quiet workloads were not fabricated.
+In each environment, the workspace and gateway/diagnostic/metric/query-audit tables retained
+30 days, while the service's `Usage` table retained 90 days. Query audits can
+identify operators and queries; raw records are not safe publication samples.
+
+Azure Policy added other Foundry diagnostic settings targeting a central
+workspace. The lab did not modify them or query that destination. Its privacy
+and retention are governed separately; deleting the lab workspace does not
+delete externally retained records. See the bounded, sanitized
+[task `007` evidence](../evidence/samples/task007-verification.json).
 
 ## Non-secret output contract
 
 The entry point returns `resourceGroupName`, `apimResourceId`, `apimGatewayUrl`,
-`apimPrincipalId`, `foundryAResourceId`, `foundryBResourceId`,
+`apimPrincipalId` (the attached user-assigned identity's principal),
+`apimIdentityResourceId`, `foundryAResourceId`, `foundryBResourceId`,
 `foundryAEndpoint`, `foundryBEndpoint`, `workspaceResourceId`,
 `workspaceCustomerId`, and `modelDeploymentName`. URLs are read from actual
 service properties, not assembled from assumed DNS suffixes. Explicit module
@@ -166,31 +195,35 @@ Eleven Node tests check foundation/routing resource wiring, native affinity/
 breaker configuration, scoped auth, diagnostic privacy, output safety,
 dependency ordering, and parameter coverage.
 
-The PowerShell test parses XML, compiles all 18 actual policy expressions as
-C# 7 against small context stand-ins, and executes 39 input/host fixtures.
+The PowerShell test parses XML, compiles all 19 actual policy expressions as
+C# 7 against small context stand-ins, and executes 42 input/host fixtures.
 It uses no live gateway and installs no dependencies. Its host references
 PowerShell's bundled Newtonsoft; the specific assembly-version compatibility
 warning is suppressed without suppressing compilation errors.
 These are local structural/expression checks, **not an APIM runtime emulator,
 ARM expression interpreter, or provider-side validation**.
 
-ARM `validate`/`what-if` are not run: tasks `002`-`004` have no authorization for live
-subscription checks and no dedicated deployed group. Do not create a group to
-run them under this task's code-only approval. Before any future deployment,
+ARM `validate`/`what-if` were not run under tasks `002`-`004`'s code-only
+authorization. Task `007` subsequently passed actual Provider validation and
+what-if before both clean deployments and their unchanged reruns.
+Before any future deployment,
 obtain authorization and use the actual dedicated group and local
 `.bicepparam` file for ARM validation and resource-level what-if review.
 Do not treat the task `001` ARM results as validation of these new modules.
 
-Task `007` must verify actual provisioning, RBAC propagation, public endpoint
+Task `007` records actual provisioning, RBAC propagation, public endpoint
 authentication, all supported diagnostic settings, event/table emission,
 privacy/retention, model availability and capacity, output endpoint properties,
 and the exact expanded policy's routing/error behavior and trace ingestion.
 Task `004` implements azd/CLI lifecycle orchestration using this entry point;
 its offline checks do not establish real provisioning or teardown.
 Task `005` adds the [offline-tested .NET harness](../src/ResponsesLab/README.md).
-Task `006` adds guarded fault/recovery automation with offline checks only.
-New policy rejection/error paths also require live
-correlation checks; do not count the old experiment as their verification.
+Task `006` adds guarded fault/recovery automation with offline checks; task
+`007` separately exercised it live.
+Both environments passed healthy routing, real backend failure, native
+breaker error correlation, and original-chain recovery. Exhaustive invalid-input
+rejection paths were not sent live; their local fixtures are not live evidence.
+Do not count the old experiment as verification of the new templates.
 
 ## Official implementation sources (inspected 2026-10-15)
 

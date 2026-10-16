@@ -2,7 +2,8 @@
 
 ## Scope and authorization
 
-This is the agreed implementation plan, not an implemented solution.
+This records the agreed implementation plan and authorization history.
+Tasks `000`-`007` are now complete; the final self-service walkthrough is task `008`.
 On 2026-10-15, the user authorized task `000` after planning PR #1 was merged,
 then task `001` after bootstrap PR #2 was merged. That authorization covered
 platform design and its read-only checks. Later on 2026-10-15 the user explicitly
@@ -23,6 +24,18 @@ including inference or credential retrieval, are authorized.
 After PR #7 merged, the user authorized task `006` controlled-failure/recovery
 code, offline checks, documentation, and PR publication only. This does not
 authorize Azure reads, real inference, or injecting/restoring a live fault.
+After PR #8 merged, the user approved starting task `007` live verification
+on 2026-10-15. Preparation uses the active subscription and West US 3; exact
+new-resource targets and provisioning/fault/cleanup actions are confirmed
+before execution. At 16:31 CDT on the same date, after the exact target/action
+handoff, the user explicitly instructed autonomous continuation. This authorizes
+the new `rg-responses-verify007-azd` and `rg-responses-verify007-cli` groups in
+the unchanged active subscription / West US 3, bounded inference, reversible
+fault/restoration, unchanged reruns, and scoped cleanup. Task `008` is not included.
+Before service provisioning, the user additionally required a dedicated
+user-assigned managed identity for APIM. Include that new owned identity in
+each target group; explicitly select its client ID in the gateway policy and
+retain only the two Foundry-scoped OpenAI User grants.
 
 The lab demonstrates conversation-aware routing through Azure API Management
 (APIM) to two Microsoft Foundry backends. Conversations chain Responses API
@@ -73,7 +86,7 @@ Backend load-balancing pool
 Supported resource diagnostics and gateway evidence --> Log Analytics
 ```
 
-This is a logical design, not an implemented system. [DESIGN.md](DESIGN.md)
+This is a logical overview of the implemented system. [DESIGN.md](DESIGN.md)
 records task `001` source-backed choices and live disposable feasibility
 evidence as of 2026-10-15. B1/B2 are resolved: native pinned-breaker rejection
 and concrete outbound host evidence passed. Task `002` implements the
@@ -81,12 +94,16 @@ infrastructure foundation in merged PR #4. Task `003` adds gateway routing,
 affinity, and diagnostic policies on `feature/003-gateway-routing-policies`.
 Task `004` implements guarded azd/CLI orchestration for those templates;
 both drivers share native `deploy.bicepparam` inputs and external group
-ownership. This is offline-validated code, not a deployed self-service lab.
+ownership. These were code-only deliveries; runtime evidence was not claimed
+until the separately authorized task `007`.
 Task `005` adds the bounded .NET 10 client, isolated response chains, and
 per-turn/session evidence; its HTTP transport tests are offline only.
 Task `006` adds the opt-in same-host backend-path fault, bounded breaker/
 fresh-session observations, conditional restoration, and original-chain recovery.
-It too is offline-validated code, not live fault/routing evidence.
+Task `007` subsequently exercised both healthy and fault workflows against
+clean azd and CLI environments, including actual workspace policy traces,
+unchanged reruns, and verified scoped cleanup. Those results are separate from
+the earlier tasks' offline checks.
 The selected trace contract is verified native policy trace records plus
 correlated gateway logs, not full debugger transcripts.
 
@@ -211,9 +228,17 @@ Its implementation and offline validation are complete in PR #6, merged at
 Its implementation and offline validation are complete in PR #7, merged at
 `dadd598` on 2026-10-15. Task `006` began on
 `feature/006-controlled-failure-recovery` with code-only authorization.
-Its implementation and offline validation are complete in PR #8, left open
-for user review; the full lab has not been deployed or live-verified.
-Tasks `007`-`008` remain pending.
+Its implementation and offline validation are complete in PR #8, merged at
+`721d299` on 2026-10-15. Task `007` began on
+`feature/007-live-verification` after approval to start live verification.
+Read-only preparation and cold validation corrected real lifecycle contracts;
+PR #9 preserves those fixes and the dedicated user-assigned identity.
+Both clean labs passed provisioning, healthy routing, controlled failure/
+recovery, correlated workspace diagnostics, unchanged reruns, and verified
+scoped teardown. Initial CLI deployment polling and azd teardown errors were
+reconciled through actual Azure state checks, not treated as successful command
+exits. Recovery records and associated model quota remain without purge.
+Task `007` is complete in PR #9, left unmerged; task `008` is pending.
 
 ## Execution and progress
 

@@ -17,7 +17,7 @@ const [diagnostic] = byType('apis/diagnostics');
 
 test('routing waits for both accounts, models and identity grants and consumes actual endpoints', () => {
   assert.deepEqual(routing.dependsOn.sort(), [
-    "[format('accounts[{0}]', 0)]", "[format('accounts[{0}]', 1)]", 'apim', 'foundries',
+    "[format('accounts[{0}]', 0)]", "[format('accounts[{0}]', 1)]", 'apim', 'foundries', 'gatewayGrants', 'gatewayIdentity',
   ]);
   for (const [index, name] of [[0, 'foundryAEndpoint'], [1, 'foundryBEndpoint']]) {
     const endpoint = routing.properties.parameters[name].value;
@@ -25,6 +25,7 @@ test('routing waits for both accounts, models and identity grants and consumes a
     assert.match(endpoint, /\.endpoints\['OpenAI Language Model Instance API'\]/);
   }
   assert.equal(routing.properties.parameters.modelDeploymentName.value, "[parameters('modelDeploymentName')]");
+  assert.equal(routing.properties.parameters.managedIdentityClientId.value, "[reference('gatewayIdentity').outputs.clientId.value]");
   assert.equal(routing.properties.parameters.affinityCookieName.value, "[parameters('affinityCookieName')]");
   assert.deepEqual(template.parameters.affinityCookieName.allowedValues, ['APIM-Backend-Affinity']);
   assert.equal(resources.length, 8);
@@ -89,6 +90,8 @@ test('policy is deployed after pool and operation with allow-listed host and mod
   assert.match(expression, /&lt;/);
   assert.match(expression, /__AFFINITY_COOKIE__/);
   assert.match(expression, /parameters\('affinityCookieName'\)/);
+  assert.match(expression, /__MANAGED_IDENTITY_CLIENT_ID__/);
+  assert.match(expression, /parameters\('managedIdentityClientId'\)/);
 });
 
 test('native Monitor trace diagnostics sample all calls without recording secrets, payloads or client IP', () => {
