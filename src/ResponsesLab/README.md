@@ -1,10 +1,14 @@
 # Conversation harness - tasks 005 and 006
 
-**Implemented and offline-tested, not live-verified.** This .NET 10 console
+**Implemented and exercised against the first task `007` azd lab.** This .NET 10 console
 application runs a small developer/architecture-expert script through the
 deployed gateway. It is not an agent framework or tool-calling loop. Task `006`
 adds the separately guarded endpoint-fault scenario below. No real inference,
 credentials, or Azure changes were used for tasks `005`/`006`.
+Task `007` separately verified 24 healthy calls and an eight-attempt
+failure/restoration/recovery run, with every request correlated to actual
+workspace policy traces. The separate CLI environment remains in progress.
+See [sanitized results](../../evidence/samples/task007-verification.json).
 
 ## Build and check without Azure
 
@@ -197,6 +201,9 @@ tokens and raw management error bodies are never logged or persisted.
 Management HTTP disables redirects/cookies, caps bodies at 1 MiB, and has a
 60-second request deadline; each CLI authentication command is bounded to
 30 seconds. The pinned backend API remains `2025-03-01-preview`.
+The management parser accepts APIM's observed UTF-8 BOM; ownership checks
+recognize both `westus3` and ARM's `West US 3` display form without accepting
+another or missing region.
 
 ### What a passing fault run observes
 

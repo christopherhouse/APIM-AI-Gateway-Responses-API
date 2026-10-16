@@ -5,8 +5,34 @@
 **B1 and B2**, and cleanup is verified. This document specifies contracts for
 later tasks; it is not the complete self-service lab. Task `002` subsequently
 received separate code-only authorization after PR #3 merged. Task `003` has
-code-only authorization after PR #4 merged; its expanded gateway policy has
-not been deployed.
+code-only authorization after PR #4 merged. Task `007` subsequently received
+separate live authorization; its current results are distinguished below from
+the historical task `001` design-gate evidence.
+
+### Task 007 live verification - 2026-10-15
+
+The first clean **azd** environment passed Provider validation/what-if,
+provisioning, and an unchanged rerun. Actual configuration included the new
+dedicated **user-assigned identity only**, the explicit policy client ID, and
+exactly two Foundry-scoped OpenAI User grants. All 24 healthy calls passed:
+four three-turn chains stayed pinned, and stateless distribution was A=6/B=6.
+An eight-attempt fault run proved a real A-path 404, three fresh B sessions,
+original-pin native breaker rejection without forwarding, verified conditional
+restoration, and original-chain recovery on A. The conservative proof window
+was 16.83 seconds, below 30 seconds.
+
+All 32 requests joined to actual workspace policy traces; backend hosts and
+native breaker error/empty forwarding fields corroborated client evidence.
+Live category/settings and privacy/retention checks are recorded in the
+[sanitized task `007` sample](../evidence/samples/task007-verification.json).
+The separate CLI lifecycle remains outstanding and is provisioning.
+The first azd deletion attempt failed with APIM `ServiceLocked`; only APIM
+remained after other parents were deleted. A same-target azd retry initiated
+deletion but failed credential acquisition while polling; fresh authentication
+passed and the group was already absent. A guarded `Down` reconciled/retired
+local state. Exact recovery queries found one APIM, two Foundry, and one
+workspace record; no purge occurred and model quota remained 90 of 1,000.
+Do not infer task completion from this first environment.
 
 ## 1. Gate results and remaining decisions
 
@@ -143,8 +169,8 @@ advances to `2025-07-01` because the older module preserving `2023-09-01`
 exposes shared keys as ordinary nested deployment outputs. The selected
 workspace module marks them secure; the root exports no credentials. APIM,
 Foundry accounts/model deployments, diagnostics, and RBAC retain the table's
-other pins. The compiled templates pass local checks; these new module choices
-have **not** been deployed. Exact module sources and validation boundaries are
+other pins. The compiled templates pass local checks; task `007` also deployed
+these modules in its first azd lab. Exact module sources and validation boundaries are
 in the [infrastructure reference](../infra/README.md).
 
 ### Task 003 gateway implementation
@@ -161,9 +187,9 @@ module owns these child resources directly rather than weakening the affinity
 contract or creating a service/identity/account dependency cycle. Other APIM
 children retain `2024-05-01`. No new infrastructure service or pin store is added.
 The [gateway contract](../infra/policies/README.md) records precise request/
-response/error behavior and current source links. All validation of the new
-policy is local; provider deployment and complete runtime assertions remain
-task `007`.
+response/error behavior and current source links. Task `007` deployed this
+policy and verified healthy/fault/native-error trace correlation; local
+invalid-input fixtures are not exhaustive live rejection-path evidence.
 
 ## 4. Routing, state, and per-turn evidence
 
@@ -271,9 +297,11 @@ step. Never invent an executed-member header for that rejection.
 Task `006` implements this workflow with offline tests. Unlike the disposable
 probe's full-property PUT, its controller uses URL-only PATCH with concrete
 `If-Match` and the same pinned `2025-03-01-preview` backend API. The official
-preview REST specification includes that conditional operation; its behavior
-with this exact deployment still requires task `007`. No new live fault or
-provider acceptance is inferred from source/schema checks.
+preview REST specification includes that conditional operation. Task `007`
+subsequently exercised it with real conditional URL-only fault/restoration.
+Actual ARM responses required accepting the `West US 3` display location and
+a UTF-8 JSON preamble; focused regressions cover both without weakening target
+ownership or accepting another/missing region.
 
 ## 6. Diagnostics, trace destinations, and retention
 
@@ -295,7 +323,7 @@ sanitized before sharing.
 | APIM service | `GatewayLogs`, `GatewayLlmLogs`, `GatewayMCPLogs`, `DeveloperPortalAuditLogs`, `WebSocketConnectionLogs` | `ApiManagementGatewayLogs` for gateway evidence; other categories may have no events because that workload is unused. S12 |
 | Each Foundry account | `Audit`, `AzureOpenAIRequestUsage`, `ManagedNetworkEvent`, `RequestResponse`, `Trace` | `AzureDiagnostics`; categories depend on resource capabilities. Inspect privacy/contents before enabling any payload-rich option. S13 |
 | Log Analytics workspace | `Audit`, `Jobs`, `SummaryLogs` | `LAQueryLogs`, `LAJobLogs`, `LASummaryLogs`; workspace itself belongs in diagnostics inventory. S14 |
-| APIM APIs/backends/policies/subscriptions, model deployments, role assignments, diagnostic settings, externally managed group | No separate log categories established for these child/control-plane resources | Record as not independently configured, not silently "all resources logged." Their resource changes are a separate Activity Log concern. |
+| User-assigned identity, APIM APIs/backends/policies/subscriptions, model deployments, role assignments, diagnostic settings, externally managed group | No separate log categories supported by the task `007` live inventory | Record as not independently configured, not silently "all resources logged." Their resource changes are a separate Activity Log concern. |
 
 Once resources exist, query their diagnostic category endpoints. Configure every
 returned supported log category and exportable metric category toward the lab
@@ -308,13 +336,25 @@ During the disposable feasibility deployment, category discovery returned all
 five listed APIM categories, all five listed Foundry categories, and all three
 workspace categories above, plus `AllMetrics` for each parent type. The probe
 enables only `GatewayLogs`, sufficient for B1/B2 and trace correlation; the
-full all-supported-category configuration is now implemented in task `002`
-code, not live-verified. Task `003` adds the native trace configuration.
+full all-supported-category configuration was implemented in task `002`.
+Task `007` verified all four parents' settings/categories and 13 identity/
+child/control-plane capability endpoints in its first live lab.
+Task `003` adds the native trace configuration.
 
 Retain workspace data for 30 days for the lab; align supported table settings.
 Do not configure a workspace data-export loop. Inventory category availability
 separately from actual emission: enabling Jobs or WebSocket logs does not mean
 the scenario should manufacture those events.
+
+In task `007`, APIM and both Foundries emitted metrics; Foundry emitted
+request/usage/audit categories and workspace query audit appeared in
+`LAQueryLogs`. Quiet categories and the workspace's own configured metrics
+were not claimed as observed. Workspace default and the gateway/diagnostic/
+metric/query-audit tables were 30 days; `Usage` was 90 days.
+Query audits contain operator/query metadata and remain private.
+Azure Policy also installed central Foundry diagnostic settings; these were
+left unchanged, and the external workspace was not queried. The lab's privacy,
+retention, and deletion claims do not cover that external destination.
 
 ### Policy records versus debugger transcripts
 
@@ -339,8 +379,9 @@ ApiManagementGatewayLogs
 ```
 
 The probe verified `context.RequestId` equals `CorrelationId`; `TraceRecords`
-contained the compact inbound/outbound/on-error messages. Task `007` must
-repeat the checks for the complete lab. Allow up to ten minutes of bounded ingestion
+contained the compact inbound/outbound/on-error messages. Task `007` repeated
+the checks for all 32 first-lab requests, including the actual native breaker
+error; every row arrived within the agreed budget. Allow up to ten minutes of bounded ingestion
 polling; a missing expected record after the budget is a failed check, not proof
 that diagnostics work.
 
@@ -465,12 +506,12 @@ The azd identity must match Azure CLI; supported azd input values are set from
 the same compiled native parameters, including defaults. A lock serializes
 wrapper operations per environment, not external Azure writers.
 
-Both drivers export eleven allow-listed non-secret client values from actual
+Both drivers export twelve allow-listed non-secret client values from actual
 deployment outputs. `Run` requires a separate credential-read opt-in, checks
 API-scoped active access, and passes the gateway key only through the trusted
 client process environment, restoring previous values/absence in `finally`.
-Task `005` now supplies that executable; the management/inference handoff
-remains unverified in Azure. Latest deployment
+Task `005` now supplies that executable; task `007` verified the actual
+management/inference handoff in its first azd environment. Latest deployment
 failure/incompleteness prevents reusing stale successful configuration.
 
 Teardown checks the exact confirmation, group ownership, parent inventory and

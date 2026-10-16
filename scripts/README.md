@@ -1,10 +1,10 @@
 # Deployment lifecycle - task 004
 
-**Implemented and offline-tested; not deployed or live-verified.** These scripts
+**Implemented; first azd environment live-verified in task `007`.** These scripts
 operate on a new, dedicated lab group only. Task `005` now provides the
 [.NET harness](../src/ResponsesLab/README.md); task `006` adds guarded
-fault/recovery automation. The clean-environment Azure walkthrough remains
-tasks `007`-`008`.
+fault/recovery automation. The separate CLI lifecycle remains task `007`; the final self-service
+walkthrough remains task `008`.
 Do not run the live examples without explicit target/action authorization.
 
 ## Prerequisites and target
@@ -130,7 +130,8 @@ start another operation against the same environment. This is billable
 infrastructure, not a guaranteed low-cost SKU. APIM runtime, two model
 allocations/inference, and diagnostics are cost drivers; quotas and ingestion
 limits are not a monetary cap. No provisioning-duration or cost ceiling is
-claimed for these undeployed scripts.
+guaranteed. The first task `007` azd deployment took approximately 32 minutes
+30 seconds; another deployment need not take the same time.
 
 ## Configuration and credentials
 
@@ -189,8 +190,8 @@ rather than a nested `pwsh -File` call. The client accepts
 `--scenario both|stateful|stateless`, defaults to both, and exits nonzero for
 request/evidence/affinity/distribution failures. The
 [harness guide](../src/ResponsesLab/README.md) defines bounds and evidence.
-Publishing/help and mocked tests passed locally; this end-to-end management
-key handoff and inference have **not** been exercised against Azure.
+Publishing/help and mocked tests passed locally. Task `007` also exercised
+this management-key handoff and real inference through the azd environment.
 
 ### Separately authorized fault run
 
@@ -215,7 +216,9 @@ independent cleanup timeout, and hard-stop limitations. An ignored
 `artifacts\lab\<environment>\fault-recovery.json` is written before mutation
 and removed only after verified restoration. An unresolved journal blocks a new
 failure run; follow the guide's manual reconciliation rather than deleting it
-or overwriting concurrent configuration. This workflow is offline-tested only.
+or overwriting concurrent configuration. Task `007` passed the first live
+azd failure/restoration/recovery run; see the
+[sanitized evidence](../evidence/samples/task007-verification.json).
 
 ## Scoped teardown
 
@@ -277,6 +280,8 @@ experiment do not satisfy those live acceptance criteria.
 | Provider, quota, region, model, policy, or permission refusal | Resolve the named prerequisite through an authorized operator; do not substitute targets or suppress checks |
 | Changed inputs, owner, or inventory | Investigate local/Azure drift; do not edit the ownership record to force adoption or deletion |
 | Native command failure with output withheld | The command failed and stopped the operation; check sign-in/permissions and separately authorized validation without credential/debug logging |
+| APIM `ServiceLocked` during teardown | The service can report `Succeeded` while refusing deletion as transitioning; inspect the exact group's state/activity and retry only the same guarded teardown after the transition. Do not bypass ownership checks or purge |
+| Deletion poll fails after Azure accepted it | Recheck authentication and exact group existence; rerun guarded `Down` to verify absence and retire state if Azure already deleted the group. A poll error alone proves neither deletion nor survival |
 | Partial provisioning or azd state failure | Retain local ownership files; use the exact guarded CLI teardown when approved |
 | Operation lock in use | Wait for the other wrapper invocation; do not bypass the lock |
 

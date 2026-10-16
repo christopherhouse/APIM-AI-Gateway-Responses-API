@@ -285,6 +285,16 @@ task `007` delivery. Provider validation/what-if will run against the authorized
 empty owned group before service provisioning; preparation results are not
 deployment or scenario evidence.
 
+**First live environment:** Guarded azd provisioning, dedicated user-assigned
+identity/policy/two-grant checks, 24 healthy calls, an eight-attempt conditional
+fault/restoration/recovery run, and all 32 correlated native policy traces
+passed. Live category/privacy/retention checks and an unchanged rerun passed.
+Scoped deletion required handling APIM's transition refusal and reconciling a
+later azd credential-poll error; the group is verified absent and state retired.
+One APIM, two Foundry, and one workspace recovery record remain without purge.
+The clean CLI deployment is now running; task `007` is not complete. See
+[sanitized evidence](../evidence/samples/task007-verification.json).
+
 Deliverables and acceptance:
 
 - Provision a clean lab through `azd`; record the actual subscription, region,

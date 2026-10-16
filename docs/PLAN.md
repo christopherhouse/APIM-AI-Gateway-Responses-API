@@ -226,10 +226,13 @@ Its implementation and offline validation are complete in PR #7, merged at
 Its implementation and offline validation are complete in PR #8, merged at
 `721d299` on 2026-10-15. Task `007` began on
 `feature/007-live-verification` after approval to start live verification.
-Read-only preparation found and corrected two lifecycle contract defects;
-draft PR #9 preserves those fixes. Live execution is blocked pending exact
-target/action confirmation; the draft is not task `007` completion.
-The full lab has not yet been deployed or live-verified; task `008` is pending.
+Read-only preparation and cold validation corrected real lifecycle contracts;
+draft PR #9 preserves those fixes and the dedicated user-assigned identity.
+The first azd lab has passed provisioning, healthy routing, controlled failure/
+recovery, correlated workspace diagnostics, and an unchanged rerun. Its scoped
+teardown is verified, with recovery records retained without purge. The clean
+CLI environment is provisioning; its scenarios and lifecycle remain outstanding. This is
+not task `007` completion; task `008` is pending.
 
 ## Execution and progress
 

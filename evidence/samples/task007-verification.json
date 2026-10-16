@@ -1,0 +1,156 @@
+{
+  "sanitized": true,
+  "verifiedDate": "2026-10-15",
+  "taskStatus": "in_progress",
+  "scope": "Task 007 live verification; not task 008",
+  "redactions": [
+    "Subscription, resource identifiers, hostnames and operator information omitted",
+    "Credentials, native cookies, response IDs, correlation IDs and raw records omitted",
+    "External governance destination identifiers omitted; that workspace was not queried"
+  ],
+  "configuration": {
+    "resourceRegion": "westus3",
+    "apimSku": "Developer",
+    "apimUnits": 1,
+    "apimIdentityType": "UserAssigned",
+    "dedicatedIdentityCount": 1,
+    "systemAssignedIdentityEnabled": false,
+    "policyExplicitClientIdVerified": true,
+    "openAiUserGrantCount": 2,
+    "grantScopes": "The two new Foundry accounts only",
+    "foundryAccounts": 2,
+    "model": "gpt-5.4-mini",
+    "modelVersion": "2026-03-17",
+    "deploymentSku": "GlobalStandard",
+    "capacityPerAccount": 20,
+    "breakerTripSeconds": 30,
+    "maxOutputTokensPerAttempt": 2048,
+    "wholeTaskInitialAttemptLimit": 96
+  },
+  "environments": [
+    {
+      "driver": "Azd",
+      "provisioning": {
+        "result": "PASS",
+        "providerValidationAndWhatIf": "PASS",
+        "preview": "PASS",
+        "observedProvisioningSeconds": 1950,
+        "ownedParentResourceCount": 5
+      },
+      "healthy": {
+        "result": "PASS",
+        "requests": 24,
+        "statuses": { "200": 24 },
+        "statefulSessions": 4,
+        "turnsPerSession": 3,
+        "completedStatefulTurns": 12,
+        "affinityViolations": 0,
+        "sessionBackendSets": [
+          ["backend-a"],
+          ["backend-b"],
+          ["backend-a"],
+          ["backend-b"]
+        ],
+        "statefulDistribution": { "backend-a": 6, "backend-b": 6 },
+        "statelessRequests": 12,
+        "statelessDistribution": { "backend-a": 6, "backend-b": 6 }
+      },
+      "failure": {
+        "result": "PASS",
+        "attempts": 8,
+        "faultMember": "backend-a",
+        "phases": [
+          { "phase": "healthy-setup", "attempts": 2, "statuses": [200, 200], "members": ["backend-a", "backend-b"] },
+          { "phase": "real same-host path fault", "attempts": 1, "status": 404, "member": "backend-a" },
+          { "phase": "fresh-during-fault", "attempts": 3, "statuses": [200, 200, 200], "members": ["backend-b", "backend-b", "backend-b"] },
+          { "phase": "original pin while breaker open", "attempts": 1, "status": 503, "reason": "CircuitBreakerIsOpen", "executedMember": null, "forwarded": false },
+          { "phase": "original chain after restoration", "attempts": 1, "status": 200, "member": "backend-a" }
+        ],
+        "conservativeProofWindowSeconds": 16.83,
+        "proofWindowLimitSeconds": 30,
+        "expectedFailureAssertionsPassed": 2,
+        "freshHealthySessions": 3,
+        "originalResponseIdAndCookiePreserved": true,
+        "restorationVerified": true,
+        "recoveryJournalRemaining": false
+      },
+      "workspaceEvidence": {
+        "result": "PASS",
+        "capturedRequests": 32,
+        "correlatedRequests": 32,
+        "actualPolicyTraceRows": 32,
+        "statuses": { "200": 30, "404": 1, "503": 1 },
+        "concreteBackendHostsMatch": true,
+        "pinnedBreakerNoForwardingCorroborated": true,
+        "allGatewayRowsIngestedWithinTenMinutesAfterScenario": true,
+        "foundryEmittedCategories": ["RequestResponse", "AzureOpenAIRequestUsage", "Audit"],
+        "foundryRequestResponseRows": { "backend-a": 14, "backend-b": 16 },
+        "foundryUsageRows": { "backend-a": 14, "backend-b": 16 },
+        "workspaceAuditTable": "LAQueryLogs",
+        "workspaceAuditRowsAtCollection": 4,
+        "metricSourcesObserved": ["APIM", "Foundry A", "Foundry B"],
+        "apimCapturedBodyHeaderCookieOrClientIpViolations": 0,
+        "foundryNonemptyContentOrCredentialFieldNamesObserved": []
+      },
+      "diagnosticConfiguration": {
+        "allInventoriedParentCategoriesEnabled": true,
+        "allLabSettingsTargetOwnedWorkspace": true,
+        "unsupportedChildAndIdentityTypesChecked": 13,
+        "unsupportedServiceCode": "ResourceTypeNotSupported",
+        "inheritedAdditionalFoundrySettings": {
+          "destinationOutsideLab": true,
+          "configuredBy": "Azure Policy",
+          "modifiedByLab": false,
+          "externalWorkspaceQueried": false
+        },
+        "workspaceReturnedDestinationFlag": null,
+        "workspaceAuditDestinationVerifiedByEmission": true,
+        "workspaceDefaultRetentionDays": 30,
+        "dailyQuotaGb": 1,
+        "observedTableRetentionDays": {
+          "ApiManagementGatewayLogs": 30,
+          "AzureDiagnostics": 30,
+          "AzureMetrics": 30,
+          "LAQueryLogs": 30,
+          "Usage": 90
+        }
+      },
+      "unchangedRerun": {
+        "result": "PASS",
+        "providerValidationAndWhatIf": "PASS",
+        "azdDeploymentDecision": "Skipped with no changes",
+        "unchangedNonSecretRuntimeValues": 12
+      },
+      "cleanup": {
+        "result": "PASS",
+        "deletionDriver": "Azd",
+        "initialAttempt": "409 ResourceGroupDeletionBlocked / APIM ServiceLocked",
+        "retry": "azd initiated deletion; AzureCLICredential failed during polling",
+        "reconciliation": "Fresh CLI/azd authentication passed; guarded Down verified already-absent group",
+        "groupAbsent": true,
+        "localStateRetired": true,
+        "runtimeAndOutputsRemoved": true,
+        "recoveryJournalRemaining": false,
+        "retainedRecoveryRecords": { "APIM": 1, "Foundry": 2, "Workspace": 1 },
+        "modelQuotaAfterDeletion": { "current": 90, "limit": 1000 },
+        "purgeRequested": false
+      }
+    }
+  ],
+  "accounting": {
+    "attemptsSoFar": 32,
+    "statusesSoFar": { "200": 30, "404": 1, "503": 1 },
+    "automaticTransportRetries": 0,
+    "additionalInferenceRuns": 0,
+    "actualInvoicedCost": "Not available; request, token and ingestion limits are not a monetary cap"
+  },
+  "limitations": [
+    "The separate CLI environment is provisioning; its scenarios, diagnostics, rerun and cleanup remain incomplete",
+    "Observed 6/6 samples do not establish a balancing SLA",
+    "Fresh-session and pinned-rejection proof is bounded to the breaker-open window",
+    "Quiet log categories were enabled but their workloads were not fabricated to force emission",
+    "Workspace AllMetrics is configured; workspace metric emission was not observed in this snapshot",
+    "Generated model explanations can be inaccurate; member headers, native errors and correlated workspace records provide routing evidence",
+    "Inherited central logging remains governed externally and is not covered by the lab workspace's privacy or retention claims"
+  ]
+}

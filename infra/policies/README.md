@@ -1,9 +1,11 @@
 # Gateway contract - task 003
 
 [`responses.xml`](responses.xml) and [`gateway.bicep`](../gateway.bicep) implement
-the gateway configuration. They have **local validation only**. Task `001`'s
-separate disposable experiment established the native routing signals; this
-expanded policy has not been deployed. No subscription keys are generated
+the gateway configuration. The first task `007` azd environment **deployed and
+exercised this policy**, including healthy chains/distribution, explicit pinned
+failure, recovery, and native workspace trace correlation. The separate CLI
+environment remains in progress. Task `001`'s experiment is historical, not
+substitute evidence for these templates. No subscription keys are generated
 locally, retrieved, or exported by these files.
 
 ## One endpoint, two request modes
@@ -50,7 +52,7 @@ chain when the cookie is unavailable. They must also reject missing/changed
 backend evidence even after a 2xx. Never restart a lost chain silently, share
 cookie containers, forge a pin, or use the session UUID to select a member.
 Task `005` implements these assertions in the
-[.NET harness](../../src/ResponsesLab/README.md), with offline checks only;
+[.NET harness](../../src/ResponsesLab/README.md), now exercised in task `007`;
 there is no server-side pin store.
 
 ## Native routing and failure
@@ -76,7 +78,7 @@ healthy member inside the open window. This is not a promise of indefinite
 healthy-only routing or a global availability SLA. Controlled fault scripts
 are implemented by task `006` in the
 [guarded fault workflow](../../src/ResponsesLab/README.md#controlled-failure-and-recovery);
-they have not been live-verified with this policy.
+the first live task `007` run passed with this policy.
 
 ## Trustworthy evidence and credentials
 
@@ -97,7 +99,8 @@ deletes caller/backend copies in inbound, outbound, and error paths; it never
 copies arbitrary error text or invents an executed member. The fault harness
 requires this reason plus 503 and a gateway UUID for its pinned-breaker
 assertion. A bare 503 is not sufficient proof. The header is not a full trace;
-workspace correlation of the exact deployed policy remains task `007`.
+task `007` correlated it with the actual gateway error and empty backend
+forwarding fields in the owned workspace.
 
 APIM subscription access is independent of backend identity. Caller
 `Ocp-Apim-Subscription-Key`, `api-key`, and `Authorization` are removed before
@@ -159,7 +162,11 @@ Task `007` must deploy the exact expanded policy and prove request path/body
 preservation, subscription enforcement/secret stripping, identity propagation,
 opaque-cookie behavior, member evidence, real HTTP errors, native breaker
 rejection/recovery, policy rejection/error correlation, and workspace
-ingestion/privacy. No local check substitutes for those live assertions.
+ingestion/privacy. The first environment passed the healthy/fault/native-error
+and trace-correlation assertions; exhaustive invalid-input and unauthenticated
+request paths were not exercised live. No local check substitutes for a live
+assertion. Bounded results are in the
+[sanitized evidence](../../evidence/samples/task007-verification.json).
 
 ## Official implementation sources (inspected 2026-10-15)
 

@@ -1,6 +1,7 @@
 # Infrastructure and gateway configuration - tasks 002/003/004
 
-This is infrastructure code, **not a deployed or callable lab**. It creates
+This infrastructure was **deployed and exercised through azd in task `007`**;
+the separate clean CLI lifecycle remains in progress. It creates
 resources inside an existing dedicated resource group; it never creates or
 selects that group. No Azure deployment or live validation was performed for
 tasks `002`-`004`. Task `004` adds the external group lifecycle in
@@ -133,8 +134,24 @@ sampling at `information` verbosity, all errors, no client IP, and zero body
 bytes in both directions. Header capture is empty except gateway-written
 request/member response IDs. Compact `responses-lab` traces exclude payloads,
 credentials, cookies, and raw URLs. Resource diagnostics plus this API
-configuration select the native `TraceRecords` path; actual ingestion is still
-unverified for these templates. No Application Insights/extra collector is added.
+configuration select the native `TraceRecords` path. Task `007` correlated all
+32 first-environment requests with actual native traces and verified no APIM
+body, credential/cookie-header, or client-IP capture in those records.
+No Application Insights/extra collector is added.
+
+Task `007` also compared live categories/settings for all four parents and
+checked 13 identity/child/control-plane types: no additional independent
+categories were supported. Foundry request/usage/audit records and workspace
+`LAQueryLogs` were emitted; quiet workloads were not fabricated.
+The workspace and gateway/diagnostic/metric/query-audit tables retained
+30 days, while the service's `Usage` table retained 90 days. Query audits can
+identify operators and queries; raw records are not safe publication samples.
+
+Azure Policy added other Foundry diagnostic settings targeting a central
+workspace. The lab did not modify them or query that destination. Its privacy
+and retention are governed separately; deleting the lab workspace does not
+delete externally retained records. See the bounded, sanitized
+[task `007` evidence](../evidence/samples/task007-verification.json).
 
 ## Non-secret output contract
 
@@ -178,22 +195,23 @@ Eleven Node tests check foundation/routing resource wiring, native affinity/
 breaker configuration, scoped auth, diagnostic privacy, output safety,
 dependency ordering, and parameter coverage.
 
-The PowerShell test parses XML, compiles all 18 actual policy expressions as
-C# 7 against small context stand-ins, and executes 39 input/host fixtures.
+The PowerShell test parses XML, compiles all 19 actual policy expressions as
+C# 7 against small context stand-ins, and executes 42 input/host fixtures.
 It uses no live gateway and installs no dependencies. Its host references
 PowerShell's bundled Newtonsoft; the specific assembly-version compatibility
 warning is suppressed without suppressing compilation errors.
 These are local structural/expression checks, **not an APIM runtime emulator,
 ARM expression interpreter, or provider-side validation**.
 
-ARM `validate`/`what-if` are not run: tasks `002`-`004` have no authorization for live
-subscription checks and no dedicated deployed group. Do not create a group to
-run them under this task's code-only approval. Before any future deployment,
+ARM `validate`/`what-if` were not run under tasks `002`-`004`'s code-only
+authorization. Task `007` subsequently passed actual Provider validation and
+what-if before the first deployment and its unchanged rerun.
+Before any future deployment,
 obtain authorization and use the actual dedicated group and local
 `.bicepparam` file for ARM validation and resource-level what-if review.
 Do not treat the task `001` ARM results as validation of these new modules.
 
-Task `007` must verify actual provisioning, RBAC propagation, public endpoint
+Task `007` records actual provisioning, RBAC propagation, public endpoint
 authentication, all supported diagnostic settings, event/table emission,
 privacy/retention, model availability and capacity, output endpoint properties,
 and the exact expanded policy's routing/error behavior and trace ingestion.
@@ -201,8 +219,10 @@ Task `004` implements azd/CLI lifecycle orchestration using this entry point;
 its offline checks do not establish real provisioning or teardown.
 Task `005` adds the [offline-tested .NET harness](../src/ResponsesLab/README.md).
 Task `006` adds guarded fault/recovery automation with offline checks only.
-New policy rejection/error paths also require live
-correlation checks; do not count the old experiment as their verification.
+The first environment passed healthy routing, real backend failure, native
+breaker error correlation, and original-chain recovery. Exhaustive invalid-input
+rejection paths were not sent live; their local fixtures are not live evidence.
+Do not count the old experiment as verification of the new templates.
 
 ## Official implementation sources (inspected 2026-10-15)
 

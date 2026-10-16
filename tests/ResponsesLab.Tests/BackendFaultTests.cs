@@ -39,6 +39,34 @@ public sealed class BackendFaultTests
     }
 
     [Theory]
+    [InlineData("West US 3", true)]
+    [InlineData("East US", false)]
+    [InlineData(null, false)]
+    public async Task Region_contract_accepts_ARM_display_form_but_rejects_other_or_missing_regions(string? location, bool accepted)
+    {
+        using var f = new Fixture();
+        f.Handler.Resources[f.Options.ApimId]["location"] = location;
+        if (accepted)
+            await f.Fault.PrepareAsync(default);
+        else
+            await Assert.ThrowsAsync<BackendControlException>(() => f.Fault.PrepareAsync(default));
+        Assert.Empty(f.Handler.Patches);
+        Assert.False(f.Fault.MutationAttempted);
+    }
+
+    [Fact]
+    public async Task Management_accepts_APIM_UTF8_BOM_through_prepare_conditional_fault_and_restore()
+    {
+        using var f = new Fixture();
+        f.Handler.PrefixUtf8Bom = true;
+        await f.Fault.PrepareAsync(default);
+        await f.Fault.ApplyAsync("backend-a", default);
+        await f.Fault.RestoreAsync(default);
+        Assert.Equal(2, f.Handler.Patches.Count);
+        Assert.False(File.Exists(f.Options.RecoveryPath));
+    }
+
+    [Theory]
     [InlineData("owner")]
     [InlineData("host")]
     [InlineData("tls")]
@@ -257,6 +285,7 @@ public sealed class BackendFaultTests
         internal bool AcceptAsynchronously { get; set; }
         internal bool OmitPatchETag { get; set; }
         internal bool ChangeDuringRestore { get; set; }
+        internal bool PrefixUtf8Bom { get; set; }
 
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
@@ -290,7 +319,7 @@ public sealed class BackendFaultTests
             }
             var response = new HttpResponseMessage(HttpStatusCode.OK)
             {
-                Content = new StringContent(resource.ToJsonString(), Encoding.UTF8, "application/json")
+                Content = new StringContent((PrefixUtf8Bom ? "\uFEFF" : "") + resource.ToJsonString(), Encoding.UTF8, "application/json")
             };
             if (ETags.TryGetValue(path, out var version) && !(request.Method == HttpMethod.Patch && OmitPatchETag))
                 response.Headers.ETag = new EntityTagHeaderValue(version);

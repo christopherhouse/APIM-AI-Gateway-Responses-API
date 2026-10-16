@@ -5,13 +5,13 @@
 | Field | Value |
 | --- | --- |
 | Updated | 2026-10-15 |
-| Phase | Task `007` guarded azd provisioning in progress; user-assigned identity configuration validated |
+| Phase | Task `007` azd runtime/rerun/cleanup verified; clean CLI provisioning running |
 | Authorization | Explicit 16:31 CDT continuation on 2026-10-15 covers the two new stated targets, bounded inference, reversible fault/restoration, reruns, and scoped cleanup |
 | Planning branch | `chore/lab-planning` |
 | Current implementation task | `007` - in_progress on `feature/007-live-verification` |
-| Next task | Validate and execute live task `007`; `008` pending |
-| Azure deployment | Task `001` cleaned; task `007` owned azd group created and guarded provisioning started; no inference or fault yet |
-| Solution files | Task `001` experiment, task `002` Bicep, task `003` gateway, task `004` lifecycle, task `005` harness, and task `006` fault/recovery automation; full live verification pending |
+| Next task | Complete clean CLI provisioning/scenarios/diagnostics/rerun/teardown; `008` pending |
+| Azure deployment | Task `007` azd group verified absent, four recovery records retained without purge; exact CLI group provisioning running |
+| Solution files | Tasks `002`-`006` implementation now exercised through azd; clean CLI lifecycle verification pending |
 | Base branch | `main` at fault/recovery merge `721d299`; initial empty base `846a2cb` preserved |
 | Pull request | #1-#8 merged; #9 is the draft task `007` work branch PR |
 
@@ -1059,6 +1059,125 @@
 - All 11 compiled infrastructure contracts also passed after adding the
   explicit policy client-ID substitution assertions. Current draft PR #9
   will record this ongoing run, not falsely mark task `007` done.
+
+### 2026-10-15 - Task 007 azd runtime and diagnostic evidence
+
+- Guarded azd provisioning completed in approximately 32 minutes 30 seconds.
+  Verified five owned parent resources in the exact group/region, the one
+  attached user-assigned identity with no system identity, its explicit policy
+  client ID, both exact Foundry-scoped OpenAI User grants, and both approved
+  model/version/SKU/capacity configurations.
+- Healthy `Run` passed all 24 requests: four three-turn chains with zero
+  affinity violations and six turns per backend; 12 stateless calls split
+  A=6/B=6. These observed counts are not a balancing SLA.
+- Initial fault preparation exposed two real ARM wire shapes: APIM reports
+  location as `West US 3`, and management JSON can carry a UTF-8 BOM.
+  Updated `BackendFault.cs` to recognize the exact normalized region and strip
+  only that preamble before strict JSON parsing. Added focused tests rejecting
+  another/missing region and exercising BOM-prefixed conditional fault/restore.
+  No fault or extra inference was attempted by these preparation failures.
+- The bounded live failure run then passed in eight HTTP attempts: two healthy
+  setup calls, a real same-host-path 404 on A, three fresh healthy B sessions,
+  original-pin 503 / `CircuitBreakerIsOpen` without forwarding, and original
+  chain recovery on A after verified restoration. The conservative proof
+  window was 16.83 seconds against the 30-second limit; no journal remained.
+- All 32 requests correlated with owned-workspace gateway rows and actual
+  `responses-lab` policy traces. Concrete backend URLs matched the client
+  evidence; the native breaker row corroborated no forwarding. All gateway
+  rows arrived within ten minutes after the scenario. Foundry emitted
+  `RequestResponse`, `AzureOpenAIRequestUsage`, and `Audit`; workspace query
+  audits appeared in `LAQueryLogs`; APIM and both Foundries emitted metrics.
+- Actual APIM records contained no captured body, credential/cookie headers,
+  or client IP. Reviewed Foundry metadata contained no nonempty content/
+  credential field names checked by the collector. This is a bounded sample,
+  not a guarantee about every service diagnostic field. Query audits include
+  operator/query metadata and remain private.
+- Compared all four parents' live categories/settings with the inventory;
+  every category targeted the owned workspace. Thirteen identity/child/group
+  types returned no supported categories / `ResourceTypeNotSupported`.
+  Azure Policy also created additional Foundry settings targeting a central
+  workspace. Left them unchanged and did not query that external destination;
+  lab retention/privacy claims do not cover it.
+- Workspace default retention and daily quota were 30 days / 1 GB. Observed
+  gateway, diagnostics, metrics, and query-audit tables retained 30 days;
+  `Usage` retained 90 days. Workspace `AllMetrics` was configured, but its own
+  metric emission and quiet categories were not fabricated or claimed.
+- An unchanged guarded azd `Provision` rerun passed Provider validation/
+  what-if; azd skipped deployment with no changes and all 12 non-secret
+  runtime values stayed identical. Preserved private runtime/state manifests
+  before the authorized exact-group `Down -Driver Azd`, now running with
+  `--purge=false`. No purge or existing resource modification was authorized.
+- Added partial sanitized task `007` evidence and updated README status.
+  Cumulative inference: 32 of the initial 96 allowed attempts. Next: confirm
+  group absence and retained recovery records, then the separate clean CLI
+  deployment, scenarios, diagnostics, unchanged rerun, and scoped cleanup.
+
+### 2026-10-15 - Task 007 azd teardown transition refusal
+
+- The first authorized guarded azd `Down` failed with HTTP 409
+  `ResourceGroupDeletionBlocked`: APIM returned `ServiceLocked` / transitioning
+  throughout the resource-group deletion attempt. This is not successful
+  cleanup, and local environment retirement was correctly withheld.
+- Followed Azure MCP azd error-troubleshooting guidance. Read-only inspection
+  of the exact group showed only its original APIM remained, reporting
+  `Succeeded`; the activity log confirmed successful deletion of both
+  Foundries, both role assignments, the user-assigned identity, and workspace,
+  alongside APIM delete failures. No existing resources were touched.
+- Retried the same guarded `Down -Driver Azd` with unchanged exact target,
+  ownership validation, isolated azd configuration, and purge disabled. The
+  retry is in progress; the separate CLI deployment has not started.
+- Release build passed with zero warnings/errors; all 117 .NET cases and
+  formatting verification passed after the two ARM wire-shape fixes.
+- Updated the affected guides and design to distinguish actual first-lab
+  proof, unobserved quiet diagnostics, inherited central logging, table
+  retention, and the remaining lifecycle criteria. Next: verify the retry,
+  record residual recovery records, then begin the clean CLI path.
+
+### 2026-10-15 - Task 007 azd cleanup verified; clean CLI provisioning started
+
+- The azd deletion retry initiated deletion but exited with
+  `AzureCLICredential: exit status 1` while polling. Fresh CLI and isolated azd
+  management-token checks both passed without sign-in or context changes;
+  the exact group then returned absent. Do not misreport the poll error as
+  an uninterrupted successful azd command.
+- Repeated the guarded `Down -Driver Azd` against the same target. Its
+  already-absent path verified absence, retired local state, removed active
+  runtime/output configuration, and retained ownership metadata.
+- Exact-name/group recovery queries found one APIM, two Foundry, and one
+  workspace soft-delete record. No purge was requested. Model quota remained
+  90 of 1,000 rather than returning to the initial 50; no quota release or
+  empty recovery inventory is claimed.
+- Only after cleanup verification, started guarded `Provision -Driver Cli`
+  for new `rg-responses-verify007-cli`, with the same approved region/SKU/
+  model/capacity, dedicated user-assigned identity, and local publisher
+  metadata. Fresh Provider validation/what-if passed with 22 creates;
+  service deployment remains running. No azd sign-in/configuration is needed
+  for this second driver; no second-environment inference has been sent.
+- Next: verify CLI deployment and identity/grants, run its bounded healthy/
+  fault scenarios, collect correlated diagnostics/privacy/retention evidence,
+  exercise unchanged rerun, and perform exact-group cleanup. Task `007`
+  remains in progress, task `008` pending, and PR #9 draft/unmerged.
+
+### 2026-10-15 - Task 007 first-environment publication checks
+
+- `dotnet build .\ResponsesLab.slnx --configuration Release --no-restore
+  --nologo` passed with zero warnings/errors; `dotnet test
+  .\ResponsesLab.slnx --configuration Release --no-build --no-restore
+  --nologo` passed all 117 cases; `dotnet format .\ResponsesLab.slnx
+  --verify-no-changes --no-restore --verbosity quiet` passed.
+- `git diff --check` and the private local checker passed for all 20 files
+  changed on this branch: UTF-8/no-BOM/LF/final newlines, 74 relative Markdown
+  links/anchors, fences, task `007` in-progress / `008` pending, sanitized
+  evidence counts, private configuration absence, and generated-state ignores.
+  The new evidence sample initially used CRLF; normalized it to repository LF
+  before the successful check.
+- Reviewed README instructions/diagram labels and documented actual versus
+  unverified behavior. GitHub-rendered Markdown/Mermaid appearance was not
+  verified. No new infrastructure/policy change occurred after their recorded
+  Bicep/contracts/expression/lifecycle validation.
+- Preserving the two ARM wire-shape fixes and first-environment evidence in
+  draft PR #9 while the authorized CLI deployment runs. Task `007` completion
+  and making the PR ready remain gated on the second lifecycle's actual results.
 
 ## Update protocol
 
