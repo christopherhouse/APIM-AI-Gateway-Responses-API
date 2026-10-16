@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import test from 'node:test';
+import { runInNewContext } from 'node:vm';
 
 const template = JSON.parse(readFileSync(new URL('../artifacts/002-template.json', import.meta.url), 'utf8'));
 const routing = template.resources.routing;
@@ -27,6 +28,9 @@ test('routing waits for both accounts, models and identity grants and consumes a
   assert.equal(routing.properties.parameters.modelDeploymentName.value, "[parameters('modelDeploymentName')]");
   assert.equal(routing.properties.parameters.managedIdentityClientId.value, "[reference('gatewayIdentity').outputs.clientId.value]");
   assert.equal(routing.properties.parameters.affinityCookieName.value, "[parameters('affinityCookieName')]");
+  assert.equal(routing.properties.parameters.sessionAffinityEnabled.value, "[parameters('sessionAffinityEnabled')]");
+  assert.equal(template.parameters.sessionAffinityEnabled.defaultValue, true);
+  assert.deepEqual(template.outputs.sessionAffinityEnabled, { type: 'bool', value: "[parameters('sessionAffinityEnabled')]" });
   assert.deepEqual(template.parameters.affinityCookieName.allowedValues, ['APIM-Backend-Affinity']);
   assert.equal(resources.length, 8);
 });
@@ -48,14 +52,28 @@ test('two TLS-validated members have the verified breakers and equal native cook
     tripDuration: 'PT30S', acceptRetryAfter: true,
   }]);
   assert.equal(pool.properties.type, 'Pool');
-  const services = pool.properties.pool.copy.find(item => item.name === 'services');
+  const services = gateway.variables.copy.find(item => item.name === 'poolServices');
   assert.equal(services.count, '[length(range(0, 2))]');
   assert.equal(services.input.priority, 1);
   assert.equal(services.input.weight, 1);
   assert.match(services.input.id, /resourceId\('Microsoft\.ApiManagement\/service\/backends'/);
-  assert.deepEqual(pool.properties.pool.sessionAffinity.sessionId, {
-    name: "[parameters('affinityCookieName')]", source: 'cookie',
-  });
+  for (const enabled of [true, false]) {
+    const actual = runInNewContext(pool.properties.pool.slice(1, -1).replace(/\bif\(/g, 'choose('), {
+      parameters: name => ({ sessionAffinityEnabled: enabled, affinityCookieName: 'APIM-Backend-Affinity' })[name],
+      variables: name => {
+        assert.equal(name, 'poolServices');
+        return ['backend-a', 'backend-b'];
+      },
+      union: (...objects) => Object.assign({}, ...objects),
+      choose: (condition, yes, no) => condition ? yes : no,
+      createObject: (...pairs) => Object.fromEntries(Array.from({ length: pairs.length / 2 }, (_, i) => pairs.slice(i * 2, i * 2 + 2))),
+    });
+    assert.deepEqual(actual.services, ['backend-a', 'backend-b']);
+    if (enabled)
+      assert.deepEqual(actual.sessionAffinity.sessionId, { name: 'APIM-Backend-Affinity', source: 'cookie' });
+    else
+      assert.equal(Object.hasOwn(actual, 'sessionAffinity'), false);
+  }
 });
 
 test('only HTTPS POST Responses is published, with API-scoped header subscription access', () => {
@@ -92,6 +110,24 @@ test('policy is deployed after pool and operation with allow-listed host and mod
   assert.match(expression, /parameters\('affinityCookieName'\)/);
   assert.match(expression, /__MANAGED_IDENTITY_CLIENT_ID__/);
   assert.match(expression, /parameters\('managedIdentityClientId'\)/);
+  assert.equal(policy.properties.value, "[variables('configuredPolicyXml')]");
+  for (const enabled of [true, false]) {
+    const configured = runInNewContext(gateway.variables.configuredPolicyXml.slice(1, -1).replace(/\bif\(/g, 'choose('), {
+      variables: name => {
+        assert.equal(name, 'policyXml');
+        return gateway.variables[sourceVariable];
+      },
+      parameters: name => {
+        assert.equal(name, 'sessionAffinityEnabled');
+        return enabled;
+      },
+      replace: (value, search, replacement) => value.replaceAll(search, replacement),
+      choose: (condition, yes, no) => condition ? yes : no,
+      string: value => typeof value === 'boolean' ? value ? 'True' : 'False' : String(value),
+    });
+    assert.match(configured, new RegExp(`name="labAffinityEnabled" value="@\\(${enabled}\\)"`));
+    assert.doesNotMatch(configured, /__SESSION_AFFINITY_ENABLED__/);
+  }
 });
 
 test('native Monitor trace diagnostics sample all calls without recording secrets, payloads or client IP', () => {

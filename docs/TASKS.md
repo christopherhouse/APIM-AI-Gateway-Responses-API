@@ -8,8 +8,11 @@ is complete as code and local validation in merged PR #5. Task `004` is complete
 as offline-validated code in merged PR #6. Task `005` is complete as code and
 offline validation in merged PR #7. Task `006` is complete as code and offline
 validation in merged PR #8. Task `007` completed both authorized live
-lifecycles and cleanup on 2026-10-15/16 in PR #9, left unmerged;
-task `008` remains pending.
+lifecycles and cleanup on 2026-10-15/16 in merged PR #9;
+task `008` delivery and its documentation/planning follow-ups are complete in
+PR #10, left unmerged for user review on the same dependency branch.
+Task `009` is pending: only its writeup is authorized on this branch, not SDK
+implementation or new Azure operations.
 IDs are stable; do not renumber completed tasks or hide blocked work.
 
 ## Status and dependency rules
@@ -38,7 +41,8 @@ new platform evidence changes an assumption.
 | 005 | Implement .NET 10 conversation harness and evidence model | 003 | done |
 | 006 | Implement controlled failure, breaker, and recovery scenarios | 004, 005 | done |
 | 007 | Verify end-to-end scenarios and diagnostic evidence in Azure | 006 | done |
-| 008 | Complete self-service documentation and clean-environment walkthrough | 007 | pending |
+| 008 | Complete self-service documentation, affinity toggle, and clean-environment walkthrough | 007 | done |
+| 009 | Compare raw HTTP, Foundry SDK, and Agent Framework in the harness | 008; separate implementation and live-operation authorization | pending |
 
 The default execution order is ascending ID. Tasks `004` and `005` can proceed
 independently once `003` is available; parallel execution is not required.
@@ -295,7 +299,8 @@ required handling APIM's transition refusal and a later credential-poll error.
 Both groups are verified absent and state retired. Per group, one APIM, two
 Foundry, and one workspace recovery record remain without purge; final exact
 model quota was 130 of 1,000 versus 50 initially.
-Task `007` is complete in PR #9; task `008` remains pending. See
+Task `007` is complete in merged PR #9; task `008` subsequently completed
+its own separately authorized comparison and cleanup in PR #10. See
 [sanitized evidence](../evidence/samples/task007-verification.json).
 
 Deliverables and acceptance:
@@ -319,15 +324,96 @@ Deliverables and acceptance:
 
 ## 008 - Complete self-service documentation and walkthrough
 
+**Authorization:** On 2026-10-16, after PR #9 merged, the user authorized task
+`008` on `feature/008-self-service-affinity-toggle`. Cost documentation is
+explicitly excluded. The added enhancement is a simple backend-pool session
+affinity parameter, enabled by default, with an off/on response-chain
+comparison. After the exact target/action handoff, the user approved a new
+environment in West US 3 in the same subscription: `walk008` /
+`rg-responses-walk008`, bounded off/on inference, affinity-only redeployment,
+driver parity/reruns, verification and scoped deletion without purge.
+The ceiling is 64 attempts at 2,048 output tokens each, without retries.
+On the same date, the user requested a documentation-only follow-up in the
+README explaining the native affinity setting, per-conversation cookie
+capture/resend, and response-ID chain with code excerpts and source-line
+citations. Continue on the existing PR #10 dependency branch; no new Azure
+operation or application change is included.
+
+**Verified result:** Native off/on configuration, four genuine cross-resource
+state failures, 24 successful affinity-on requests, all 42 trace joins including
+diagnostics, unchanged 13-value rerun, and scoped cleanup/retired state passed.
+Actual redacted turn output and complete final tables are in the
+[console sample](../evidence/samples/task008-console.md). Published in PR #10
+on 2026-10-16, left open and unmerged for user review.
+
 Deliverables and acceptance:
 
 - Complete the root README with prerequisites, architecture, state ownership,
   affinity lifecycle, auth, policies, breakers, and limitations.
+- Tie the native affinity setting to actual harness cookie capture/resend and
+  `previous_response_id` handling using accurate code excerpts and source-line
+  citations; explain session isolation, stateless calls, and failure guards.
 - Document both complete deployment paths, harness commands and scenario
   expectations, Log Analytics queries, troubleshooting, and scoped teardown.
 - Include example redacted per-turn output and final summary from a real
   verified run; label illustrative samples if any are not actual run evidence.
-- Explain cost drivers, token/capacity controls, and cleanup responsibilities.
+- Explain token/capacity controls and cleanup responsibilities; cost
+  documentation is excluded by the user's task `008` scope change.
+- Add a deployment parameter that enables/disables native backend-pool session
+  affinity, defaulting to enabled, through both deployment drivers.
+- Demonstrate an unpinned cross-backend response-chain failure versus successful
+  pinned chains. Do not treat missing client cookies, a policy rejection, or
+  accidental same-backend routing as proof of a backend response-state failure.
 - Walk through the instructions from a clean environment and fix missing steps.
 - Update the plan and task/progress records to match delivered behavior,
   link completion PRs, and leave PRs unmerged for the user.
+
+## 009 - Compare raw HTTP, Foundry SDK, and Agent Framework
+
+**Authorization/status:** `pending`. On 2026-10-16 the user authorized writing
+up this proposal on `feature/008-self-service-affinity-toggle` before merging
+PR #10. That is planning only, not permission for SDK implementation, package
+changes, infrastructure changes, Azure reads, inference or faults. Start after
+separate implementation approval and merged `008`, or an explicitly documented
+dependency branch. Live proof needs its own target/action and aggregate-budget
+approval; task `008` resources were deleted and are not reusable live targets.
+
+**Scope:** One .NET harness with raw HTTP as the control and proposed
+`foundry-sdk` / `agent-framework` client modes. These selectors do not exist
+yet. Follow the [comparison plan and compatibility gates](PLAN.md#planned-extension-sdk-and-agent-framework-comparison);
+do not assume that a Foundry project SDK fits the current model endpoint.
+
+Deliverables and acceptance:
+
+- Resolve and document the exact SDK/framework packages and pinned versions,
+  API/endpoint/authentication contract and supported transport customization.
+  Identify any project, gateway, role or backend changes and obtain approval
+  before expanding topology; no silent SDK substitution or APIM bypass.
+- Retain the raw HTTP control and reuse the same prompts, interleaving, bounded
+  execution, evidence and assertions through small SDK/framework adapters.
+  Keep existing commands/default behavior working; document the actual stack.
+- In Agent Framework, reuse independent `AgentSession` instances with
+  service-managed Responses state. Verify continuation identifiers on the wire;
+  local-history replay is not a substitute for a server-side response chain.
+- Report pinned SDK-default cookie behavior separately from any configured
+  per-conversation transport. Demonstrate capture/resend and session isolation;
+  disclose manual pipeline policies instead of calling them SDK defaults.
+- Preserve real SDK response handling and distinguish missing cookies, invalid
+  cookies, gateway failures, backend switches and incomplete conversations.
+  Independent stateless requests carry neither response IDs nor affinity state.
+- Add focused offline tests for interleaved cookie/state isolation,
+  continuation fields, stateless behavior, error paths, cancellation and bounds;
+  run the smallest applicable build/tests/formatting and raw-mode regressions.
+- Disable retries across all layers and enforce a run-wide budget against actual
+  model HTTP attempts, including extra calls made inside SDK/framework methods.
+  Publish mode/profile/version metadata without secrets or raw cookie values.
+- Once separately authorized, demonstrate the same off/on proof for all three
+  supported modes: actual cross-backend response-state failure off, pinned
+  chains with zero violations on, both members across independent chains and
+  separately across stateless calls, and actual workspace policy-trace
+  correlation for every model attempt. Record default-profile limitations
+  separately; do not relabel policy errors or replay as proof.
+- Update README/client instructions with exact configuration, required
+  customizations, code-line references and sanitized observed results.
+  Keep planned, offline-tested and live-verified behavior distinct. Do not mark
+  this task done while compatibility or live acceptance remains unresolved.

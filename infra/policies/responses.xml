@@ -7,6 +7,7 @@
     <set-header name="X-Lab-Backend-Id" exists-action="delete" />
     <set-header name="X-Lab-Error-Reason" exists-action="delete" />
     <set-variable name="labModel" value="__MODEL_DEPLOYMENT__" />
+    <set-variable name="labAffinityEnabled" value="@(__SESSION_AFFINITY_ENABLED__)" />
     <set-variable name="labHostA" value="__HOST_A__" />
     <set-variable name="labHostB" value="__HOST_B__" />
     <set-variable name="labValidationError" value="@{
@@ -40,7 +41,9 @@
       }
       if (cookieCount &gt; 1) { return &quot;DuplicateAffinityCookie&quot;; }
       if (scenario == &quot;stateless&quot; &amp;&amp; (previous != null || cookieCount != 0)) { return &quot;StatelessRoutingContextNotAllowed&quot;; }
-      if (previous != null &amp;&amp; (cookieCount != 1 || !hasCookieValue)) { return &quot;AffinityCookieRequired&quot;; }
+      var affinityEnabled = (bool)context.Variables[&quot;labAffinityEnabled&quot;];
+      if (!affinityEnabled &amp;&amp; cookieCount != 0) { return &quot;AffinityCookieDisabled&quot;; }
+      if (affinityEnabled &amp;&amp; previous != null &amp;&amp; (cookieCount != 1 || !hasCookieValue)) { return &quot;AffinityCookieRequired&quot;; }
       if (previous == null &amp;&amp; cookieCount != 0) { return &quot;UnexpectedAffinityCookie&quot;; }
       return &quot;&quot;;
     }" />

@@ -33,6 +33,7 @@ The gateway does not impose a separate prompt schema or change model output.
 | --- | --- | --- |
 | First stateful turn | `store=true`; no `previous_response_id`; no affinity cookie | New isolated cookie container and session UUID |
 | Chained stateful turn | `store=true`; nonempty string `previous_response_id`; exactly one nonempty affinity cookie | Replay only that session's cookie and latest successful response ID |
+| Chained stateful turn, affinity off | `store=true`; nonempty `previous_response_id`; no affinity cookie | Explicit off-mode comparison; send the actual preceding ID without replaying history |
 | Stateless call | `store=false`; no `previous_response_id`; no affinity cookie | Independent request; ignore returned `Set-Cookie` |
 
 Omit `previous_response_id` on first/stateless calls rather than sending `null`.
@@ -44,6 +45,15 @@ Ordinary contract errors have `error.code` values such as
 Empty JSON bodies return `InvalidJson`; malformed/non-object JSON instead
 raises a native policy-expression error through `on-error`. Its status/body
 are gateway-owned, not promised to be a JSON 400.
+
+The native pool parameter **`sessionAffinityEnabled` defaults to `true`**.
+With `false`, Bicep omits `pool.sessionAffinity`, and the deployment-substituted
+policy boolean permits chained IDs without cookies. A supplied affinity
+cookie is rejected as `AffinityCookieDisabled`, so stale pins cannot quietly
+invalidate the comparison. All other request/auth/evidence checks remain.
+This boolean is not caller-controlled; a request header cannot disable
+normal cookie checks. Use the [explicit off-mode scenario](../../docs/WALKTHROUGH.md#3-affinity-off-demonstrate-the-broken-chain),
+not a fabricated policy error, to observe missing response state.
 
 The policy validates cookie **transport**, not the opaque value's authenticity,
 age, ownership, or binding to a response ID. It cannot recover an expired pin.
@@ -59,8 +69,10 @@ there is no server-side pin store.
 
 Both member URLs come from Foundry's returned OpenAI endpoint property plus
 `openai/v1`; the operation supplies `/responses`. The native `responses-pool`
-has equal weights/priorities and cookie source **`cookie`**, with fixed name
-`APIM-Backend-Affinity`. Small samples need not be evenly distributed.
+has equal weights/priorities. When enabled, affinity uses source **`cookie`**
+and fixed name `APIM-Backend-Affinity`; when disabled, selection is unpinned.
+Small samples need not be evenly distributed, and an unpinned chain can
+accidentally stay on the same member.
 
 Each `backend-a`/`backend-b` breaker counts one `404`, `429`, or `500-599`
 within `PT1M`, with `PT30S` trip duration and `acceptRetryAfter=true`. Detection

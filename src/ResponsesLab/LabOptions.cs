@@ -11,6 +11,7 @@ internal sealed class LabOptions
     internal required string Model { get; init; }
     internal required string SubscriptionKey { get; init; }
     internal string CookieName { get; init; } = "APIM-Backend-Affinity";
+    internal bool SessionAffinityEnabled { get; init; } = true;
     internal int StatefulSessions { get; init; } = 4;
     internal int TurnsPerSession { get; init; } = 3;
     internal int StatelessRequests { get; init; } = 12;
@@ -58,6 +59,9 @@ internal sealed class LabOptions
         if (cookieName != "APIM-Backend-Affinity")
             throw new ConfigurationException("LAB_AFFINITY_COOKIE_NAME must match the fixed gateway contract.");
         var effort = read("LAB_REASONING_EFFORT") ?? "low";
+        var affinity = read("LAB_SESSION_AFFINITY_ENABLED") ?? "true";
+        if (affinity is not ("true" or "false"))
+            throw new ConfigurationException("LAB_SESSION_AFFINITY_ENABLED must be true or false.");
         if (effort is not ("low" or "medium" or "high"))
             throw new ConfigurationException("LAB_REASONING_EFFORT must be low, medium, or high.");
         _ = Number("LAB_MAX_RETRIES", 0, 0, 0);
@@ -71,6 +75,7 @@ internal sealed class LabOptions
             Model = model,
             SubscriptionKey = key,
             CookieName = cookieName,
+            SessionAffinityEnabled = affinity == "true",
             StatefulSessions = Number("LAB_STATEFUL_SESSION_COUNT", 4, 2, 8),
             TurnsPerSession = Number("LAB_TURNS_PER_SESSION", 3, 2, 3),
             StatelessRequests = Number("LAB_STATELESS_REQUEST_COUNT", 12, 2, 24),

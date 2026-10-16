@@ -157,6 +157,7 @@ function Assert-LabPermission($Context, [string]$Scope, [string[]]$Actions) {
 }
 
 function Get-LabParameters($Context) {
+    Assert-Lab ($env:LAB_SESSION_AFFINITY_ENABLED -cin @($null, '', 'true', 'false')) 'LAB_SESSION_AFFINITY_ENABLED must be true or false.'
     foreach ($name in @('LAB_PUBLISHER_NAME', 'LAB_PUBLISHER_EMAIL')) {
         $value = [Environment]::GetEnvironmentVariable($name, 'Process')
         Assert-Lab (-not [string]::IsNullOrWhiteSpace($value) -and $value -notmatch 'REPLACE|example\.invalid|[\r\n]') "Set real local $name metadata before provisioning."
@@ -173,11 +174,26 @@ function Get-LabParameters($Context) {
     Assert-Lab ($parameters.modelName.value -match '^gpt-([5-9]|[1-9][0-9])(?:[.-]|$)') 'A GPT-5-family or newer model is required.'
     Assert-Lab ($parameters.modelDeploymentSku.value -ceq 'GlobalStandard') 'No deployment SKU substitution is permitted.'
     Assert-Lab ($parameters.modelCapacity.value -ge 1 -and $parameters.modelCapacity.value -le 20) 'Per-account capacity must be 1-20.'
+    Assert-Lab ($parameters.sessionAffinityEnabled.value -is [bool]) 'Compiled affinity parameter must be boolean.'
     $hash = (Get-FileHash -LiteralPath $parameterPath -Algorithm SHA256).Hash
+    $fixed = [ordered]@{}
+    foreach ($key in ($parameters.Keys | Sort-Object)) {
+        if ($key -ne 'sessionAffinityEnabled') { $fixed[$key] = $parameters[$key] }
+    }
+    $fixedJson = $fixed | ConvertTo-Json -Depth 20 -Compress
+    $fixedHash = [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData([Text.Encoding]::UTF8.GetBytes($fixedJson)))
     if ($Context.State['parameterHash']) {
-        Assert-Lab ($hash -eq $Context.State.parameterHash) 'Deployment inputs changed for this environment. Review changes explicitly; use a new environment rather than silently replacing resources.'
+        if ($hash -ne $Context.State.parameterHash) {
+            Assert-Lab ($env:LAB_ALLOW_DEPLOY -ceq 'true' -and $env:LAB_ALLOW_AFFINITY_CHANGE -ceq 'true' -and
+                $Context.State['fixedParameterHash'] -eq $fixedHash -and
+                $Context.State.ContainsKey('sessionAffinityEnabled') -and
+                $Context.State.sessionAffinityEnabled -ne $parameters.sessionAffinityEnabled.value) 'Deployment inputs changed. Only an affinity-only change with Provision -AllowDeploy -AllowAffinityChange and matching saved inputs is permitted; otherwise use a new environment.'
+            Write-Host "Reviewed affinity-only change: $($Context.State.sessionAffinityEnabled) -> $($parameters.sessionAffinityEnabled.value); Provider validation/what-if still required."
+        }
     }
     $Context.State.parameterHash = $hash
+    $Context.State.fixedParameterHash = $fixedHash
+    $Context.State.sessionAffinityEnabled = $parameters.sessionAffinityEnabled.value
     return $parameters
 }
 
@@ -302,6 +318,8 @@ function Export-LabRuntime($Context) {
         }
         $runtime[$key] = $value
     }
+    Assert-Lab ($output['sessionAffinityEnabled'] -and $output.sessionAffinityEnabled.value -is [bool]) 'Missing boolean sessionAffinityEnabled output; deploy the current template before running the client.'
+    $runtime.LAB_SESSION_AFFINITY_ENABLED = $output.sessionAffinityEnabled.value.ToString().ToLowerInvariant()
     $endpoint = [uri]$runtime.LAB_RESPONSES_ENDPOINT
     $gateway = [uri]$output.apimGatewayUrl.value
     Assert-Lab ($endpoint.Scheme -eq 'https' -and $endpoint.Authority -eq $gateway.Authority -and $endpoint.AbsolutePath -eq '/openai/v1/responses' -and -not $endpoint.Query) 'Unexpected Responses output URL.'
@@ -379,8 +397,12 @@ function Initialize-LabAzd($Context, [switch]$RequireExisting) {
         LAB_MODEL_NAME = 'modelName'; LAB_MODEL_VERSION = 'modelVersion'
         LAB_MODEL_DEPLOYMENT = 'modelDeploymentName'; LAB_MODEL_SKU = 'modelDeploymentSku'
         LAB_MODEL_CAPACITY = 'modelCapacity'
+        LAB_SESSION_AFFINITY_ENABLED = 'sessionAffinityEnabled'
     }
-    foreach ($key in $mapping.Keys) { $values[$key] = [string]$parameters[$mapping[$key]].value }
+    foreach ($key in $mapping.Keys) {
+        $value = $parameters[$mapping[$key]].value
+        $values[$key] = if ($value -is [bool]) { $value.ToString().ToLowerInvariant() } else { [string]$value }
+    }
     foreach ($key in $values.Keys) {
         Invoke-LabCommand azd @('env', 'set', $key, $values[$key], '--environment', $Context.Target.environment) -Json $false
     }
@@ -422,6 +444,7 @@ function Invoke-LabClient($Context, [string]$ClientPath, [string[]]$ClientArgume
     Assert-Lab ($null -ne (Get-Command $ClientPath -CommandType Application -ErrorAction SilentlyContinue)) 'ClientPath must be an executable, not a shell script.'
     $runtime = Export-LabRuntime $Context
     if ($AllowFaults) {
+        Assert-Lab ($runtime.LAB_SESSION_AFFINITY_ENABLED -ceq 'true') 'Controlled failure requires session affinity enabled.'
         foreach ($member in @('A', 'B')) {
             Assert-Lab ($runtime["LAB_BACKEND_${member}_ID"] -ceq "$($runtime.LAB_APIM_RESOURCE_ID)/backends/backend-$($member.ToLowerInvariant())") 'Fault target is not an exact allow-listed backend.'
             Assert-LabPermission $Context $runtime["LAB_BACKEND_${member}_ID"] @('Microsoft.ApiManagement/service/backends/read', 'Microsoft.ApiManagement/service/backends/write')

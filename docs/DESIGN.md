@@ -37,7 +37,50 @@ local state. Exact recovery queries found one APIM, two Foundry, and one
 workspace record for that group. CLI teardown also verified absence, retired
 state, and the same four recovery records. Neither environment was purged;
 final model quota was 130 of 1,000 versus the initial 50, reflecting retained
-model allocations. Task `007` is complete in PR #9; task `008` remains pending.
+model allocations. Task `007` is complete in merged PR #9.
+
+### Task 008 affinity comparison contract - 2026-10-16
+
+Task `008` is complete in open PR #10 on
+`feature/008-self-service-affinity-toggle`, left unmerged for user review.
+The user excluded cost documentation and approved a new same-subscription
+West US 3 environment for the bounded clean walkthrough. The
+[walkthrough](WALKTHROUGH.md) is the self-service entry point; its new
+off-mode live proof is separate from task `007`'s affinity-on evidence.
+
+The new environment's [actual results](../evidence/samples/task008-verification.json)
+now verify four real cross-backend state failures with affinity off, 24
+successful requests with affinity on, all 42 request/policy-trace joins
+including diagnostics, an unchanged rerun preserving 13 runtime values, and
+scoped deletion/retired state without purge. The
+[redacted console sample](../evidence/samples/task008-console.md) includes
+actual model text and complete session tables.
+
+`sessionAffinityEnabled` is a **default-true Bicep boolean**. Both drivers read
+`LAB_SESSION_AFFINITY_ENABLED` and export the actual deployed boolean to
+the client. With false, the native pool omits `sessionAffinity` and the
+deployment-selected policy permits chained IDs without cookies, while rejecting
+stale cookies. Auth, evidence validation, equal weights and breakers stay
+unchanged; no routing-by-UUID, forced member, cache or history replay is added.
+
+The explicit `affinity-off` client preserves real previous IDs without cookies.
+It accepts only HTTP 400/404 on a prior successful chain, forwarded to the other
+concrete gateway-verified member with correlated request evidence, plus either
+`error.code=previous_response_not_found` or the exact verified different-resource
+error shape documented in the [harness guide](../src/ResponsesLab/README.md#explicit-affinity-off-comparison).
+The actual service returned `code=null`, `param=null`,
+`type=invalid_request_error` and a specific message that the item was created
+under a different Azure OpenAI resource. The client keeps the actual null code;
+it does not invent a missing-response code or accept arbitrary HTTP 400s.
+Same-member success is possible and inconclusive, not a
+guaranteed failure. Generic errors, policy refusal, missing cookies/evidence,
+deadlines and successful switches do not establish the desired proof.
+Normal stateful/failure scenarios still require affinity on.
+
+Existing environments can change only this boolean using
+`Provision -AllowDeploy -AllowAffinityChange`, with the same saved
+non-affinity parameter fingerprint. All other inputs/targets remain fixed;
+Provider validation/what-if, ownership and inventory checks remain mandatory.
 
 ## 1. Gate results and remaining decisions
 
@@ -210,7 +253,7 @@ invalid-input fixtures are not exhaustive live rejection-path evidence.
   label, and an isolated cookie container. Never share a cookie handler across
   sessions or with the stateless scenario.
 
-Configure the pool with equal weights and priorities, cookie source `cookie`,
+By default configure the pool with equal weights and priorities, cookie source `cookie`,
 and cookie name `APIM-Backend-Affinity` (the name used by S22). Do not parse,
 forge, reconstruct, or log cookie values. Use HTTPS and the normal cookie
 domain/path/expiry rules. Discard session routing state when that session ends.
@@ -221,6 +264,7 @@ domain/path/expiry rules. Discard session routing state when that session ends.
 | --- | --- |
 | First stateful turn | New harness session UUID; no cookie or previous response ID. Send `store=true`, `stream=false`, `model=responses-chat`; select through the pool. Retain the issued affinity cookie and response ID only after a successful response with valid evidence. |
 | Chained turn | Send that session's cookie and latest `previous_response_id`. Missing/expired affinity information is an explicit client/gateway validation failure, not a new conversation. Keep the same expected backend. |
+| Explicit affinity-off chain | Deploy `sessionAffinityEnabled=false`; send the latest actual previous ID without a cookie. Observe the backend's actual missing-response error after a cross-member choice; accidental same-member success is inconclusive. |
 | Stateless call | Independent request with no previous ID, `store=false`, and no cookie replay. Ignore `Set-Cookie`; never borrow a stateful session's handler. |
 | Pinned backend failure | Preserve the chain and original routing context; no retry onto another backend or history replay. Observed initial real backend 404, then native 503 / `CircuitBreakerIsOpen` with no forwarding while that member's breaker was open. Do not require JSON error bodies. |
 | Successful HTTP with missing or changed backend evidence | Fail the harness assertion, preserve diagnostics, and stop that chain. A 2xx alone is not an affinity pass. |
@@ -443,11 +487,13 @@ task `007` separately verified the live handoff through both drivers.
 | `modelDeploymentSku`, `modelCapacity` | `LAB_MODEL_SKU`, `LAB_MODEL_CAPACITY` | `GlobalStandard`, `20` per backend |
 | `logRetentionDays` | Fixed orchestration default; future `LAB_LOG_RETENTION_DAYS` | `30`; not an exposed task `004` override |
 | `affinityCookieName` | `LAB_AFFINITY_COOKIE_NAME` | `APIM-Backend-Affinity`, not its secret value |
+| `sessionAffinityEnabled` | `LAB_SESSION_AFFINITY_ENABLED` | Boolean input/output, default true; explicit off-mode comparison only when false |
 
 Non-secret outputs: `apimGatewayUrl`, `responsesEndpoint`, `apimResourceId`,
 `apimSubscriptionResourceId`, `backendAId`, `backendBId`, `foundryAResourceId`,
 `foundryBResourceId`, `foundryAEndpoint`, `foundryBEndpoint`,
-`workspaceResourceId`, `workspaceCustomerId`, and `modelDeploymentName`.
+`workspaceResourceId`, `workspaceCustomerId`, `modelDeploymentName`, and
+boolean `sessionAffinityEnabled`.
 Map endpoint/deployment outputs directly to `LAB_RESPONSES_ENDPOINT` and
 `LAB_MODEL_DEPLOYMENT`; the harness must not guess URLs. Its only secret input
 is `LAB_APIM_SUBSCRIPTION_KEY`, handled as described above.

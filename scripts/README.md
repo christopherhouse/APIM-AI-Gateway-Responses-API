@@ -5,7 +5,8 @@ operate on a new, dedicated lab group only. Task `005` now provides the
 [.NET harness](../src/ResponsesLab/README.md); task `006` adds guarded
 fault/recovery automation. Both environments passed scenarios, diagnostics,
 unchanged reruns, and scoped cleanup; the final self-service walkthrough
-remains task `008`.
+is in the [task `008` walkthrough](../docs/WALKTHROUGH.md), including the
+default-on session-affinity parameter and explicit off-mode comparison.
 Do not run the live examples without explicit target/action authorization.
 
 ## Prerequisites and target
@@ -65,6 +66,7 @@ Never reuse another application's group, even if empty.
 | `LAB_MODEL_NAME` / `LAB_MODEL_VERSION` | `gpt-5.4-mini` / `2026-03-17` |
 | `LAB_MODEL_DEPLOYMENT` | `responses-chat` |
 | `LAB_MODEL_SKU` / `LAB_MODEL_CAPACITY` | `GlobalStandard` / `20` per account |
+| `LAB_SESSION_AFFINITY_ENABLED` | `true`; lowercase `true` or `false`, native pool affinity rather than client-only suppression |
 | Publisher metadata | Required local values, no committed personal metadata |
 | Resource names and diagnostics | Deterministic Bicep defaults; 30-day workspace retention, 1 GB/day ingestion quota |
 
@@ -114,7 +116,7 @@ The wrapper creates/tags the group **outside Bicep**, validates ownership,
 runs `az deployment group validate --validation-level Provider`, shows
 `az deployment group what-if --validation-level Provider`, then invokes either
 `azd provision` or `az deployment group create`. Do not approve provisioning
-until you accept the intended resources and costs; the explicit deployment
+until you accept the intended resources; the explicit deployment
 opt-in covers the subsequent deployment, not an additional interactive prompt.
 A validation failure can leave an empty owned group; cleanup is still explicit.
 
@@ -127,11 +129,8 @@ hooks require wrapper-provided action/target opt-ins. Do not add arbitrary
 services or deployment layers to this dedicated-group configuration.
 
 Developer APIM provisioning can be slow; keep the command attached and do not
-start another operation against the same environment. This is billable
-infrastructure, not a guaranteed low-cost SKU. APIM runtime, two model
-allocations/inference, and diagnostics are cost drivers; quotas and ingestion
-limits are not a monetary cap. No provisioning-duration or cost ceiling is
-guaranteed. The first task `007` azd deployment took approximately 32 minutes
+start another operation against the same environment. No provisioning-duration
+ceiling is guaranteed. The first task `007` azd deployment took approximately 32 minutes
 30 seconds; the CLI ARM deployment took approximately 30 minutes 32 seconds.
 Another deployment need not take the same time. The initial CLI process later
 failed deployment polling with an expired token even though ARM had succeeded;
@@ -144,7 +143,7 @@ CLI rerun exited successfully and preserved all 12 runtime values.
 | --- | --- |
 | `artifacts\lab\<environment>\state.json` | Wrapper target, random ownership UUID, parameter hash, last successful output inventory, retirement status; no keys |
 | `artifacts\lab\<environment>\compiled-parameters.json` | Generated native-parameter compiler output, never a maintained JSON parameter source |
-| `artifacts\lab\<environment>\runtime.json` | Twelve allow-listed, non-secret client/ownership values |
+| `artifacts\lab\<environment>\runtime.json` | Thirteen allow-listed, non-secret client/ownership values, including actual affinity mode |
 | `artifacts\lab\<environment>\operation.lock` | Exclusive per-environment wrapper lock |
 | `.azure\<environment>\` | azd-managed settings/state, including local publisher metadata and ordinary deployment outputs; never a credential store |
 
@@ -152,8 +151,9 @@ Keep these ignored files local and protect them. Do not delete/edit ownership
 state to bypass a mismatch or adopt a group; loss of that record blocks reuse
 and teardown through the wrapper and requires explicit operator investigation.
 For an unchanged rerun, use the same environment, group, inputs, and sign-ins.
-Changed targets or compiled inputs fail instead of silently replacing resources;
-use a new environment/group for changed deployment inputs. An `Azd` rerun
+Changed targets or compiled inputs fail instead of silently replacing resources.
+The sole exception is the explicit affinity-only update below; otherwise use
+a new environment/group for changed deployment inputs. An `Azd` rerun
 synchronizes every supported input, including defaults, from the same compiled
 parameters rather than trusting stale `.env` model values.
 Source/template updates still require deliberate review; the input hash is not
@@ -161,6 +161,7 @@ a template-version lock. Do not run concurrent tools outside the wrapper.
 
 After successful provisioning, both drivers export these names from ARM outputs:
 `LAB_RESPONSES_ENDPOINT`, `LAB_MODEL_DEPLOYMENT`, `LAB_AFFINITY_COOKIE_NAME`,
+`LAB_SESSION_AFFINITY_ENABLED`,
 `LAB_APIM_RESOURCE_ID`, `LAB_APIM_IDENTITY_RESOURCE_ID`, `LAB_APIM_SUBSCRIPTION_RESOURCE_ID`, `LAB_BACKEND_A_ID`,
 `LAB_BACKEND_B_ID`, `LAB_FOUNDRY_A_RESOURCE_ID`, `LAB_FOUNDRY_B_RESOURCE_ID`,
 `LAB_WORKSPACE_RESOURCE_ID`, and `LAB_WORKSPACE_CUSTOMER_ID`.
@@ -192,11 +193,41 @@ $client = (Resolve-Path .\artifacts\publish\ResponsesLab\ResponsesLab.exe).Path
 
 Invoke the script directly in PowerShell 7 for `-ClientArguments` arrays,
 rather than a nested `pwsh -File` call. The client accepts
-`--scenario both|stateful|stateless`, defaults to both, and exits nonzero for
+`--scenario both|stateful|stateless|affinity-off`, defaults to both, and exits nonzero for
 request/evidence/affinity/distribution failures. The
 [harness guide](../src/ResponsesLab/README.md) defines bounds and evidence.
 Publishing/help and mocked tests passed locally. Task `007` also exercised
 this management-key handoff and real inference through both environments.
+
+### Affinity-only configuration changes
+
+Native Bicep `sessionAffinityEnabled` defaults to `true`. Both drivers read
+`LAB_SESSION_AFFINITY_ENABLED`; a false value removes `pool.sessionAffinity`
+and switches policy cookie validation to the explicit unpinned contract.
+The client receives a lowercase boolean from the **actual deployment output**,
+not from a caller override during `Run`.
+
+To change only this setting on a lab created with the current templates:
+
+```powershell
+$env:LAB_SESSION_AFFINITY_ENABLED = 'false' # Or 'true' to restore pinning.
+& .\scripts\Invoke-Lab.ps1 -Action Provision -Driver $driver -EnvironmentName $environment -SubscriptionId $subscription -ResourceGroupName $group -AllowAzure -AllowDeploy -AllowAffinityChange
+```
+
+Set `$driver` to `Azd` or `Cli`; both commands preserve the existing target
+and ownership/inventory checks and run Provider validation/what-if.
+`-AllowAffinityChange` is valid only with `Provision -AllowDeploy`.
+The full compiled-input hash remains recorded, plus a fingerprint of every
+input except affinity. Any change to another input still fails, even with
+the opt-in. Saved state lacking that fingerprint cannot use the exception.
+Failed updates still fail visibly; `Run` refuses stale/unsuccessful outputs.
+Do not hand-edit hashes, reuse retired groups, or run concurrent writers.
+
+With affinity off, use `@('--allow-requests', '--scenario', 'affinity-off')`;
+normal stateful and controlled-failure scenarios require affinity on.
+Off-mode permits real unpinned response-ID chaining but accepts only the
+specific correlated cross-backend missing-response error as expected.
+See the [complete off/on comparison](../docs/WALKTHROUGH.md#3-affinity-off-demonstrate-the-broken-chain).
 
 ### Separately authorized fault run
 

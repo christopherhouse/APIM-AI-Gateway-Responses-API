@@ -13,18 +13,20 @@ public sealed class HarnessTests
     private const string PinB = "synthetic-private-pin-b";
     private static readonly Uri Endpoint = new("https://offline.example.invalid/openai/v1/responses");
 
-    private static LabOptions Options(TimeSpan? requestTimeout = null, int statelessRequests = 2, TimeSpan? runTimeout = null) => new()
-    {
-        Endpoint = Endpoint,
-        Model = "responses-chat",
-        SubscriptionKey = Key,
-        StatefulSessions = 2,
-        TurnsPerSession = 3,
-        StatelessRequests = statelessRequests,
-        RequestInterval = TimeSpan.Zero,
-        RequestTimeout = requestTimeout ?? TimeSpan.FromSeconds(5),
-        RunTimeout = runTimeout ?? TimeSpan.FromSeconds(30)
-    };
+    private static LabOptions Options(TimeSpan? requestTimeout = null, int statelessRequests = 2, TimeSpan? runTimeout = null,
+        bool affinityEnabled = true) => new()
+        {
+            Endpoint = Endpoint,
+            Model = "responses-chat",
+            SubscriptionKey = Key,
+            StatefulSessions = 2,
+            TurnsPerSession = 3,
+            StatelessRequests = statelessRequests,
+            RequestInterval = TimeSpan.Zero,
+            RequestTimeout = requestTimeout ?? TimeSpan.FromSeconds(5),
+            RunTimeout = runTimeout ?? TimeSpan.FromSeconds(30),
+            SessionAffinityEnabled = affinityEnabled
+        };
 
     private static HttpResponseMessage Success(string id, string backend = "backend-a", string? cookie = PinA,
         string text = "Foundry owns response state; APIM supplies routing continuity.", string status = "completed")
@@ -147,6 +149,149 @@ public sealed class HarnessTests
         Assert.Equal("backend-a", session.OriginalBackend);
         await Assert.ThrowsAsync<InvalidOperationException>(() => client.SendAsync(session, "Do not replay", default));
         Assert.Equal(2, handler.Calls.Count);
+    }
+
+    [Theory]
+    [InlineData(400)]
+    [InlineData(404)]
+    public async Task Affinity_off_proves_real_cross_backend_missing_response_without_cookies_or_retries(int status)
+    {
+        using var handler = new FakeHandler((call, _) =>
+        {
+            var response = Success($"response-{call.Number}", cookie: null);
+            if (call.Body.ContainsKey("previous_response_id"))
+            {
+                response.StatusCode = (HttpStatusCode)status;
+                response.Headers.Remove("X-Lab-Backend-Id");
+                response.Headers.Add("X-Lab-Backend-Id", "backend-b");
+                response.Content = new StringContent("""{"error":{"code":"previous_response_not_found"}}""");
+            }
+            return Task.FromResult(response);
+        });
+        using var http = new HttpClient(handler);
+        using var writer = new StringWriter();
+        var options = Options(affinityEnabled: false);
+        var report = await new LabRunner(new ResponsesClient(http, options), options, writer).RunAsync("affinity-off", default);
+        Assert.Equal(0, report.ExitCode);
+        Assert.Equal(2, report.UnpinnedFailures);
+        Assert.Equal(4, handler.Calls.Count);
+        Assert.All(handler.Calls, call => Assert.Null(call.Cookie));
+        Assert.Equal("response-1", handler.Calls[1].Body["previous_response_id"]!.GetValue<string>());
+        Assert.Equal("response-3", handler.Calls[3].Body["previous_response_id"]!.GetValue<string>());
+        Assert.All(report.Sessions, session => Assert.Equal(2, session.Turns.Count));
+        report.Write(writer);
+        Assert.Contains("Affinity OFF: PASS", writer.ToString());
+        Assert.Contains("expected-cross-backend-failure", writer.ToString());
+    }
+
+    [Theory]
+    [InlineData("invalid_request_error", null, null, true, true)]
+    [InlineData("server_error", null, null, true, false)]
+    [InlineData("invalid_request_error", "unrelated", null, true, false)]
+    [InlineData("invalid_request_error", null, "model", true, false)]
+    [InlineData("invalid_request_error", null, null, false, false)]
+    public async Task Off_demo_classifies_only_the_observed_exact_cross_resource_error_shape(
+        string type, string? code, string? param, bool exactMessage, bool expected)
+    {
+        using var handler = new FakeHandler((call, _) =>
+        {
+            var response = Success($"response-{call.Number}", cookie: null);
+            if (call.Body.ContainsKey("previous_response_id"))
+            {
+                response.StatusCode = HttpStatusCode.BadRequest;
+                response.Headers.Remove("X-Lab-Backend-Id");
+                response.Headers.Add("X-Lab-Backend-Id", "backend-b");
+                response.Content = new StringContent(JsonSerializer.Serialize(new
+                {
+                    error = new
+                    {
+                        type,
+                        code,
+                        param,
+                        message = exactMessage
+                            ? "The requested item was created under a different Azure OpenAI resource. Use the same resource that created the item to access it."
+                            : "An unrelated invalid request."
+                    }
+                }));
+            }
+            return Task.FromResult(response);
+        });
+        using var http = new HttpClient(handler);
+        using var writer = new StringWriter();
+        var options = Options(affinityEnabled: false);
+        var report = await new LabRunner(new ResponsesClient(http, options), options, writer).RunAsync("affinity-off", default);
+        Assert.Equal(expected ? 0 : 1, report.ExitCode);
+        Assert.Equal(expected ? 2 : 0, report.UnpinnedFailures);
+        Assert.All(report.Sessions, session => Assert.Equal(expected, session.Turns[^1].CrossResourceStateError));
+        Assert.All(report.Sessions, session => Assert.Equal(code, session.Turns[^1].ErrorCode));
+        report.Write(writer);
+        Assert.Contains($"exact different-resource errors={(expected ? 2 : 0)}", writer.ToString());
+    }
+
+    [Theory]
+    [InlineData(400, "previous_response_not_found", "backend-a", false)]
+    [InlineData(400, "AffinityCookieRequired", "backend-b", false)]
+    [InlineData(503, "previous_response_not_found", "backend-b", false)]
+    [InlineData(400, "previous_response_not_found", "backend-b", true)]
+    public async Task Off_demo_rejects_same_backend_policy_unrelated_and_uncorrelated_errors(
+        int status, string code, string backend, bool missingRequestId)
+    {
+        using var handler = new FakeHandler((call, _) =>
+        {
+            var response = Success($"response-{call.Number}", cookie: null);
+            if (call.Body.ContainsKey("previous_response_id"))
+            {
+                response.StatusCode = (HttpStatusCode)status;
+                response.Headers.Remove("X-Lab-Backend-Id");
+                response.Headers.Add("X-Lab-Backend-Id", backend);
+                if (missingRequestId)
+                    response.Headers.Remove("X-Lab-Request-Id");
+                response.Content = new StringContent(JsonSerializer.Serialize(new { error = new { code } }));
+            }
+            return Task.FromResult(response);
+        });
+        using var http = new HttpClient(handler);
+        using var writer = new StringWriter();
+        var options = Options(affinityEnabled: false);
+        var report = await new LabRunner(new ResponsesClient(http, options), options, writer).RunAsync("affinity-off", default);
+        Assert.Equal(1, report.ExitCode);
+        Assert.Equal(0, report.UnpinnedFailures);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Off_demo_does_not_claim_same_backend_success_or_successful_switch_as_expected_failure(bool switchBackend)
+    {
+        using var handler = new FakeHandler((call, _) => Task.FromResult(Success(
+            $"response-{call.Number}", switchBackend && call.Body.ContainsKey("previous_response_id") ? "backend-b" : "backend-a", null)));
+        using var http = new HttpClient(handler);
+        using var writer = new StringWriter();
+        var options = Options(affinityEnabled: false);
+        var report = await new LabRunner(new ResponsesClient(http, options), options, writer).RunAsync("affinity-off", default);
+        Assert.Equal(1, report.ExitCode);
+        Assert.Equal(0, report.UnpinnedFailures);
+        report.Write(writer);
+        Assert.Contains("INCONCLUSIVE/FAIL", writer.ToString());
+    }
+
+    [Fact]
+    public async Task Scenario_mode_mismatch_fails_before_HTTP_and_off_mode_does_not_hide_stale_gateway_affinity()
+    {
+        using var handler = new FakeHandler(Success("first"));
+        using var http = new HttpClient(handler);
+        using var writer = new StringWriter();
+        var enabled = Options();
+        await Assert.ThrowsAsync<ConfigurationException>(() =>
+            new LabRunner(new ResponsesClient(http, enabled), enabled, writer).RunAsync("affinity-off", default));
+        var disabled = Options(affinityEnabled: false);
+        await Assert.ThrowsAsync<ConfigurationException>(() =>
+            new LabRunner(new ResponsesClient(http, disabled), disabled, writer).RunAsync("stateful", default));
+        Assert.Empty(handler.Calls);
+        var session = new Conversation("stateful", 2);
+        var result = await new ResponsesClient(http, disabled).SendAsync(session, "First", default);
+        Assert.Equal(TurnOutcome.InvalidAffinity, result.Outcome);
+        Assert.Null(session.PreviousResponseId);
     }
 
     [Theory]
@@ -466,6 +611,8 @@ public sealed class HarnessTests
     [InlineData("LAB_ENABLE_FAULTS", "true")]
     [InlineData("LAB_REASONING_EFFORT", "unbounded")]
     [InlineData("LAB_AFFINITY_COOKIE_NAME", "foreign")]
+    [InlineData("LAB_SESSION_AFFINITY_ENABLED", "False")]
+    [InlineData("LAB_SESSION_AFFINITY_ENABLED", "typo")]
     [InlineData("LAB_RESPONSES_ENDPOINT", "http://offline.example.invalid/openai/v1/responses")]
     [InlineData("LAB_RESPONSES_ENDPOINT", "https://offline.example.invalid/openai/v1/responses?key=secret")]
     public void Invalid_configuration_is_not_coerced_or_echoed(string name, string value)

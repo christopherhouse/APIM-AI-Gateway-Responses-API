@@ -5,25 +5,26 @@
 | Field | Value |
 | --- | --- |
 | Updated | 2026-10-16 |
-| Phase | Task `007` both clean live lifecycles, diagnostics, unchanged reruns, and scoped cleanups complete |
-| Authorization | Explicit 16:31 CDT continuation on 2026-10-15 covers the two new stated targets, bounded inference, reversible fault/restoration, reruns, and scoped cleanup |
+| Phase | Task `008` complete; task `009` SDK comparison documented as pending in open, unmerged PR #10 |
+| Authorization | User requested the proposed SDK/Agent Framework enhancement be written up on this branch before merging on 2026-10-16; planning only, no SDK implementation or Azure operations |
 | Planning branch | `chore/lab-planning` |
-| Current implementation task | `007` - done on `feature/007-live-verification`, PR #9 |
-| Next task | `008` pending; await user review/merge and separate authorization |
-| Azure deployment | Both task `007` groups verified absent and local state retired; four recovery records per environment retained without purge |
-| Solution files | Tasks `002`-`006` exercised through both drivers; 64 request/policy-trace joins and original-chain recovery verified |
-| Base branch | `main` at fault/recovery merge `721d299`; initial empty base `846a2cb` preserved |
-| Pull request | #1-#8 merged; #9 is the task `007` delivery PR, left unmerged |
+| Current implementation task | `008` - done, including planning writeup on `feature/008-self-service-affinity-toggle`; no SDK implementation started |
+| Next task | User review/merge of #10, then separate authorization for pending task `009` |
+| Azure deployment | `rg-responses-walk008` verified absent; local state retired, runtime removed, recovery records retained without purge |
+| Solution files | Task `007` baseline plus default-on affinity toggle; task `008` off/on proof, 42 trace joins and unchanged 13-value rerun verified |
+| Base branch | `main` at task `007` merge `e66815a`; initial empty base `846a2cb` preserved |
+| Pull request | #1-#9 merged; #10 open and unmerged |
 
 ## Known prerequisites and open decisions
 
 | Item | Owner/action | Effect |
 | --- | --- | --- |
-| Implementation authorization | Task `007` live target/action continuation authorized on 2026-10-15 at 16:31 CDT | New `rg-responses-verify007-azd`, then `rg-responses-verify007-cli`, unchanged subscription / West US 3; bounded inference, reversible fault/restoration, reruns, cleanup. Task `008` remains pending. |
+| Implementation authorization | Planning-only SDK comparison follow-up authorized on 2026-10-16 | Continue on existing PR #10 branch explicitly; SDK implementation, package changes and new Azure operations are not authorized. |
 | Initial base branch | Resolved with explicit user approval on 2026-10-15 | Empty commit `846a2cb` establishes `main`; subsequent work stays on work branches. |
 | Platform feasibility | Task `001`, B1-B2 resolved in `DESIGN.md` | Native original-pin rejection, outbound member evidence, and workspace policy traces verified; no workaround required. |
 | Model and authentication | Task `001` live feasibility passed | `gpt-5.4-mini` / `2026-03-17` / `GlobalStandard` served Responses through API-scoped gateway access and resource-scoped managed identity. |
-| Live Azure operations | Authorized task `007` deployment/fault/rerun/cleanup complete | Both exact owned groups are absent; no existing resources changed, target substitution, or purge. |
+| SDK/framework compatibility | Task `009` pending, gates in `PLAN.md` | Choose concrete packages/versions, verify project-versus-model endpoint/auth compatibility and measure transport cookie isolation before adapter implementation. No out-of-the-box affinity claim is made. |
+| Live Azure operations | Prior authorized task `008` lifecycle complete; documentation follow-up authorizes none | Owned group remains verified deleted; no new reads, inference, mutations, teardown, or purge. |
 
 ## Execution log
 
@@ -1274,6 +1275,314 @@
 - All live acceptance criteria and scoped cleanup are complete. Publishing
   these final records to existing PR #9 and making it ready for user review is
   the remaining handoff; do not merge it or begin task `008`.
+
+### 2026-10-16 - Task 008 started after task 007 merged
+
+- Confirmed PR #9 merged at `e66815a`, fast-forwarded `main`, and created
+  `feature/008-self-service-affinity-toggle` with a clean worktree.
+- User authorized the final self-service walkthrough, explicitly excluded cost
+  documentation, and added a native backend-pool affinity on/off parameter.
+  Updated the plan/backlog acceptance criteria without changing historical
+  task `007` results.
+- After the exact target/action handoff, the user approved a new environment
+  in West US 3 in the same subscription: `walk008` /
+  `rg-responses-walk008`. Bound work to 64 HTTP attempts at 2,048 output tokens,
+  no transport retries, read-only verification/credential handoff,
+  affinity-only redeployments, driver parity/reruns, and owned-group deletion
+  without purge. No existing application resources are adopted.
+- Added default-on Bicep `sessionAffinityEnabled`, native parameter environment
+  input, boolean runtime export, and deployment-substituted policy validation.
+  With false, the pool omits `sessionAffinity`; the policy allows real chained
+  IDs without cookies and rejects stale pins. Authentication, weights,
+  circuit breakers, evidence validation and single-forward behavior remain.
+- Added `Provision -AllowDeploy -AllowAffinityChange`: only the affinity
+  boolean can change, and every other compiled input must match the saved
+  fingerprint. Existing target/ownership/inventory checks and Provider
+  validation/what-if remain mandatory.
+- Added explicit client `affinity-off` comparison. It sends actual
+  previous-response IDs without cookies and accepts only correlated
+  cross-backend missing-response errors as the expected demonstration.
+  Same-backend success is inconclusive; policy refusals, generic errors,
+  successful switches, missing evidence and deadlines do not fake a pass.
+- Added the complete [walkthrough](WALKTHROUGH.md), refreshed the README entry
+  point and reference guides, and removed current cost guidance while
+  retaining token/capacity limits and cleanup responsibilities.
+- Bicep build/lint and both native parameter compilations passed. All 11
+  infrastructure contracts passed, including both branches of the actual
+  emitted pool expression. The first compiler attempt exposed a misplaced
+  brace and a nested-loop restriction; moving the service loop to its own
+  variable resolved them before Azure deployment.
+- `dotnet test .\ResponsesLab.slnx --configuration Release --no-restore --nologo`
+  passed all 128 tests; formatting verification and local publish passed.
+  `pwsh -NoProfile -File .\infra\policy.test.ps1` passed 20 compiled
+  expressions / 45 fixtures; `pwsh -NoProfile -File .\scripts\lifecycle.test.ps1`
+  passed all 35 offline cases.
+- Fresh context checks confirmed the unchanged enabled AzureCloud
+  subscription and exact new group absence. Guarded preparation created only
+  the owned empty group, checked model/provider/quota/capacity/permissions,
+  and passed Provider validation/what-if with 22 creates.
+- Azure MCP validated `azure.yaml` against the stable schema. The first
+  actual azd preview failed subscription enumeration with AzureCLICredential;
+  it was not counted as success. Fresh management authentication passed;
+  a retry with the active tenant set in the same isolated delegated config
+  passed in 3m03s. No global authentication configuration was changed.
+- Started guarded azd provisioning with affinity **off**. At this checkpoint
+  no task `008` inference, live off/on proof, or cleanup is complete.
+  Next: verify deployed mode/identity, execute the bounded comparison,
+  correlate evidence, verify the unchanged rerun, and delete the owned group.
+
+### 2026-10-16 - Task 008 deployment caught a policy rendering defect
+
+- The first azd deployment did not complete: foundation resources and both
+  models provisioned, but APIM rejected `@(False)` in the generated policy.
+  A fresh authenticated read confirmed the latest ARM deployment and its
+  routing module were actually `Failed`; no runtime export or inference was
+  attempted from that state.
+- Root cause: ARM's boolean-to-string conversion produced `False`, which is
+  not a C# boolean literal. Changed `infra/gateway.bicep` to select the explicit
+  lowercase strings `true`/`false` instead of converting the boolean.
+- Strengthened the compiled-template policy test to evaluate both real
+  replacement branches with ARM-style boolean conversion and assert the
+  emitted C# literals. It would reject the failed capitalization.
+- Bicep build/lint passed; all 11 infrastructure contracts and all 20 compiled
+  policy expressions / 45 fixtures passed after the fix. The owned lab is
+  retained for the same authorized off-mode deployment retry, not exported
+  as successful or silently replaced with another target.
+
+### 2026-10-16 - Task 008 actual off-mode proof and service error contract
+
+- Corrected same-target azd provisioning succeeded in 2m10s and exported
+  13 non-secret runtime values. Verified actual native affinity absence,
+  policy `@(false)`, equal pool members, sole dedicated user-assigned identity,
+  explicit policy client ID, exactly two account-scoped grants, both exact
+  model configurations, and API diagnostic sampling/capture privacy.
+- The first eight-request comparison observed four A-to-B HTTP 400 failures
+  but correctly exited nonzero: the assumed `previous_response_not_found`
+  code was absent. All eight requests joined to actual workspace policy
+  traces and concrete hosts within ten minutes; this was not relabeled a pass.
+- A separately bounded two-request diagnostic continued a real A response,
+  then observed B's actual response: `code=null`, `param=null`,
+  `type=invalid_request_error`, with the specific message that the requested
+  item was created under a different Azure OpenAI resource. Both additional
+  requests also joined to workspace policy traces with matching status/host
+  and no APIM body/credential/cookie/IP capture.
+- Updated the client to classify only that exact four-field payload, alongside
+  the explicit missing-response code. The actual error code remains null;
+  cross-resource classification has its own boolean evidence field. Generic
+  HTTP 400s, different messages/types/parameters/codes, same-member routing,
+  missing correlation and successful switches still cannot pass.
+- `dotnet test .\ResponsesLab.slnx --configuration Release --no-restore --nologo`
+  passed all 133 cases after a local variable-name compile conflict was fixed.
+  Formatting verification and client publishing passed.
+- A fresh eight-request run passed: all four chains succeeded on A, then
+  received the exact resource-state error on B; each stopped without retry or
+  replay. Four third turns remained explicitly unattempted. Total task use
+  is 18 of 64 authorized HTTP attempts so far, at 2,048 output tokens maximum.
+- Started immediate workspace correlation for the passing run and the
+  authorized same-input affinity-only update through the CLI driver. No
+  task `008` affinity-on success, unchanged rerun, or cleanup is claimed yet.
+
+### 2026-10-16 - Task 008 affinity-on continuity and complete trace joins
+
+- The authorized affinity-only CLI deployment succeeded. Actual configuration
+  reads verified the native cookie-affinity property and policy `@(true)`;
+  the dedicated identity, explicit client ID, two narrow grants, exact models,
+  equal weights and API diagnostic privacy remained correct.
+- All 24 healthy requests returned HTTP 200. Four interleaved three-turn
+  conversations stayed on A/B/A/B, with zero failures or affinity violations.
+  Stateful requests observed A=6/B=6; twelve independent stateless calls also
+  observed A=6/B=6. These are observations, not a promised perfect split.
+- All 24 healthy request UUIDs joined to actual policy traces with matching
+  session/member/status and concrete backend hosts within ten minutes.
+  Including the initial comparison, diagnostic and passing comparison,
+  all 42 task attempts have matching workspace proof and zero APIM
+  body/credential/cookie/client-IP capture violations.
+- Added [actual redacted console evidence](../evidence/samples/task008-console.md):
+  five exact turn excerpts and all 20 final session rows across the passing
+  off/on runs. An automated comparison against the private logs verified
+  field values, verbatim assistant text and summary counts; only identifier/
+  fingerprint aliases replace private values. Model wording is not treated
+  as routing or failure-semantics evidence.
+- The 27-file documentation/scope check passed 90 relative links/anchors,
+  task states, UTF-8/LF/whitespace, ignore and private-value checks. The new
+  Markdown sample initially had CRLF; normalized it to the repository's LF
+  convention and reran successfully.
+- Started the unchanged azd rerun with the same affinity-on inputs. Runtime
+  equality and scoped cleanup are still pending; task `008` is not complete.
+
+### 2026-10-16 - Task 008 unchanged rerun and verified cleanup
+
+- `artifacts\008-invoke.ps1 -Action Provision -Driver Azd -Affinity true`
+  completed successfully with unchanged inputs. azd reported 1m59s for
+  provisioning; this was an actual redeployment, not a skipped deployment.
+  Compared all 13 non-secret runtime values before/after: identical.
+- Saved the private cleanup manifest, then ran guarded `Down -Driver Azd`
+  for only `rg-responses-walk008`, with exact group confirmation and
+  `--purge=false`. The command and subsequent residual verification passed.
+  Actual group absence, retired local state, removed runtime/outputs and no
+  remaining recovery journal were verified.
+- Exact recovery queries found one APIM, two Foundry and one workspace record.
+  Model quota after deletion was 170/1,000, reflecting retained allocations;
+  no recovery record was purged and no immediate name/quota release is claimed.
+- Finalized `README.md`, `docs/WALKTHROUGH.md`, PLAN/TASKS/DESIGN, the reference
+  guides and the two sanitized task `008` samples. The walkthrough now records
+  actual clean-environment outcomes, per-turn model text, complete final session
+  tables, both deployment paths, queries, troubleshooting and teardown.
+  Current cost guidance is excluded as requested; historical results are intact.
+- All 42 of 64 authorized inference attempts have correlated policy evidence.
+  No additional inference, controlled outage, existing-application changes,
+  operator grants, target substitutions or purge were performed.
+- Implementation, live verification and cleanup criteria are satisfied.
+  Task `008` remains `in_progress` solely until final staged review, commit/push
+  and a task-linked PR exist. Do not merge that PR automatically.
+
+### 2026-10-16 - Task 008 final scope and evidence checks
+
+- `python .\artifacts\008-local-checks.py` passed: 28 scoped UTF-8/LF files,
+  99 relative links/anchors, balanced fences, consistent task states, relevant
+  ignore rules, private publisher/subscription exclusion, and whitespace.
+  `git diff --check` passed; inspected the complete changed-file list and
+  infrastructure/lifecycle/harness diffs for task scope.
+- An independent aggregate check matched the sanitized sample to all 42
+  actual requests, four workspace summaries, 13-value rerun and cleanup record.
+  A dynamic scan confirmed 153 actual private identity/routing values were
+  absent from all 28 scoped files. The two sanitized samples and native
+  `.bicepparam` source remain versionable; raw evidence/local state stay ignored.
+- The final product validation remains the passed Bicep/native-parameter
+  compilation, 11 infrastructure contracts, 20 compiled policy expressions/
+  45 fixtures, 35 lifecycle cases and 133 .NET cases, plus formatting and
+  publish. Subsequent edits are documentation/sanitized evidence only.
+- Reviewed affected README commands, relative links and Mermaid source for
+  implemented-versus-live accuracy. GitHub-rendered Markdown/Mermaid appearance
+  was not verified. No additional Azure action is required or planned.
+- Next: scoped staged review, commit/push, create the template-based task
+  `008` PR, then record its number and completion without merging.
+
+### 2026-10-16 - Task 008 published in PR #10
+
+- Staged exactly 28 reviewed files. `git diff --cached --check` passed;
+  the staged content matched the privacy-checked worktree, and the final
+  documentation check again passed all 99 relative links/anchors.
+  No private local state, raw traces, generated compiler output, credentials
+  or real identity/routing values were staged.
+- Committed as `aaae4d6`, pushed
+  `feature/008-self-service-affinity-toggle`, and created PR #10 against `main`
+  using every repository-template heading, comment and checklist item.
+  The PR records task `008`, exact commands/results, README impact, authorized
+  deployment/cleanup boundaries, resolved failures and remaining limitations.
+- The first post-create `gh pr view --repo` call required an explicit PR
+  number. Querying #10 verified it is open, not a draft, and has the correct
+  head/base; PR creation was not repeated.
+- Marked task `008` done only after all acceptance evidence, verified cleanup
+  and the confirmed PR existed. This follow-up records its PR and completion
+  consistently in PLAN, TASKS, DESIGN, this tracker and the sanitized sample.
+- All planned tasks are complete. No PR was merged; no additional Azure
+  operation or inference is planned. Next action belongs to user review of #10.
+
+### 2026-10-16 - Task 008 README/code-citation follow-up started
+
+- User requested a README section connecting the native affinity switch,
+  explicit harness cookie capture/resend and response-ID chain, with code
+  excerpts and line-of-code citations. This is documentation-only authorization.
+- Confirmed clean worktree, fetched origin, and verified PR #10 remains open
+  and unmerged. `main` is still task `007` merge `e66815a`; local and remote
+  task `008` heads both match `ca8188c`.
+- Continue this coherent task `008` follow-up on its existing
+  `feature/008-self-service-affinity-toggle` dependency branch and PR #10,
+  explicitly without treating that open PR as merged or creating later work.
+- Marked task `008` `in_progress` for the new acceptance item before README
+  edits. Prior implementation/live evidence and cleanup remain complete.
+- Read the required plan/task/progress records, repository PR template, and
+  actual Bicep, policy, conversation model and HTTP client. No source or Azure
+  changes are needed. Next: add the integrated section and verify excerpts,
+  line citations, links, formatting, scope and generated-state ignore rules.
+
+### 2026-10-16 - Task 008 integrated README explanation validated
+
+- Added the README section "How affinity and response chaining connect" and
+  a jump link from the initial affinity switch explanation. It distinguishes
+  the native routing cookie, Foundry response ID, and application correlation
+  UUID, then connects the pool configuration to session-local storage,
+  explicit `Set-Cookie` capture and subsequent `Cookie`/response-ID transport.
+- Included five implementation excerpts and 13 immutable GitHub source-line
+  citations across five unchanged source files at reviewed revision `ca8188c`.
+  Explained disabled automatic HTTP cookies, independent stateless calls,
+  missing-cookie/backend evidence guards, real off/on evidence, and logical
+  backend continuity rather than physical worker placement or an eternal pin.
+- `python .\artifacts\008-readme-citations.py`: passed all 13 line ranges and
+  five exact excerpts (common indentation normalized); pinned source content
+  matches the current implementation. The new validator remains ignored.
+  Its first run caught an incorrect expected citation count in the local
+  checker (14 versus the actual 13); corrected that checker and reran.
+- `python .\artifacts\008-local-checks.py`: passed 28 branch-scoped UTF-8/LF
+  files, 102 relative links/anchors, fences, task states, private-value
+  exclusions, relevant ignore fixtures and whitespace. `git diff --check`
+  passed. Reviewed the four-file follow-up diff and README presentation source.
+- Only `README.md`, PLAN, TASKS and this tracker changed. Existing command
+  examples and Mermaid diagrams are untouched. No Bicep, policy, harness or
+  lifecycle behavior changed; builds, inference, Azure checks and live
+  validation were not rerun for this documentation-only change.
+  GitHub-rendered visual appearance was not verified.
+- The added acceptance item is complete and the existing PR #10 is confirmed
+  open on the correct branch. Task `008` is done; publish this follow-up to
+  that PR, preserving its template and original implementation/live evidence.
+  No PR merge, new Azure operation or later task is authorized or planned.
+
+### 2026-10-16 - SDK comparison planning follow-up started
+
+- User requested that the proposed Agent Framework and Foundry SDK harness
+  enhancement be written up on this branch before merging. This authorizes
+  planning/documentation only, not implementation, dependency installation,
+  Azure checks, inference, deployment, faults or teardown.
+- Confirmed clean worktree and local/remote/PR #10 head `e61dd12`; PR #10
+  remains open and unmerged against `main` at `e66815a`. Continue the task
+  `008` documentation follow-up on its existing
+  `feature/008-self-service-affinity-toggle` dependency branch explicitly.
+- Marked the current documentation follow-up `in_progress` before edits.
+  Preserve task `008` implementation, verified live outcomes and cleanup.
+  Next: record a pending next task with SDK/endpoint compatibility gates,
+  default-versus-configured cookie tests, session isolation, shared evidence
+  and separately authorized live proof; keep the README's status accurate.
+
+### 2026-10-16 - SDK comparison scope and acceptance recorded
+
+- Added pending task `009` in TASKS and the detailed comparison plan in PLAN:
+  one harness with the existing raw HTTP control, a concrete Foundry SDK mode
+  and an Agent Framework mode. Record the actual provider/SDK stack rather
+  than presenting abstraction layers as three independent transports.
+- Defined gates for package/version identity, project-versus-model endpoint
+  and authentication compatibility, service-managed response-ID chaining,
+  transport customization, cookie isolation and retries. No silent APIM
+  bypass, topology expansion, SDK substitution or local-history replay.
+- Separate measured SDK-default cookie behavior from supported session-scoped
+  configuration, including disclosure of any manual pipeline policy. Require
+  actual outbound-attempt budgets and the same interleaved off/on,
+  stateful/stateless and workspace-trace proof; extra profiles/calls are not
+  covered by the old task `008` budget.
+- Added a clearly planned/not-implemented README entry with links to the
+  design gates and acceptance criteria. Current raw HTTP commands, excerpts,
+  13 source-line citations and all earlier live evidence are unchanged.
+- Reviewed four official Microsoft references on 2026-10-16 for SDK endpoint
+  boundaries, framework sessions/storage and APIM cookie handling. They do
+  not establish that any SDK integration has been implemented or verified.
+- `python .\artifacts\009-plan-checks.py`: passed ordered task IDs `000`-`009`,
+  `000`-`008` done / `009` pending, planning-only status and proposed selectors,
+  unchanged README outside the new proposal, append-only progress history,
+  and the exact four-file documentation scope.
+- `python .\artifacts\008-readme-citations.py`: passed all 13 unchanged
+  immutable source-line citations and five excerpts, scoped files, existing
+  completed task states and repository PR-template structure.
+  `python .\artifacts\008-local-checks.py`: passed 28 branch-scoped UTF-8/LF
+  files, 105 relative links/anchors, fences, task states, privacy/ignore
+  fixtures and whitespace. `git diff --check`: passed.
+- Only README, PLAN, TASKS and this tracker changed. No package was added,
+  no SDK/framework code was implemented, and no build or Azure operation was
+  run for this planning-only update. Existing Mermaid diagrams are unchanged;
+  GitHub-rendered visual appearance was not verified.
+- Planning acceptance is complete in existing PR #10; task `009` remains
+  pending. Publish the writeup on this same branch and update the PR without
+  merging. Future implementation and exact-target live actions still need
+  their separate authorization.
 
 ## Update protocol
 

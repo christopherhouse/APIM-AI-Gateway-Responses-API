@@ -3,12 +3,13 @@ using ResponsesLab;
 if (args is ["--help"])
 {
     Console.WriteLine("""
-        ResponsesLab --allow-requests [--scenario both|stateful|stateless]
+        ResponsesLab --allow-requests [--scenario both|stateful|stateless|affinity-off]
         ResponsesLab --allow-requests --scenario failure --allow-faults --confirm-resource-group <exact-group>
         Requires approved LAB_RESPONSES_ENDPOINT, LAB_MODEL_DEPLOYMENT and
         process-only LAB_APIM_SUBSCRIPTION_KEY. No calls without --allow-requests.
         Configuration, bounds, evidence and wrapper commands: src\ResponsesLab\README.md
         Failure requires the guarded wrapper, separate live authorization, and exact owned-group confirmation.
+        affinity-off requires the deployed pool's exported affinity setting to be false.
         """);
     return 0;
 }
@@ -21,17 +22,19 @@ if (args is ["--allow-requests", "--scenario", "failure", "--allow-faults", "--c
     faultConfirmation = group;
 }
 else if (args is ["--allow-requests", "--scenario", var selected] &&
-    selected is "both" or "stateful" or "stateless")
+    selected is "both" or "stateful" or "stateless" or "affinity-off")
     scenario = selected;
 else if (args is not ["--allow-requests"])
 {
-    Console.Error.WriteLine("Usage: ResponsesLab --allow-requests [--scenario both|stateful|stateless]. See --help for the separately authorized failure scenario.");
+    Console.Error.WriteLine("Usage: ResponsesLab --allow-requests [--scenario both|stateful|stateless|affinity-off]. See --help for the separately authorized failure scenario.");
     return 2;
 }
 
 try
 {
     var options = LabOptions.Load(Environment.GetEnvironmentVariable, scenario == "failure");
+    if (scenario == "failure" && !options.SessionAffinityEnabled)
+        throw new ConfigurationException("The controlled failure scenario requires LAB_SESSION_AFFINITY_ENABLED=true.");
     var faultOptions = faultConfirmation is null ? null : FaultOptions.Load(Environment.GetEnvironmentVariable, faultConfirmation);
     using var cancelled = new CancellationTokenSource();
     ConsoleCancelEventHandler cancel = (_, eventArgs) =>

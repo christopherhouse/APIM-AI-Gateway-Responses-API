@@ -5,6 +5,7 @@ param managedIdentityClientId string
 param foundryAEndpoint string
 param foundryBEndpoint string
 param modelDeploymentName string
+param sessionAffinityEnabled bool = true
 
 @allowed([
   'APIM-Backend-Affinity'
@@ -32,6 +33,7 @@ var policyXml = replace(replace(
   '__AFFINITY_COOKIE__',
   affinityCookieName
 ), '__MANAGED_IDENTITY_CLIENT_ID__', managedIdentityClientId)
+var configuredPolicyXml = replace(policyXml, '__SESSION_AFFINITY_ENABLED__', sessionAffinityEnabled ? 'true' : 'false')
 
 resource gateway 'Microsoft.ApiManagement/service@2024-05-01' existing = {
   name: apimName
@@ -71,20 +73,23 @@ resource backends 'Microsoft.ApiManagement/service/backends@2025-03-01-preview' 
   }
 ]
 
+var poolServices = [for i in range(0, 2): { id: backends[i].id, priority: 1, weight: 1 }]
+
 resource pool 'Microsoft.ApiManagement/service/backends@2025-03-01-preview' = {
   parent: gateway
   name: 'responses-pool'
   properties: {
     type: 'Pool'
-    pool: {
-      services: [for i in range(0, 2): { id: backends[i].id, priority: 1, weight: 1 }]
+    pool: union({
+      services: poolServices
+    }, sessionAffinityEnabled ? {
       sessionAffinity: {
         sessionId: {
           name: affinityCookieName
           source: 'cookie'
         }
       }
-    }
+    } : {})
   }
 }
 
@@ -119,7 +124,7 @@ resource policy 'Microsoft.ApiManagement/service/apis/policies@2024-05-01' = {
   name: 'policy'
   properties: {
     format: 'rawxml'
-    value: policyXml
+    value: configuredPolicyXml
   }
   dependsOn: [pool, operation]
 }
