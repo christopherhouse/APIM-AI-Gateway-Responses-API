@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
+using System.Runtime.ExceptionServices;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
@@ -7,9 +8,13 @@ using System.Text.RegularExpressions;
 
 namespace ResponsesLab;
 
-internal sealed class ResponsesClient(HttpClient http, LabOptions options)
+internal sealed class ResponsesClient(HttpClient http, LabOptions options, SdkResponseSender? sdk = null,
+    ClientSelection? selection = null)
 {
+    internal ClientSelection Selection { get; } = selection ?? new ClientSelection();
     internal const int MaxResponseBytes = 1024 * 1024;
+
+    internal void SetBudget(int attempts) => sdk?.SetBudget(attempts);
 
     internal static HttpClient CreateHttpClient() => new(new SocketsHttpHandler
     {
@@ -28,7 +33,7 @@ internal sealed class ResponsesClient(HttpClient http, LabOptions options)
 
     private async Task<TurnEvidence> SendCoreAsync(Conversation session, string prompt, CancellationToken cancellationToken, bool faultProbe)
     {
-        if (faultProbe && session.Scenario != "stateful")
+        if (faultProbe && (session.Scenario != "stateful" || sdk is not null))
             throw new InvalidOperationException("Controlled fault probes require a stateful session.");
         if ((session.Failed && (!faultProbe || session.Turns.Any(turn =>
                 turn.Outcome != TurnOutcome.Success && !turn.IsControlledFault(session.OriginalBackend)))) ||
@@ -36,7 +41,11 @@ internal sealed class ResponsesClient(HttpClient http, LabOptions options)
             throw new InvalidOperationException("Cannot resume a failed or completed conversation.");
 
         var evidence = new TurnEvidence(session.Scenario, session.Id, session.Turns.Count + 1,
-            prompt, session.PreviousResponseId, Guid.NewGuid());
+            prompt, session.PreviousResponseId, Guid.NewGuid())
+        {
+            ClientMode = Selection.Mode,
+            CookieProfile = Selection.CookieProfile
+        };
         var privateValues = new HashSet<string>(StringComparer.Ordinal) { options.SubscriptionKey };
         foreach (Cookie cookie in session.Cookies.GetAllCookies())
             if (cookie.Value.Length != 0)
@@ -44,6 +53,8 @@ internal sealed class ResponsesClient(HttpClient http, LabOptions options)
 
         TurnEvidence Finish(TurnOutcome outcome)
         {
+            if (sdk is not null)
+                privateValues.UnionWith(sdk.PrivateCookieValues);
             string? Redact(string? value)
             {
                 foreach (var secret in privateValues.OrderByDescending(value => value.Length))
@@ -66,7 +77,8 @@ internal sealed class ResponsesClient(HttpClient http, LabOptions options)
             return Finish(TurnOutcome.RunCancelled);
         var stateful = session.Scenario == "stateful";
         var cookies = AffinityCookies(session);
-        if (stateful && options.SessionAffinityEnabled && session.PreviousResponseId is not null && !ValidCookie(cookies))
+        if (stateful && options.SessionAffinityEnabled && session.PreviousResponseId is not null &&
+            Selection.CookieProfile != "sdk-default" && !ValidCookie(cookies))
             return Finish(TurnOutcome.MissingAffinity);
 
         using var request = new HttpRequestMessage(HttpMethod.Post, options.Endpoint);
@@ -74,7 +86,7 @@ internal sealed class ResponsesClient(HttpClient http, LabOptions options)
         request.Headers.Add("X-Lab-Session-Id", session.Id.ToString("D"));
         request.Headers.Add("X-Lab-Scenario", session.Scenario);
         request.Headers.Add("x-ms-client-request-id", evidence.ClientRequestId.ToString("D"));
-        if (stateful && options.SessionAffinityEnabled && session.PreviousResponseId is not null)
+        if (sdk is null && stateful && options.SessionAffinityEnabled && session.PreviousResponseId is not null)
         {
             request.Headers.Add("Cookie", $"{options.CookieName}={cookies[0].Value}");
             evidence = evidence with { AffinityFingerprint = Fingerprint(cookies[0].Value) };
@@ -97,8 +109,20 @@ internal sealed class ResponsesClient(HttpClient http, LabOptions options)
         timeout.CancelAfter(options.RequestTimeout);
         try
         {
-            evidence = evidence with { Sent = true };
-            using var response = await http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, timeout.Token);
+            SdkTurnResult? sdkResult = null;
+            HttpResponseMessage responseMessage;
+            if (sdk is null)
+            {
+                evidence = evidence with { Sent = true, WireAttempts = 1 };
+                responseMessage = await http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, timeout.Token);
+            }
+            else
+            {
+                sdkResult = await sdk.SendAsync(session, prompt, evidence.ClientRequestId,
+                    () => evidence = evidence with { Sent = true, WireAttempts = evidence.WireAttempts + 1 }, timeout.Token);
+                responseMessage = sdkResult.Response;
+            }
+            using var response = responseMessage;
             var backend = SingleHeader(response, "X-Lab-Backend-Id");
             var requestId = SingleHeader(response, "X-Lab-Request-Id");
             var retryAfter = response.Headers.RetryAfter;
@@ -122,6 +146,10 @@ internal sealed class ResponsesClient(HttpClient http, LabOptions options)
                     privateValues.Add(value);
             }
 
+            if (sdkResult?.TransportFailure is { } failure)
+                ExceptionDispatchInfo.Capture(failure).Throw();
+            if (sdkResult?.BodyTooLarge == true)
+                return Finish(TurnOutcome.ResponseTooLarge);
             var bytes = await ReadBodyAsync(response, timeout.Token);
             if (bytes is null)
                 return Finish(TurnOutcome.ResponseTooLarge);
@@ -176,6 +204,8 @@ internal sealed class ResponsesClient(HttpClient http, LabOptions options)
                 return Finish(TurnOutcome.Refused);
             if (string.IsNullOrWhiteSpace(evidence.OutputText))
                 return Finish(TurnOutcome.InvalidResponse);
+            if (sdkResult is not null && (!sdkResult.Parsed || sdkResult.ResponseId != id || sdkResult.OutputText != evidence.OutputText))
+                return Finish(TurnOutcome.InvalidResponse);
 
             if (stateful)
             {
@@ -216,6 +246,14 @@ internal sealed class ResponsesClient(HttpClient http, LabOptions options)
         catch (CookieException)
         {
             return Finish(TurnOutcome.InvalidAffinity);
+        }
+        catch (SdkBodyTooLargeException)
+        {
+            return Finish(TurnOutcome.ResponseTooLarge);
+        }
+        catch (SdkContractException)
+        {
+            return Finish(TurnOutcome.SdkContractViolation);
         }
     }
 

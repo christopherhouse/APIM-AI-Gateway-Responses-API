@@ -663,6 +663,42 @@ timestamps. Default maximum is 24 calls; maximum configuration is 28 calls and
 conditional-write, and lifecycle tests establish implementation only, not
 task `007` live routing, provider behavior, model quality, or workspace traces.
 
+### Task 009 SDK/framework implementation boundary
+
+The [comparison contract](PLAN.md#sdk-and-agent-framework-comparison) extends
+the same harness without altering the gateway or resource topology.
+`foundry-sdk` is a genuine Foundry `ProjectResponsesClient`; `agent-framework`
+wraps that client with `AsAIAgent` and independent reused `AgentSession`
+instances. Pinned packages, endpoint/custom-auth construction and primary
+source commits are recorded in the plan. This is not a hosted-agent project
+workflow or a disguised raw HTTP adapter.
+
+For the configured profile, every conversation has its own automatic cookie
+handler/transport, enabled only for affinity-on stateful calls. In contrast,
+`sdk-default` deliberately leaves the pinned SDK transport unchanged. Local
+wire tests observe its shared cookie jar resending one conversation's cookie
+on an unrelated first turn and a stateless call. An isolated framework session
+does not isolate that shared HTTP state; the profile's resulting gateway
+contract errors remain failures.
+
+Service-managed continuation is separately established on the wire:
+stateful calls carry the preceding successful response ID and exactly one
+new user message. No assistant history is replayed, and the adapter does not
+set the framework session's internal ID. Shared validation still requires
+genuine typed SDK handling, completed assistant output and gateway/member
+evidence. Bounded capture preserves actual multi-value headers and HTTP errors.
+Before transport, exact endpoint/method/body checks, one call per turn and the
+runner's planned attempt budget prevent hidden extra SDK/framework requests.
+Retries are disabled; no route fallback, history repair or cookie injection
+is used to make the default profile pass.
+
+Task `009` code approval covers dependencies, loopback tests, documentation and
+PR publication only. SDK live off/on proofs and workspace joins remain pending
+separate target/action/budget authorization. The owned task `008` group remains
+deleted; no new Azure read, inference, change or cleanup is implied. Controlled
+faults stay on the raw HTTP path. Do not add these local results to prior
+live-evidence claims.
+
 ## 9. Feasibility experiment required to close the gates
 
 The user explicitly authorized this experiment on 2026-10-15, including

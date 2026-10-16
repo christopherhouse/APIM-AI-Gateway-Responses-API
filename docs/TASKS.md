@@ -10,9 +10,8 @@ offline validation in merged PR #7. Task `006` is complete as code and offline
 validation in merged PR #8. Task `007` completed both authorized live
 lifecycles and cleanup on 2026-10-15/16 in merged PR #9;
 task `008` delivery and its documentation/planning follow-ups are complete in
-PR #10, left unmerged for user review on the same dependency branch.
-Task `009` is pending: only its writeup is authorized on this branch, not SDK
-implementation or new Azure operations.
+merged PR #10. Task `009` is in progress after separate code/offline-check/
+documentation authorization on 2026-10-16. No new Azure operations are authorized.
 IDs are stable; do not renumber completed tasks or hide blocked work.
 
 ## Status and dependency rules
@@ -42,7 +41,7 @@ new platform evidence changes an assumption.
 | 006 | Implement controlled failure, breaker, and recovery scenarios | 004, 005 | done |
 | 007 | Verify end-to-end scenarios and diagnostic evidence in Azure | 006 | done |
 | 008 | Complete self-service documentation, affinity toggle, and clean-environment walkthrough | 007 | done |
-| 009 | Compare raw HTTP, Foundry SDK, and Agent Framework in the harness | 008; separate implementation and live-operation authorization | pending |
+| 009 | Compare raw HTTP, Foundry SDK, and Agent Framework in the harness | 008; implementation approved, live-operation approval outstanding | in_progress |
 
 The default execution order is ascending ID. Tasks `004` and `005` can proceed
 independently once `003` is available; parallel execution is not required.
@@ -370,18 +369,25 @@ Deliverables and acceptance:
 
 ## 009 - Compare raw HTTP, Foundry SDK, and Agent Framework
 
-**Authorization/status:** `pending`. On 2026-10-16 the user authorized writing
+**Authorization/status:** `in_progress`. On 2026-10-16 the user authorized writing
 up this proposal on `feature/008-self-service-affinity-toggle` before merging
-PR #10. That is planning only, not permission for SDK implementation, package
-changes, infrastructure changes, Azure reads, inference or faults. Start after
-separate implementation approval and merged `008`, or an explicitly documented
-dependency branch. Live proof needs its own target/action and aggregate-budget
-approval; task `008` resources were deleted and are not reusable live targets.
+PR #10. After that PR merged at `99cd7b0`, the user separately approved building
+the comparison and requested thorough README scenario walkthroughs. Work on
+`feature/009-sdk-framework-comparison` covers code, dependencies, offline
+checks, documentation and PR publication. Topology expansion and new Azure
+operations are not authorized. Live proof needs its own target/action and
+aggregate-budget approval; task `008` resources were deleted and are not
+reusable live targets.
 
-**Scope:** One .NET harness with raw HTTP as the control and proposed
-`foundry-sdk` / `agent-framework` client modes. These selectors do not exist
-yet. Follow the [comparison plan and compatibility gates](PLAN.md#planned-extension-sdk-and-agent-framework-comparison);
-do not assume that a Foundry project SDK fits the current model endpoint.
+**Scope:** One .NET harness with raw HTTP as the control and implemented
+`foundry-sdk` / `agent-framework` client modes, with `sdk-default` and
+`session-scoped` cookie profiles. The [compatibility gates](PLAN.md#sdk-and-agent-framework-comparison)
+are resolved for the pinned stack through source review and local wire tests;
+no project/gateway topology change was needed. Offline implementation is not
+live verification. Task `009` remains `in_progress` until the separately
+authorized live acceptance below is completed.
+Current [sanitized offline evidence](../evidence/samples/task009-offline-verification.json)
+records pinned versions, actual local check outcomes and the remaining live gates.
 
 Deliverables and acceptance:
 

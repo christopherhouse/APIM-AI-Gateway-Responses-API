@@ -1,0 +1,66 @@
+{
+  "task": "009",
+  "status": "in_progress",
+  "verificationDate": "2026-10-16",
+  "scope": "Offline SDK/framework implementation only; not live Azure evidence",
+  "packages": {
+    "Azure.AI.Extensions.OpenAI": "3.0.0-beta.3",
+    "Microsoft.Agents.AI.OpenAI": "1.25.0",
+    "OpenAI": "2.14.0",
+    "System.ClientModel": "1.15.0",
+    "Microsoft.Extensions.AI.OpenAI": "10.10.1"
+  },
+  "clientModes": ["http", "foundry-sdk", "agent-framework"],
+  "cookieProfiles": {
+    "http": ["manual"],
+    "foundry-sdk": ["sdk-default", "session-scoped"],
+    "agent-framework": ["sdk-default", "session-scoped"]
+  },
+  "localChecks": {
+    "lockedDependencyRestore": "passed",
+    "releaseBuild": "passed; zero warnings/errors",
+    "harnessTests": {
+      "passed": 196,
+      "failed": 0,
+      "skipped": 0,
+      "existingRawAndManagementCases": 133,
+      "newSdkWireAndInvocationCases": 63
+    },
+    "sdkStabilityRuns": {
+      "runs": 3,
+      "casesPerRun": 63,
+      "allPassed": true
+    },
+    "offlineLifecycleTests": {
+      "passed": 36,
+      "includesFourSdkModeProfileArgumentHandoffs": true
+    },
+    "formatVerify": "passed",
+    "releasePublish": "passed",
+    "publishedHelpAndPreConfigurationGuards": "passed"
+  },
+  "observations": {
+    "requestBoundary": "Genuine pinned SDK/framework calls to a synthetic loopback HTTP server; no external model calls or TLS-validation bypass",
+    "existingGatewayContract": "Exact POST /openai/v1/responses, APIM key header, no project discovery, dated query, conversation API or topology change",
+    "frameworkContinuation": "Reused independent AgentSession instances send the preceding response ID and one current user message; no local history replay",
+    "sdkDefaultCookies": "Stock shared HTTP client/jar automatically resends one conversation's cookie on its continuation, an unrelated first turn and a stateless request",
+    "defaultProfileFailure": "Synthetic gateway returns UnexpectedAffinityCookie for the contaminated new/stateless requests; this is not live APIM or off-mode proof",
+    "configuredCookies": "One automatic handler/jar per conversation; interleaved continuations stay separate; stateless and affinity-off handlers disable cookies",
+    "responseHandling": "Genuine typed parsing plus shared validation; malformed typed fields cannot become raw-JSON success; actual multi-value headers retained",
+    "bounds": "One exact-route transport attempt per turn and planned run-wide budget; no SDK retry, redirect, hidden tool loop or history replay",
+    "cookieEvidence": "Fingerprints observe received/session-jar state, not transport-injected outbound SDK headers"
+  },
+  "azureOperationsPerformed": false,
+  "newLiveAuthorizationGranted": false,
+  "liveAcceptanceComplete": false,
+  "pendingLiveAcceptance": [
+    "Approve an exact new target, permitted actions and aggregate attempt/token/time budget",
+    "Real cross-backend response-state failure with native affinity off for each supported client",
+    "Pinned three-turn chains with zero violations and both members across independent chains with affinity on",
+    "Both members across separate stateless calls",
+    "Actual workspace policy-trace correlation for every model attempt",
+    "Record SDK-default limitations separately from configured-profile proof"
+  ],
+  "privacy": "Aggregate synthetic observations only; no credentials, raw cookies, private targets or request/response traces",
+  "pullRequest": null
+}

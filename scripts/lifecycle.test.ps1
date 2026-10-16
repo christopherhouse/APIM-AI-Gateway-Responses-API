@@ -424,6 +424,33 @@ try {
             Test-Assert ($text -notmatch 'synthetic-key-not-real|LAB_APIM_SUBSCRIPTION_KEY') 'Secret was persisted'
         } finally { $env:LAB_APIM_SUBSCRIPTION_KEY = $oldKey }
     }
+    Test-Case 'SDK selectors pass through unchanged with process-only credential handoff' {
+        & $module { Set-OwnedFixture }
+        $probe = Join-Path $testRoot 'sdk-argument-probe.ps1'
+        Set-Content -LiteralPath $probe -Value @'
+if (($args -join '|') -cne $env:LAB_OFFLINE_EXPECTED_ARGUMENTS -or $env:LAB_APIM_SUBSCRIPTION_KEY -cne 'synthetic-key-not-real') { exit 9 }
+exit 0
+'@
+        $oldExpected = $env:LAB_OFFLINE_EXPECTED_ARGUMENTS
+        $oldKey = $env:LAB_APIM_SUBSCRIPTION_KEY
+        try {
+            $client = (Get-Command pwsh -CommandType Application).Source
+            foreach ($mode in @('foundry-sdk', 'agent-framework')) {
+                foreach ($profile in @('sdk-default', 'session-scoped')) {
+                    $clientArgs = @('--allow-requests', '--client', $mode, '--cookie-profile', $profile, '--scenario', 'stateful')
+                    $env:LAB_OFFLINE_EXPECTED_ARGUMENTS = $clientArgs -join '|'
+                    & $module {
+                        param($Client, $Probe, $ClientArgs)
+                        Invoke-LabClient $script:Context $Client (@('-NoProfile', '-File', $Probe) + $ClientArgs)
+                    } $client $probe $clientArgs
+                    Test-Assert ($env:LAB_APIM_SUBSCRIPTION_KEY -ceq $oldKey) 'SDK handoff did not restore the process key'
+                }
+            }
+        } finally {
+            $env:LAB_OFFLINE_EXPECTED_ARGUMENTS = $oldExpected
+            $env:LAB_APIM_SUBSCRIPTION_KEY = $oldKey
+        }
+    }
     Test-Case 'client failure removes a key that was absent before invocation' {
         & $module { Set-OwnedFixture }
         $oldKey = $env:LAB_APIM_SUBSCRIPTION_KEY

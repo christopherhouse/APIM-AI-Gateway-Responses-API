@@ -14,6 +14,10 @@ state retired, and recovery records retained without purge. See the
 [actual console examples](../evidence/samples/task008-console.md).
 Earlier [task `007` results](../evidence/samples/task007-verification.json)
 remain the separate two-driver failure/recovery baseline.
+These commands use the default **raw HTTP control**. Task `009` adds
+[Foundry SDK and Agent Framework selectors](../README.md#-three-clients-the-same-state-and-routing-rules)
+with local wire-test results; their live off/on/workspace proof is not implied
+by this walkthrough and requires separate authorization.
 
 ## 1. Prepare a new lab
 

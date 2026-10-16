@@ -35,6 +35,8 @@ internal sealed class RunReport(IReadOnlyList<Conversation> sessions, bool cance
 
     internal void Write(TextWriter writer)
     {
+        writer.WriteLine($"Model HTTP attempts: actual={Sessions.Sum(session => session.Turns.Sum(turn => turn.WireAttempts))}; " +
+            $"planned maximum={Sessions.Sum(session => session.PlannedTurns)}; no transport retries.");
         writer.WriteLine("SESSION SUMMARY (backend sets include any observed forwarded outcome)");
         writer.WriteLine("| Scenario | Session | Outcome | Planned | Sent | Completed | Failed | Unattempted | Affinity violations | Backends |");
         writer.WriteLine("| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |");
@@ -84,6 +86,7 @@ internal sealed class LabRunner(ResponsesClient client, LabOptions options, Text
             sessions.AddRange(Enumerable.Range(0, options.StatelessRequests).Select(_ => new Conversation("stateless", 1)));
         if (sessions.Count == 0)
             throw new ArgumentException("Unknown scenario.", nameof(scenario));
+        client.SetBudget(sessions.Sum(session => session.PlannedTurns));
 
         using var deadline = CancellationTokenSource.CreateLinkedTokenSource(token);
         deadline.CancelAfter(options.RunTimeout);

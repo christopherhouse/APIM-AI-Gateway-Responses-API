@@ -5,26 +5,26 @@
 | Field | Value |
 | --- | --- |
 | Updated | 2026-10-16 |
-| Phase | Task `008` complete; task `009` SDK comparison documented as pending in open, unmerged PR #10 |
-| Authorization | User requested the proposed SDK/Agent Framework enhancement be written up on this branch before merging on 2026-10-16; planning only, no SDK implementation or Azure operations |
+| Phase | Task `009` in progress: compatible SDK/framework modes implemented and locally tested; final validation/documentation/PR publication |
+| Authorization | On 2026-10-16 after #10 merged, user approved building task `009` plus complete README scenario explanations; code/offline/docs/PR only, no new Azure operations |
 | Planning branch | `chore/lab-planning` |
-| Current implementation task | `008` - done, including planning writeup on `feature/008-self-service-affinity-toggle`; no SDK implementation started |
-| Next task | User review/merge of #10, then separate authorization for pending task `009` |
+| Current implementation task | `009` - `in_progress` on `feature/009-sdk-framework-comparison` |
+| Next task | Finish offline validation/documentation and publish task `009` PR; live off/on/workspace proof needs separate approval |
 | Azure deployment | `rg-responses-walk008` verified absent; local state retired, runtime removed, recovery records retained without purge |
-| Solution files | Task `007` baseline plus default-on affinity toggle; task `008` off/on proof, 42 trace joins and unchanged 13-value rerun verified |
-| Base branch | `main` at task `007` merge `e66815a`; initial empty base `846a2cb` preserved |
-| Pull request | #1-#9 merged; #10 open and unmerged |
+| Solution files | Raw HTTP baseline plus task `009` Foundry SDK/Agent Framework adapters, explicit cookie profiles, pinned packages/lock and real-SDK loopback tests |
+| Base branch | `main` at task `008` merge `99cd7b0`; initial empty base `846a2cb` preserved |
+| Pull request | #1-#10 merged; task `009` PR not yet created |
 
 ## Known prerequisites and open decisions
 
 | Item | Owner/action | Effect |
 | --- | --- | --- |
-| Implementation authorization | Planning-only SDK comparison follow-up authorized on 2026-10-16 | Continue on existing PR #10 branch explicitly; SDK implementation, package changes and new Azure operations are not authorized. |
+| Implementation authorization | Task `009` code/offline/docs/PR approved on 2026-10-16 | Implement only after SDK compatibility gates; include README runups for every mode/profile/scenario. No topology expansion or new Azure operations. |
 | Initial base branch | Resolved with explicit user approval on 2026-10-15 | Empty commit `846a2cb` establishes `main`; subsequent work stays on work branches. |
 | Platform feasibility | Task `001`, B1-B2 resolved in `DESIGN.md` | Native original-pin rejection, outbound member evidence, and workspace policy traces verified; no workaround required. |
 | Model and authentication | Task `001` live feasibility passed | `gpt-5.4-mini` / `2026-03-17` / `GlobalStandard` served Responses through API-scoped gateway access and resource-scoped managed identity. |
-| SDK/framework compatibility | Task `009` pending, gates in `PLAN.md` | Choose concrete packages/versions, verify project-versus-model endpoint/auth compatibility and measure transport cookie isolation before adapter implementation. No out-of-the-box affinity claim is made. |
-| Live Azure operations | Prior authorized task `008` lifecycle complete; documentation follow-up authorizes none | Owned group remains verified deleted; no new reads, inference, mutations, teardown, or purge. |
+| SDK/framework compatibility | Local gates resolved; pinned source/API construction in `PLAN.md` | Genuine Foundry model Responses client fits existing route/custom key header with no topology change; independent framework service sessions and configured handler isolation are wire-tested. Stock cookie jar is shared, not per-session. Live verification remains pending. |
+| Live Azure operations | Prior task `008` lifecycle complete; task `009` code approval authorizes none | Owned group remains verified deleted; no new reads, inference, mutations, teardown, or purge. |
 
 ## Execution log
 
@@ -1583,6 +1583,118 @@
   pending. Publish the writeup on this same branch and update the PR without
   merging. Future implementation and exact-target live actions still need
   their separate authorization.
+
+### 2026-10-16 - Task 009 implementation authorized after merge
+
+- User confirmed PR #10 merged and asked to build the SDK/framework comparison,
+  then explicitly required a clear README runup for how every scenario works
+  and handles state/cookies. Scope is code, dependencies, offline validation,
+  scenario documentation and a PR; new Azure operations remain separately gated.
+- Verified PR #10 merged at `99cd7b0`, fetched origin, fast-forwarded clean
+  `main`, and created `feature/009-sdk-framework-comparison` before edits.
+  .NET SDK `10.0.402` is available locally.
+- Marked task `009` `in_progress` and recorded authorization before SDK code.
+  First resolve exact package/API/endpoint/authentication, service response-ID
+  storage, cookie-transport and retry gates; do not substitute an incompatible
+  project SDK, bypass APIM or silently expand topology.
+- Task `008` live evidence and verified deletion remain unchanged. No SDK
+  implementation, new dependency install or Azure operation is claimed at
+  this starting checkpoint.
+
+### 2026-10-16 - Task 009 compatible clients and offline proof implemented
+
+- Resolved the exact package gates before adapters: Foundry
+  `Azure.AI.Extensions.OpenAI` `3.0.0-beta.3` (preview),
+  `Microsoft.Agents.AI.OpenAI` `1.25.0`, OpenAI `2.14.0`, and locked
+  System.ClientModel `1.15.0` / Microsoft.Extensions.AI.OpenAI `10.10.1`.
+  The Foundry client's public custom-auth constructor uses the exported
+  gateway base directly; no project discovery, gateway route, role, bearer
+  credential or other topology change is needed. Exact source pins are in PLAN.
+- Added `ClientSelection.cs`, `SdkResponseSender.cs`, exact package references
+  and `packages.lock.json`. Integrated mode/profile selection, shared typed/
+  gateway validation, secret-safe metadata and actual attempt accounting in
+  `Program.cs`, `ResponsesClient.cs`, `Conversation.cs` and `LabRunner.cs`.
+  Existing commands still select `http`/`manual`; SDK modes default to the
+  explicitly configured `session-scoped` profile.
+- Genuine Foundry SDK requests and framework `AsAIAgent`/reused `AgentSession`
+  requests use only the current prompt and real response-ID continuation.
+  Session-scoped automatic handlers isolate jars; SDK-default leaves the
+  pinned transport unchanged. Local wire observations show its stock jar
+  resending the same cookie on a continuation, unrelated first turn and
+  stateless call. Synthetic gateway errors for those contaminated requests
+  are recorded, not relabeled as an affinity-off backend-state proof.
+- Added `SdkClientTests.cs` with real SDK/framework HTTP calls to a synthetic
+  ephemeral loopback server. Tests cover interleaving, service-managed IDs,
+  stateless/off profiles, default sharing, invalid/expired/duplicate cookies,
+  actual HTTP errors, typed/schema/refusal/incomplete/tool output, member/
+  request evidence, request/run cancellation, exact and excessive 1 MiB
+  bodies with/without length, redirects, privacy and actual attempt budgets.
+  No model or external Azure endpoint is used.
+- Fixed issues found by these checks: initial synthetic off-mode responses
+  incorrectly reported `store=false`; typed malformed timestamp fields throw
+  `InvalidOperationException`, not only `JsonException`; SDK header enumeration
+  combines repeated values, requiring `TryGetValues` to retain duplicate-cookie
+  rejection. Status/gateway headers are retained even when a bounded body fails.
+  A first extended run also reported one framework evidence assertion failure;
+  it did not recur in the corrected full SDK run or three subsequent complete
+  63-case stability runs. No unresolved failing check remains.
+- `dotnet restore .\src\ResponsesLab\ResponsesLab.csproj --locked-mode --source https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public/nuget/v3/index.json --verbosity quiet`:
+  passed exact lock restoration. Direct NuGet metadata TLS negotiation failed;
+  Microsoft's official public mirror worked without changing global feeds,
+  trust or certificate validation.
+- `dotnet build .\ResponsesLab.slnx --configuration Release --no-restore --verbosity quiet`:
+  passed with zero warnings/errors.
+- `dotnet test .\ResponsesLab.slnx --configuration Release --no-restore --verbosity quiet`:
+  passed all 196 cases, including 133 existing raw/management regressions and
+  63 new SDK/wire/invocation cases; none skipped. The SDK suite also passed
+  three additional consecutive 63-case stability runs after header fixes.
+- `dotnet format .\ResponsesLab.slnx --verify-no-changes --no-restore --verbosity quiet`:
+  passed.
+- `dotnet publish .\src\ResponsesLab\ResponsesLab.csproj --configuration Release --no-restore --output .\artifacts\publish\ResponsesLab --verbosity quiet`:
+  passed. Published `--help` exited 0; no arguments, SDK mode without
+  `--allow-requests`, and SDK `failure` selections each exited 2 before
+  configuration/credentials. No inference was attempted.
+- `pwsh -NoProfile -File .\scripts\lifecycle.test.ps1`: passed all 36 offline
+  cases, including four SDK mode/profile arrays passed unchanged through
+  synthetic process-only credential handoff. All Azure commands were mocked.
+- Updated root/client READMEs with per-mode code, cookie ownership, profiles,
+  each scenario's behavior, exact opt-ins and current evidence boundaries;
+  updated PLAN/TASKS/DESIGN, lifecycle guide and the raw-only walkthrough
+  labels. Added aggregate synthetic
+  [offline evidence](../evidence/samples/task009-offline-verification.json),
+  not new live evidence.
+- Remaining: final documentation/links/privacy/diff review and PR publication.
+  Azure reads, inference, deployment, faults and teardown were not performed
+  or authorized. Task `009` stays `in_progress`: live off/on proofs and every
+  workspace join remain separately gated; prior task `008` evidence is unchanged.
+
+### 2026-10-16 - Task 009 documentation and scope review
+
+- `python .\artifacts\009-local-checks.py`: passed 19 scoped UTF-8/LF files,
+  all 14 Markdown files and 126 relative links/anchors. The checker verifies
+  13 immutable raw-baseline source citations, all eight exact quoted code
+  excerpts, current SDK line anchors, ordered task states, preserved execution
+  history, matching exact package pins/lock, offline-only aggregate evidence,
+  ignore fixtures, credential-shape checks and whitespace.
+- The first local format check found NuGet's generated lockfile had CRLF and
+  no final newline; normalized text to repository settings. The citation
+  check initially included the uncited introductory Bicep snippet; scoping
+  exact-excerpt checks to the documented source walkthrough resolved the
+  validator, without changing baseline citations or claiming current raw
+  files still match the older pinned revision.
+- `git diff --check`: passed. Reviewed the changed-file list and shared-client
+  diff; no infrastructure/policy/deployment changes or later-task scaffolding.
+  Generated publish/build/test helpers stay ignored. New evidence contains
+  aggregate synthetic observations only, not credentials/cookies/private
+  targets or raw requests/responses.
+- README impact is intentional: each mode/profile has a state/cookie runup,
+  source excerpts/line references, exact configuration, off/on/stateless/fault
+  boundaries and honest offline/live labels. Relative links/code fences and
+  excerpts were checked locally; GitHub's interactive Markdown/Mermaid
+  presentation was not browser-reviewed. Existing architecture/fault diagrams
+  are unchanged and their raw-only live-evidence captions remain explicit.
+- Remaining action is commit/push and a template-based PR, left unmerged.
+  Task `009` remains `in_progress` pending separately authorized live proof.
 
 ## Update protocol
 
