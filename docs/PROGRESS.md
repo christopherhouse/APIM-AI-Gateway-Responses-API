@@ -5,15 +5,15 @@
 | Field | Value |
 | --- | --- |
 | Updated | 2026-10-16 |
-| Phase | Task `008` implementation, clean walkthrough and cleanup verified; PR publication pending |
+| Phase | Task `008` complete in PR #10, left open and unmerged for user review |
 | Authorization | Task `008` approved on 2026-10-16; new `walk008` / `rg-responses-walk008`, same active subscription / West US 3, bounded off/on inference and scoped cleanup, no purge |
 | Planning branch | `chore/lab-planning` |
-| Current implementation task | `008` - in progress on `feature/008-self-service-affinity-toggle` |
-| Next task | Final scoped/staged checks, commit/push, publish task `008` PR, and record completion |
+| Current implementation task | `008` - done on `feature/008-self-service-affinity-toggle` |
+| Next task | User review/merge of #10; no further implementation task is queued |
 | Azure deployment | `rg-responses-walk008` verified absent; local state retired, runtime removed, recovery records retained without purge |
 | Solution files | Task `007` baseline plus default-on affinity toggle; task `008` off/on proof, 42 trace joins and unchanged 13-value rerun verified |
 | Base branch | `main` at task `007` merge `e66815a`; initial empty base `846a2cb` preserved |
-| Pull request | #1-#9 merged; task `008` PR pending |
+| Pull request | #1-#9 merged; #10 open and unmerged |
 
 ## Known prerequisites and open decisions
 
@@ -1456,6 +1456,27 @@
   was not verified. No additional Azure action is required or planned.
 - Next: scoped staged review, commit/push, create the template-based task
   `008` PR, then record its number and completion without merging.
+
+### 2026-10-16 - Task 008 published in PR #10
+
+- Staged exactly 28 reviewed files. `git diff --cached --check` passed;
+  the staged content matched the privacy-checked worktree, and the final
+  documentation check again passed all 99 relative links/anchors.
+  No private local state, raw traces, generated compiler output, credentials
+  or real identity/routing values were staged.
+- Committed as `aaae4d6`, pushed
+  `feature/008-self-service-affinity-toggle`, and created PR #10 against `main`
+  using every repository-template heading, comment and checklist item.
+  The PR records task `008`, exact commands/results, README impact, authorized
+  deployment/cleanup boundaries, resolved failures and remaining limitations.
+- The first post-create `gh pr view --repo` call required an explicit PR
+  number. Querying #10 verified it is open, not a draft, and has the correct
+  head/base; PR creation was not repeated.
+- Marked task `008` done only after all acceptance evidence, verified cleanup
+  and the confirmed PR existed. This follow-up records its PR and completion
+  consistently in PLAN, TASKS, DESIGN, this tracker and the sanitized sample.
+- All planned tasks are complete. No PR was merged; no additional Azure
+  operation or inference is planned. Next action belongs to user review of #10.
 
 ## Update protocol
 

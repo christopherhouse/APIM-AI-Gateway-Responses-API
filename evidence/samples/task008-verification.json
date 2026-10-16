@@ -1,7 +1,8 @@
 {
   "sanitized": true,
   "verifiedDate": "2026-10-16",
-  "taskStatus": "in_progress",
+  "taskStatus": "done",
+  "pullRequest": 10,
   "scope": "Task 008 clean-environment native affinity off/on comparison",
   "consoleSample": "task008-console.md",
   "redactions": [

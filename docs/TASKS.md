@@ -9,7 +9,7 @@ as offline-validated code in merged PR #6. Task `005` is complete as code and
 offline validation in merged PR #7. Task `006` is complete as code and offline
 validation in merged PR #8. Task `007` completed both authorized live
 lifecycles and cleanup on 2026-10-15/16 in merged PR #9;
-task `008` is in progress after that merge.
+task `008` is complete in PR #10, left unmerged for user review.
 IDs are stable; do not renumber completed tasks or hide blocked work.
 
 ## Status and dependency rules
@@ -38,7 +38,7 @@ new platform evidence changes an assumption.
 | 005 | Implement .NET 10 conversation harness and evidence model | 003 | done |
 | 006 | Implement controlled failure, breaker, and recovery scenarios | 004, 005 | done |
 | 007 | Verify end-to-end scenarios and diagnostic evidence in Azure | 006 | done |
-| 008 | Complete self-service documentation, affinity toggle, and clean-environment walkthrough | 007 | in_progress |
+| 008 | Complete self-service documentation, affinity toggle, and clean-environment walkthrough | 007 | done |
 
 The default execution order is ascending ID. Tasks `004` and `005` can proceed
 independently once `003` is available; parallel execution is not required.
@@ -333,8 +333,8 @@ The ceiling is 64 attempts at 2,048 output tokens each, without retries.
 state failures, 24 successful affinity-on requests, all 42 trace joins including
 diagnostics, unchanged 13-value rerun, and scoped cleanup/retired state passed.
 Actual redacted turn output and complete final tables are in the
-[console sample](../evidence/samples/task008-console.md). Final PR publication
-is pending; this task remains `in_progress` until the PR exists.
+[console sample](../evidence/samples/task008-console.md). Published in PR #10
+on 2026-10-16, left open and unmerged for user review.
 
 Deliverables and acceptance:
 

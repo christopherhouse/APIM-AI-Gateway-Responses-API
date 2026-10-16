@@ -41,7 +41,8 @@ model allocations. Task `007` is complete in merged PR #9.
 
 ### Task 008 affinity comparison contract - 2026-10-16
 
-Task `008` is in progress on `feature/008-self-service-affinity-toggle`.
+Task `008` is complete in open PR #10 on
+`feature/008-self-service-affinity-toggle`, left unmerged for user review.
 The user excluded cost documentation and approved a new same-subscription
 West US 3 environment for the bounded clean walkthrough. The
 [walkthrough](WALKTHROUGH.md) is the self-service entry point; its new
@@ -53,8 +54,7 @@ successful requests with affinity on, all 42 request/policy-trace joins
 including diagnostics, an unchanged rerun preserving 13 runtime values, and
 scoped deletion/retired state without purge. The
 [redacted console sample](../evidence/samples/task008-console.md) includes
-actual model text and complete session tables. PR publication remains the
-last task-completion step.
+actual model text and complete session tables.
 
 `sessionAffinityEnabled` is a **default-true Bicep boolean**. Both drivers read
 `LAB_SESSION_AFFINITY_ENABLED` and export the actual deployed boolean to
