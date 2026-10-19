@@ -5,15 +5,15 @@
 | Field | Value |
 | --- | --- |
 | Updated | 2026-10-19 |
-| Phase | Task `009` live acceptance and scoped cleanup complete; final evidence publication to existing PR #12 |
+| Phase | All tasks `000`-`009` complete; live evidence published in open, unmerged PR #12 |
 | Authorization | On 2026-10-19 at 10:12 CDT, user explicitly approved the proposed `sdk009` provisioning, bounded tests, affinity updates, trace reads and scoped cleanup without purge |
 | Planning branch | `chore/lab-planning` |
-| Current implementation task | `009` - `done` on `feature/009-sdk-live-verification`; final records update the existing PR #12 dependency branch |
-| Next task | Finish final documentation/evidence checks, push and update PR #12; leave it unmerged for user review |
+| Current implementation task | `009` - `done` on `feature/009-sdk-live-verification`, delivered in existing PR #12 |
+| Next task | User review and merge of PR #12; no additional implementation or Azure action is pending |
 | Azure deployment | `rg-responses-sdk009` verified absent; local state retired, runtime/outputs removed, recovery records retained without purge |
 | Solution files | Raw HTTP baseline plus task `009` Foundry SDK/Agent Framework adapters, explicit cookie profiles, pinned packages/lock and real-SDK loopback tests |
 | Base branch | `main` at task `009` implementation merge `24754e8`; initial empty base `846a2cb` preserved |
-| Pull request | #1-#11 merged; current live verification/evidence delivery updates existing open, unmerged PR #12 |
+| Pull request | #1-#11 merged; live verification/evidence delivery published in existing open, unmerged PR #12 |
 
 ## Known prerequisites and open decisions
 
@@ -1931,6 +1931,29 @@
 - Remaining handoff: stage and check the exact seven files, commit/push this
   branch, update the existing PR #12 title/template body, verify the remote
   head and open/unmerged state, then record publication without merging.
+
+### 2026-10-19 - Task 009 live delivery published in PR #12
+
+- Final validation after the evidence link was added passed all seven scoped
+  files, 14 Markdown documents / 134 relative links and anchors, immutable
+  citations/excerpts, historical-progress/evidence preservation, privacy and
+  ignore fixtures, exact template and task/result consistency.
+- `git diff --cached --check` passed. Inspected the staged seven-file list
+  and aggregate for scope and secrets; no raw artifacts, source, infrastructure
+  or package changes were staged.
+- Committed and pushed live proof as `fab896f`, with required Copilot/session
+  trailers. Updated the same PR #12 title and complete template-based body
+  from the original blocker to the verified live result, default-cookie
+  limitation, exact commands/results, initial cleanup failures and confirmed
+  final cleanup. No second PR was created and none was merged.
+- Fresh `gh pr view 12` and remote-head checks confirmed OPEN, not draft,
+  unmerged, correct head/base branches, exact reviewed body, seven changed
+  files and matching local/remote commit; the worktree was clean. This final
+  publication receipt is committed on the same branch, followed by one final
+  head/state check.
+- All task `009` criteria are complete, including the authorized lab's
+  verified deletion without purge. No further model request, Azure operation
+  or implementation is pending. Next action is user review/merge of PR #12.
 
 ## Update protocol
 
