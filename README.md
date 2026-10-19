@@ -24,7 +24,10 @@ unavailable.
 > **New: [compare raw HTTP, Foundry SDK, and Agent Framework](#-three-clients-the-same-state-and-routing-rules).**
 > All three client modes are implemented. SDK/framework transport behavior is
 > tested locally with genuine package calls; their live off/on and workspace
-> proof is still pending separate Azure authorization.
+> proof is still pending. Implementation PR #11 merged on October 19, 2026,
+> and live testing is authorized, but the former disposable lab is deleted.
+> Replacement provisioning/affinity-update/cleanup approval is the remaining
+> target blocker; no SDK live result is claimed.
 
 ## 🚀 Start here
 
@@ -527,7 +530,9 @@ cookie capture/resend, interleaving, service-ID continuation, stateless
 isolation, typed/error handling, cancellation, body/attempt bounds and redirect
 checks against a synthetic loopback server. No model was called and no Azure
 resource was read or changed. Live off/on proof and workspace joins for the
-SDK modes remain pending; task `009` stays `in_progress`. See the
+SDK modes remain pending; task `009` is `blocked` on an authorized active
+target, not on adapter implementation. Live testing was approved on
+October 19, 2026, but replacement lab provisioning remains unapproved. See the
 [sanitized offline result summary](evidence/samples/task009-offline-verification.json),
 [compatibility decisions and primary sources](docs/PLAN.md#compatibility-gates-before-adapter-implementation)
 and [harness reference](src/ResponsesLab/README.md#client-modes-and-cookie-profiles).

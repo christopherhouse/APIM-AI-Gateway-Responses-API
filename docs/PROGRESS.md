@@ -4,27 +4,27 @@
 
 | Field | Value |
 | --- | --- |
-| Updated | 2026-10-16 |
-| Phase | Task `009` in progress: code/offline/documentation delivery published in open PR #11; live acceptance pending |
-| Authorization | On 2026-10-16 after #10 merged, user approved building task `009` plus complete README scenario explanations; code/offline/docs/PR only, no new Azure operations |
+| Updated | 2026-10-19 |
+| Phase | Task `009` blocked: PR #11 merged and live tests authorized, but no active lab target exists |
+| Authorization | User approved live Azure testing on 2026-10-19; exact replacement provisioning, affinity updates and cleanup remain unapproved after a no-infrastructure-change testing scope |
 | Planning branch | `chore/lab-planning` |
-| Current implementation task | `009` - `in_progress` on `feature/009-sdk-framework-comparison` |
-| Next task | User review/merge of PR #11; SDK live off/on/workspace work needs separate exact-target/action/budget approval |
-| Azure deployment | `rg-responses-walk008` verified absent; local state retired, runtime removed, recovery records retained without purge |
+| Current implementation task | `009` - `blocked` on `feature/009-sdk-live-verification` |
+| Next task | Obtain replacement lab lifecycle approval or a compatible active target, then execute bounded SDK off/on/workspace proof |
+| Azure deployment | On 2026-10-19, `rg-responses-walk008` remains absent; all three saved environments are retired and have no runtime handoff |
 | Solution files | Raw HTTP baseline plus task `009` Foundry SDK/Agent Framework adapters, explicit cookie profiles, pinned packages/lock and real-SDK loopback tests |
-| Base branch | `main` at task `008` merge `99cd7b0`; initial empty base `846a2cb` preserved |
-| Pull request | #1-#10 merged; task `009` PR #11 open and intentionally unmerged |
+| Base branch | `main` at task `009` implementation merge `24754e8`; initial empty base `846a2cb` preserved |
+| Pull request | #1-#11 merged; live-target blocker follow-up not yet published |
 
 ## Known prerequisites and open decisions
 
 | Item | Owner/action | Effect |
 | --- | --- | --- |
-| Implementation authorization | Task `009` code/offline/docs/PR approved on 2026-10-16 | Implement only after SDK compatibility gates; include README runups for every mode/profile/scenario. No topology expansion or new Azure operations. |
+| Implementation authorization | Task `009` code/offline/docs/PR approved on 2026-10-16; merged PR #11 on 2026-10-19 | Implementation and README runups delivered; remaining work is actual live acceptance. |
 | Initial base branch | Resolved with explicit user approval on 2026-10-15 | Empty commit `846a2cb` establishes `main`; subsequent work stays on work branches. |
 | Platform feasibility | Task `001`, B1-B2 resolved in `DESIGN.md` | Native original-pin rejection, outbound member evidence, and workspace policy traces verified; no workaround required. |
 | Model and authentication | Task `001` live feasibility passed | `gpt-5.4-mini` / `2026-03-17` / `GlobalStandard` served Responses through API-scoped gateway access and resource-scoped managed identity. |
 | SDK/framework compatibility | Local gates resolved; pinned source/API construction in `PLAN.md` | Genuine Foundry model Responses client fits existing route/custom key header with no topology change; independent framework service sessions and configured handler isolation are wire-tested. Stock cookie jar is shared, not per-session. Live verification remains pending. |
-| Live Azure operations | Prior task `008` lifecycle complete; task `009` code approval authorizes none | Owned group remains verified deleted; no new reads, inference, mutations, teardown, or purge. |
+| Live Azure operations | Live tests authorized on 2026-10-19; exact replacement lifecycle approval unresolved | Read-only target checks completed; former owned group is absent. No new model calls, mutations, fault, teardown or purge. |
 
 ## Execution log
 
@@ -1719,6 +1719,37 @@
   live acceptance has not been authorized or performed. No Azure operation,
   live inference, new group, fault or cleanup occurred. PR #11 is not merged
   automatically; user review/merge and separate live authorization are next.
+
+### 2026-10-19 - Task 009 live tests authorized; active target unavailable
+
+- User confirmed PR #11 merged and authorized live Azure testing. Verified
+  its merge at `24754e8` on 2026-10-19 and created
+  `feature/009-sdk-live-verification` from fetched `origin/main`; no changes
+  were made directly on `main`.
+- Completed the Foundry skill dependency check. Read the plan, backlog,
+  progress, lifecycle and walkthrough before target preparation.
+- `az account show` confirmed the unchanged active AzureCloud subscription
+  is enabled. All three saved environments are retired; none has a runtime
+  handoff. `az group exists` returned `false` for both the former
+  `rg-responses-walk008` and proposed `rg-responses-sdk009`.
+- Corrected the earlier handoff's mistaken reference to an existing deployment:
+  task `008` had already deleted its disposable lab. No endpoint or key was
+  guessed, and no unrelated existing application was adopted.
+- Proposed a new `sdk009` / `rg-responses-sdk009` lab in the unchanged active
+  subscription / West US 3, using the existing Developer APIM, two GPT-5.4
+  mini accounts, dedicated identity and workspace design. Requested explicit
+  provisioning, affinity-only off/on updates, model/trace reads and exact
+  owned-group deletion without purge, capped at 160 model attempts with
+  2,048 output tokens each, no retries or injected faults.
+- The authorization question returned that the user is unavailable. This is
+  not provisioning approval: the preceding testing scope explicitly excluded
+  infrastructure changes. Task `009` is blocked pending that exact lifecycle
+  approval or a compatible existing target, rather than claiming live proof.
+- Updated README, PLAN, TASKS and the current checkpoint to distinguish merged
+  implementation, approved testing, and unresolved target creation. No live
+  inference, resource change, credential retrieval, fault or cleanup occurred.
+- Documentation validation and publication of this blocker follow-up are the
+  remaining branch actions; full task `009` acceptance remains incomplete.
 
 ## Update protocol
 

@@ -10,8 +10,10 @@ offline validation in merged PR #7. Task `006` is complete as code and offline
 validation in merged PR #8. Task `007` completed both authorized live
 lifecycles and cleanup on 2026-10-15/16 in merged PR #9;
 task `008` delivery and its documentation/planning follow-ups are complete in
-merged PR #10. Task `009` is in progress after separate code/offline-check/
-documentation authorization on 2026-10-16. No new Azure operations are authorized.
+merged PR #10. Task `009` code/offline-check/documentation delivery in PR #11
+merged on 2026-10-19. Live testing is now authorized, but task `009` is blocked
+on an active target: the former lab is deleted, and replacement provisioning/
+affinity-update/cleanup approval is unresolved.
 IDs are stable; do not renumber completed tasks or hide blocked work.
 
 ## Status and dependency rules
@@ -41,7 +43,7 @@ new platform evidence changes an assumption.
 | 006 | Implement controlled failure, breaker, and recovery scenarios | 004, 005 | done |
 | 007 | Verify end-to-end scenarios and diagnostic evidence in Azure | 006 | done |
 | 008 | Complete self-service documentation, affinity toggle, and clean-environment walkthrough | 007 | done |
-| 009 | Compare raw HTTP, Foundry SDK, and Agent Framework in the harness | 008; implementation approved, live-operation approval outstanding | in_progress |
+| 009 | Compare raw HTTP, Foundry SDK, and Agent Framework in the harness | 008; replacement live-target lifecycle approval outstanding | blocked |
 
 The default execution order is ascending ID. Tasks `004` and `005` can proceed
 independently once `003` is available; parallel execution is not required.
@@ -369,27 +371,32 @@ Deliverables and acceptance:
 
 ## 009 - Compare raw HTTP, Foundry SDK, and Agent Framework
 
-**Authorization/status:** `in_progress`. On 2026-10-16 the user authorized writing
+**Authorization/status:** `blocked`. On 2026-10-16 the user authorized writing
 up this proposal on `feature/008-self-service-affinity-toggle` before merging
 PR #10. After that PR merged at `99cd7b0`, the user separately approved building
 the comparison and requested thorough README scenario walkthroughs. Work on
 `feature/009-sdk-framework-comparison` covers code, dependencies, offline
-checks, documentation and PR publication. Topology expansion and new Azure
-operations are not authorized. Live proof needs its own target/action and
-aggregate-budget approval; task `008` resources were deleted and are not
-reusable live targets.
+checks, documentation and PR publication. PR #11 merged on 2026-10-19, when
+the user also authorized live Azure testing. Read-only preparation on
+`feature/009-sdk-live-verification` confirmed task `008` resources remain
+deleted and all saved local environments are retired. No current runtime
+target exists. Testing permission followed an explicitly no-infrastructure-change
+scope; it is not treated as replacement provisioning or deletion approval.
+An exact new-target lifecycle and aggregate budget were proposed, but the
+user was unavailable to confirm them. Resume after that approval or provision
+of a compatible existing target; no inference or resource changes were made.
 
 **Scope:** One .NET harness with raw HTTP as the control and implemented
 `foundry-sdk` / `agent-framework` client modes, with `sdk-default` and
 `session-scoped` cookie profiles. The [compatibility gates](PLAN.md#sdk-and-agent-framework-comparison)
 are resolved for the pinned stack through source review and local wire tests;
 no project/gateway topology change was needed. Offline implementation is not
-live verification. Task `009` remains `in_progress` until the separately
-authorized live acceptance below is completed.
+live verification. Task `009` remains `blocked` until an authorized live target
+is available; the live acceptance below remains incomplete.
 Current [sanitized offline evidence](../evidence/samples/task009-offline-verification.json)
 records pinned versions, actual local check outcomes and the remaining live gates.
-Code/offline/scenario-documentation delivery is published in open PR #11,
-left unmerged for user review; the live acceptance below is still pending.
+Code/offline/scenario-documentation delivery is published in merged PR #11;
+the live acceptance below is still pending.
 
 Deliverables and acceptance:
 

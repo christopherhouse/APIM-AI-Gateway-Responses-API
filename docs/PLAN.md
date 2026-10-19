@@ -14,12 +14,15 @@ Framework and Foundry SDK harness comparison on
 `feature/008-self-service-affinity-toggle` before merging PR #10.
 That planning follow-up is included in PR #10. After its merge, the user
 authorized building task `009` and requested a full README explanation of
-each scenario. Task `009` is in progress on
-`feature/009-sdk-framework-comparison`: code, dependencies, offline checks,
-documentation and PR publication only. New Azure reads, inference, resource
-changes, faults or cleanup still require separate exact-target authorization.
-The offline implementation and scenario documentation are published in open,
-unmerged PR #11; task `009` remains `in_progress` pending live acceptance.
+each scenario. The code, dependencies, offline checks and scenario documentation
+were delivered on `feature/009-sdk-framework-comparison` in PR #11, merged on
+2026-10-19 at `24754e8`. On that date, the user authorized live Azure testing.
+Preparation continues on `feature/009-sdk-live-verification`; task `009` is
+`blocked` because its former disposable lab is confirmed deleted and no active
+target is configured. The preceding testing scope explicitly excluded
+infrastructure changes. Replacement provisioning, native affinity updates and
+scoped cleanup therefore need exact-target/action approval before execution.
+No live SDK inference or resource mutation has occurred.
 Task `008` was authorized on 2026-10-16 after
 PR #9 merged. Work on `feature/008-self-service-affinity-toggle` excludes cost
 documentation at the user's request. Add a default-on native backend-pool
@@ -278,14 +281,17 @@ it does not authorize task `009`.
 
 ## SDK and Agent Framework comparison
 
-**Status: task `009` in progress; no SDK live verification yet.** The user
+**Status: task `009` blocked on a live target; no SDK live verification yet.** The user
 authorized this writeup before merging PR #10, then separately approved SDK/
 framework implementation and scenario documentation after its merge on
-2026-10-16. Work is on `feature/009-sdk-framework-comparison` from `99cd7b0`.
+2026-10-16. Implementation used `feature/009-sdk-framework-comparison` from `99cd7b0`.
 The compatibility gates below are resolved for the pinned stack; adapters and
-focused real-SDK loopback tests are implemented. No new Azure operation or
-topology expansion is authorized. Live off/on/workspace acceptance remains pending.
-Code/offline delivery is published in PR #11, intentionally left unmerged.
+focused real-SDK loopback tests are implemented. Code/offline delivery in PR #11
+merged on 2026-10-19. Live testing and target/telemetry reads were authorized
+that day, but the former lab no longer exists. The continuation branch is
+`feature/009-sdk-live-verification`. Replacement provisioning and affinity
+updates are not inferred from testing permission; live off/on/workspace
+acceptance remains pending that target authorization.
 
 ### One harness, three client modes
 
