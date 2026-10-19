@@ -20,6 +20,11 @@ unavailable.
 > [actual console examples](evidence/samples/task008-console.md) preserve
 > outcomes and trace proof. The unchanged rerun preserved all 13 runtime
 > values; the disposable lab is verified deleted without purge.
+>
+> **New: [compare raw HTTP, Foundry SDK, and Agent Framework](#-three-clients-the-same-state-and-routing-rules).**
+> All three client modes are implemented. SDK/framework transport behavior is
+> tested locally with genuine package calls; their live off/on and workspace
+> proof is still pending separate Azure authorization.
 
 ## 🚀 Start here
 
@@ -79,6 +84,7 @@ flowchart LR
 
 *Implemented components; task `007` verified both deployment lifecycles on
 October 15-16, 2026. Task `008` additionally verified native affinity off/on.*
+Those live runs used the raw HTTP client; task `009` adds offline-tested SDK modes.
 Solid arrows show requests; dotted arrows show diagnostics. The harness keeps
 routing context, Foundry owns response state, and APIM is not a
 conversation-history database. Native pinning
@@ -111,7 +117,7 @@ Both Foundry resources are configured for **West US 3**. The selected
 `GlobalStandard` model deployment can process inference globally; resource
 location does not imply West US 3-only processing.
 
-## 🧪 Verified scenarios
+## 🧪 Live-verified scenarios: raw HTTP baseline
 
 | Scenario | Success means |
 | --- | --- |
@@ -199,8 +205,9 @@ No result is inferred from the offline tests.
 
 ## 💬 Conversation harness
 
-Task `005` adds a .NET 10 console app with no model SDK or agent framework.
-It interleaves independent multi-turn sessions, separately runs stateless
+Task `005` established the raw HTTP control. Task `009` adds genuine Foundry
+SDK and Microsoft Agent Framework modes to the **same .NET 10 console app**.
+All modes interleave independent multi-turn sessions, separately run stateless
 calls, and emits each turn's prompt/assistant text, response-chain IDs, actual
 gateway request UUID, concrete member, safe cookie fingerprint, and outcome.
 The final session table and separate distributions include failed and
@@ -211,9 +218,10 @@ unattempted work; a missing member is a failed observation, not a promised 50/50
 dotnet build .\ResponsesLab.slnx --configuration Release
 dotnet test .\ResponsesLab.slnx --configuration Release --no-restore
 dotnet format .\ResponsesLab.slnx --verify-no-changes --no-restore
+dotnet publish .\src\ResponsesLab\ResponsesLab.csproj --configuration Release --no-restore --output .\artifacts\publish\ResponsesLab
 ```
 
-Defaults cap the script at 24 requests, 2,048 output tokens per request,
+Defaults cap **one selected mode/profile** at 24 requests, 2,048 output tokens per request,
 one request at a time, ten-second spacing, and a ten-minute overall deadline.
 The client stops a broken chain; it never retries, restarts history, or accepts
 a changed/missing member. The [harness guide](src/ResponsesLab/README.md)
@@ -234,9 +242,10 @@ cookie. These three identifiers have different jobs:
 | `previous_response_id` | Foundry returns a response ID; the client supplies it to continue that response chain | No; it references backend-owned response state |
 | `X-Lab-Session-Id` | Harness-generated application UUID used to correlate turns and traces | No; it is not a backend-selection key |
 
-The excerpts below are from the implementation, not standalone programs.
-Source links are pinned to the reviewed revision so their line numbers remain
-stable.
+The excerpts below explain the **raw HTTP control**, not SDK-default behavior.
+They are from the task `008` implementation, not standalone programs. Source
+links are pinned to that reviewed baseline so their line numbers remain stable;
+task `009` keeps this behavior while adding the separate adapters below.
 
 ### Enable the gateway's native cookie affinity
 
@@ -271,7 +280,7 @@ internal string? OriginalBackend { get; set; }
 ```
 
 Source: [`Conversation.cs:57-59`](https://github.com/christopherhouse/APIM-AI-Gateway-Responses-API/blob/ca8188cdb51bd405f7daf0c943ba31fc9e499f25/src/ResponsesLab/Conversation.cs#L57-L59).
-Independent conversations can therefore pin to different members without
+In the raw control, independent conversations can therefore pin to different members without
 sharing cookies or response IDs. `OriginalBackend` is an assertion target,
 not a client-chosen route.
 
@@ -343,22 +352,185 @@ stateful/stateless requests succeeded. This establishes continuity to the
 and is not an indefinite guarantee across cookie expiry, failures or topology
 changes. See the [separately verified failure/recovery behavior](#-controlled-failure-and-recovery).
 
-## 🧩 Planned: SDK and Agent Framework comparison
+## 🧩 Three clients, the same state and routing rules
 
-**Task `009` is planned, not implemented or live-verified.** Keep this raw
-HTTP harness as the control, then compare a concrete Foundry SDK client and
-Microsoft Agent Framework using the same conversations and gateway evidence.
-Measure SDK-default cookie behavior separately from any configured
-per-conversation transport; do not assume that framework conversation memory
-also supplies isolated APIM affinity.
+**Choose the abstraction, not a different experiment.** Each invocation selects
+one client and one cookie profile. Prompts, session UUIDs, scheduling, model
+bounds, backend assertions and failure accounting remain shared. There is no
+“run everything” switch that silently multiplies the inference allowance.
 
-The [comparison plan](docs/PLAN.md#planned-extension-sdk-and-agent-framework-comparison)
-defines SDK/project-endpoint compatibility gates, automatic versus custom cookie
-handling, service-managed response chains, actual HTTP-attempt budgets and
-off/on trace proof. [Task `009` acceptance](docs/TASKS.md#009---compare-raw-http-foundry-sdk-and-agent-framework)
-keeps implementation and new live Azure verification behind separate approvals.
-This PR records the proposal only; the current commands and verified results
-remain the raw HTTP baseline.
+| Mode / profile | Who advances the response chain? | Who carries the routing cookie? | Evidence status |
+| --- | --- | --- | --- |
+| `http` / `manual` | Harness saves each successful ID and sets `previous_response_id` | Harness explicitly selects/stores/sends one conversation's native cookie | Live off/on and fault/recovery baseline |
+| `foundry-sdk` / `session-scoped` | Genuine `ProjectResponsesClient.CreateResponseAsync`; harness supplies the previous successful ID | Configured automatic HTTP handler, one jar per conversation | Real SDK loopback tests; live pending |
+| `agent-framework` / `session-scoped` | Reused independent `AgentSession`; framework maps its service response ID to `previous_response_id` | The same explicitly configured per-conversation handler below the SDK | Real framework loopback tests; live pending |
+| Either SDK mode / `sdk-default` | Same SDK/framework state handling as above | Unchanged pinned SDK transport: **a shared cookie jar**, not a jar per session | Shared capture/resend observed locally; not isolation proof |
+
+The actual stack is **Agent Framework → Foundry `ProjectResponsesClient` →
+OpenAI Responses implementation → System.ClientModel HTTP pipeline**. The
+framework mode is not a hosted Foundry agent and does not create a project,
+agent, tool loop, conversation API resource, or new gateway route. Every model
+request still goes through the existing APIM operation.
+
+### 1. Raw HTTP: the transparent control
+
+Start here to see both halves explicitly. On turn one, send `store=true` and
+the current prompt, retain APIM's cookie and Foundry's successful response ID,
+then send **both** on the next turn. Each `Conversation` has its own container.
+The shared raw transport disables automatic cookies, so a new conversation
+or stateless call cannot accidentally inherit another conversation's pin.
+
+The [control walkthrough above](#-how-affinity-and-response-chaining-connect)
+shows the exact capture, manual header and ID-update code. This remains the
+default when no client selector is supplied:
+
+```powershell
+$clientArgs = @('--allow-requests', '--client', 'http', '--scenario', 'both')
+```
+
+### 2. Foundry SDK: typed calls, explicit continuation
+
+The compatible SDK is **`Azure.AI.Extensions.OpenAI` `3.0.0-beta.3`**,
+with **OpenAI `2.14.0`**. This is an intentionally pinned **preview** client,
+not a claim about the newest release. Its supported custom-auth constructor
+accepts the exported gateway base `/openai/v1/`, using an
+`ApiKeyAuthenticationPolicy` for `Ocp-Apim-Subscription-Key`.
+`GetProjectResponsesClientForModel` returns the genuine model Responses client;
+no project endpoint discovery, bearer token acquisition, new role or APIM
+bypass is needed. This constructor's compatibility was checked, not inferred
+from the word “project.”
+
+The adapter makes the actual typed call:
+
+```csharp
+var create = CreateOptions(conversation);
+create.Instructions = ConversationScript.Instructions;
+create.InputItems.Add(ResponseItem.CreateUserMessageItem(prompt));
+create.PreviousResponseId = conversation.PreviousResponseId;
+var result = await client.Responses.CreateResponseAsync(create, cancellationToken: token);
+```
+
+Source: [`SdkResponseSender.cs:52-56`](src/ResponsesLab/SdkResponseSender.cs#L52-L56);
+client/auth construction: [`127-157`](src/ResponsesLab/SdkResponseSender.cs#L127-L157).
+Only the **current** user message is sent. Typed SDK ID/text must agree with
+the captured bounded HTTP result; an SDK parse failure is not rescued by
+silently accepting raw JSON. Shared checks still require completed assistant
+text, a real gateway UUID, and the expected member.
+
+```powershell
+$clientArgs = @('--allow-requests', '--client', 'foundry-sdk', '--cookie-profile', 'session-scoped', '--scenario', 'both')
+```
+
+### 3. Agent Framework: session memory is not routing memory
+
+**`Microsoft.Agents.AI.OpenAI` `1.25.0`** wraps that same Foundry Responses
+client with `AsAIAgent`. Each lab conversation gets a separate agent/client and
+an independent, reused `AgentSession`:
+
+```csharp
+client.AgentSession ??= await client.Agent!.CreateSessionAsync(token);
+var result = await client.Agent!.RunAsync(prompt, client.AgentSession, cancellationToken: token);
+```
+
+Source: [`SdkResponseSender.cs:62-63`](src/ResponsesLab/SdkResponseSender.cs#L62-L63).
+The framework owns advancement of its service-managed conversation ID.
+The harness does **not** set that internal ID or inject previous assistant
+messages. Loopback requests establish that the next call contains the preceding
+response ID and only one new user message—not a local-history replay.
+There is no local chat-history provider or automatic function-invocation loop.
+
+An `AgentSession` solves **service continuation**, not HTTP cookie isolation.
+It still needs the correctly scoped transport:
+
+```powershell
+$clientArgs = @('--allow-requests', '--client', 'agent-framework', '--cookie-profile', 'session-scoped', '--scenario', 'both')
+```
+
+### Automatic cookies: configured versus SDK default
+
+For `session-scoped`, the adapter supplies `HttpClientPipelineTransport` with
+a distinct `SocketsHttpHandler` per conversation:
+
+```csharp
+UseCookies = conversation.Scenario == "stateful" && options.SessionAffinityEnabled,
+CookieContainer = conversation.Cookies,
+AllowAutoRedirect = false
+```
+
+Source: [`SdkResponseSender.cs:145-147`](src/ResponsesLab/SdkResponseSender.cs#L145-L147).
+The handler captures `Set-Cookie` and automatically resends applicable cookies;
+the SDK adapter never copies the raw control's manual `Cookie` header.
+Domain/path/expiry rules still apply. Stateless calls and affinity-off chains
+disable automatic cookies. This is **supported custom transport configuration**,
+not out-of-the-box SDK session isolation.
+
+For `sdk-default`, `Transport` is left unset. The pinned System.ClientModel
+`1.15.0` transport shares an HTTP client/cookie container across client instances.
+Local wire tests show one conversation continuing successfully, then the same
+cookie appearing on an unrelated first turn **and on a stateless request**.
+Those requests violate this lab's gateway contract and receive the synthetic
+test gateway's `UnexpectedAffinityCookie` error. A shared pin is not a successful
+multi-session demonstration; the harness reports the errors instead of removing
+the cookie, swapping transports, replaying history, or weakening assertions.
+
+To observe that profile deliberately, choose **one** SDK mode:
+
+```powershell
+$clientArgs = @('--allow-requests', '--client', 'agent-framework', '--cookie-profile', 'sdk-default', '--scenario', 'both')
+```
+
+“SDK default” means **default cookies only**. Endpoint/authentication, lab
+headers, bounded response capture, request/run deadlines, disabled logging/
+tracing and zero retries are still explicit lab configuration.
+
+### Walk each scenario through any supported client
+
+| Scenario | What travels | What establishes the result |
+| --- | --- | --- |
+| Affinity **on**, `both` or `stateful` | Real response chain plus that conversation's cookie | Every successful turn remains on its first concrete member; independent chains must collectively observe both members |
+| Affinity **off**, `affinity-off` | `store=true` and the real previous response ID, **no cookie** | An actual cross-member 400/404 with the exact missing-response contract; same-member success is inconclusive |
+| Independent `stateless` | `store=false`, one fresh session per request, no previous ID or cookie | Both concrete members observed independently; a perfect split is not required |
+| Controlled `failure` | Original chain/pin plus separately authorized reversible fault | **Raw HTTP only** for this extension; SDK/framework selectors reject the invocation before configuration/credentials |
+
+For the off comparison, deploy/export `LAB_SESSION_AFFINITY_ENABLED=false`
+using the [guarded walkthrough](docs/WALKTHROUGH.md), then select the mode:
+
+```powershell
+$clientArgs = @('--allow-requests', '--client', 'foundry-sdk', '--cookie-profile', 'session-scoped', '--scenario', 'affinity-off')
+```
+
+After the separately approved affinity-on update, use that mode's `both`
+arguments above. For an independently approved stateless-only run, replace
+`both` with `stateless`. Never change just the exported client value to pretend
+that the deployed pool changed.
+
+**These argument arrays do not authorize a live run.** Once the target/actions
+and aggregate request budget are approved, pass the selected array to the
+existing wrapper with the same confirmed environment/subscription/group:
+
+```powershell
+$client = (Resolve-Path .\artifacts\publish\ResponsesLab\ResponsesLab.exe).Path
+& .\scripts\Invoke-Lab.ps1 -Action Run -EnvironmentName $environment -SubscriptionId $subscription -ResourceGroupName $group -AllowAzure -AllowCredentialRead -ClientPath $client -ClientArguments $clientArgs
+```
+
+The default `both` still plans at most **24 actual model HTTP attempts for
+that single invocation**. A before-transport policy permits one exact-route
+POST per turn and enforces the planned run budget before sending; SDK retries
+are zero, redirects stay disabled, and hidden extra calls fail explicitly.
+Output adds `clientMode`, `cookieProfile` and `wireAttempts`, with package pins
+in the run header. Cookie fingerprints observe received/session-jar state;
+they are **not** proof of transport-injected outbound cookie headers.
+Gateway member evidence and workspace correlation remain the routing truth.
+
+**Observed locally, not in Azure:** real pinned SDK/framework calls passed
+cookie capture/resend, interleaving, service-ID continuation, stateless
+isolation, typed/error handling, cancellation, body/attempt bounds and redirect
+checks against a synthetic loopback server. No model was called and no Azure
+resource was read or changed. Live off/on proof and workspace joins for the
+SDK modes remain pending; task `009` stays `in_progress`. See the
+[sanitized offline result summary](evidence/samples/task009-offline-verification.json),
+[compatibility decisions and primary sources](docs/PLAN.md#compatibility-gates-before-adapter-implementation)
+and [harness reference](src/ResponsesLab/README.md#client-modes-and-cookie-profiles).
 
 ## 🛠️ Controlled failure and recovery
 
