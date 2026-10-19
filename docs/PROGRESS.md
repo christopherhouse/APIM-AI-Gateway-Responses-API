@@ -5,15 +5,15 @@
 | Field | Value |
 | --- | --- |
 | Updated | 2026-10-19 |
-| Phase | Task `009` blocked: PR #11 merged and live tests authorized, but no active lab target exists |
-| Authorization | User approved live Azure testing on 2026-10-19; exact replacement provisioning, affinity updates and cleanup remain unapproved after a no-infrastructure-change testing scope |
+| Phase | Task `009` live acceptance and scoped cleanup complete; final evidence publication to existing PR #12 |
+| Authorization | On 2026-10-19 at 10:12 CDT, user explicitly approved the proposed `sdk009` provisioning, bounded tests, affinity updates, trace reads and scoped cleanup without purge |
 | Planning branch | `chore/lab-planning` |
-| Current implementation task | `009` - `blocked` on `feature/009-sdk-live-verification` |
-| Next task | Obtain replacement lab lifecycle approval or a compatible active target, then execute bounded SDK off/on/workspace proof |
-| Azure deployment | On 2026-10-19, `rg-responses-walk008` remains absent; all three saved environments are retired and have no runtime handoff |
+| Current implementation task | `009` - `done` on `feature/009-sdk-live-verification`; final records update the existing PR #12 dependency branch |
+| Next task | Finish final documentation/evidence checks, push and update PR #12; leave it unmerged for user review |
+| Azure deployment | `rg-responses-sdk009` verified absent; local state retired, runtime/outputs removed, recovery records retained without purge |
 | Solution files | Raw HTTP baseline plus task `009` Foundry SDK/Agent Framework adapters, explicit cookie profiles, pinned packages/lock and real-SDK loopback tests |
 | Base branch | `main` at task `009` implementation merge `24754e8`; initial empty base `846a2cb` preserved |
-| Pull request | #1-#11 merged; live-target blocker follow-up published in open, unmerged PR #12 |
+| Pull request | #1-#11 merged; current live verification/evidence delivery updates existing open, unmerged PR #12 |
 
 ## Known prerequisites and open decisions
 
@@ -23,8 +23,8 @@
 | Initial base branch | Resolved with explicit user approval on 2026-10-15 | Empty commit `846a2cb` establishes `main`; subsequent work stays on work branches. |
 | Platform feasibility | Task `001`, B1-B2 resolved in `DESIGN.md` | Native original-pin rejection, outbound member evidence, and workspace policy traces verified; no workaround required. |
 | Model and authentication | Task `001` live feasibility passed | `gpt-5.4-mini` / `2026-03-17` / `GlobalStandard` served Responses through API-scoped gateway access and resource-scoped managed identity. |
-| SDK/framework compatibility | Local gates resolved; pinned source/API construction in `PLAN.md` | Genuine Foundry model Responses client fits existing route/custom key header with no topology change; independent framework service sessions and configured handler isolation are wire-tested. Stock cookie jar is shared, not per-session. Live verification remains pending. |
-| Live Azure operations | Live tests authorized on 2026-10-19; exact replacement lifecycle approval unresolved | Read-only target checks completed; former owned group is absent. No new model calls, mutations, fault, teardown or purge. |
+| SDK/framework compatibility | Local gates and live off/on comparisons passed for the pinned stack in `PLAN.md` | Genuine Foundry client and independent framework sessions worked through the existing APIM route; configured cookie isolation passed. Stock sharing failed the independent-session contract locally and live. |
+| Live Azure operations | Exact `sdk009` lifecycle approved on 2026-10-19 at 10:12 CDT | At most 160 model attempts, 2,048 output tokens each, no retries/faults; existing design, affinity-only updates, traces and scoped deletion without purge. |
 
 ## Execution log
 
@@ -1767,6 +1767,170 @@
   not satisfy task `009` live acceptance or authorize provisioning.
 - Resume only after explicit replacement lifecycle approval or provision
   of a compatible existing target. No inference or Azure mutation was performed.
+
+### 2026-10-19 - Task 009 replacement lifecycle explicitly approved
+
+- After the exact `sdk009` target/action/budget handoff, the user instructed
+  execution. This resolves the earlier blocker and authorizes the proposed
+  new group in the unchanged active subscription / West US 3, the existing
+  Developer APIM/two-model/UAMI/workspace design, affinity-only off/on updates,
+  bounded real inference, workspace reads and exact owned-group cleanup
+  without purge. No fault injection or unrelated resource changes are included.
+- Continue `feature/009-sdk-live-verification`, the existing open PR #12
+  dependency branch from merged `main` at `24754e8`; do not merge it or create
+  a competing branch. Task `009` returns to `in_progress`.
+- Enforce a cumulative ceiling of 160 actual model attempts at 2,048 output
+  tokens each, zero transport retries, with the existing serial scheduling,
+  request deadlines and scenario limits. Budget every default-profile or
+  diagnostic run against that same ceiling.
+- Fresh validation and provisioning are next; earlier offline checks and
+  deleted-lab results are not substituted for current live evidence.
+
+### 2026-10-19 - Task 009 fresh validation passed
+
+- Fresh `artifacts\009-invoke.ps1 -Action Validate` passed the unchanged
+  active context, exact model/version/Responses capability, quota/capacity,
+  provider-region support, and scoped permissions. Created only the new
+  authorized owned group outside Bicep. Provider validation and what-if
+  passed with 22 creates; three policy assignments were inventoried without
+  changing governance configuration.
+- Current Bicep build/lint and native sample/deploy parameter compilations
+  passed; all 11 infrastructure contracts passed. Release client build had
+  zero warnings/errors, all 196 offline tests passed, and publish passed.
+- Static identity review confirmed the sole new UAMI and two exact
+  account-scoped OpenAI User grants; no operator elevation or topology change.
+  Current validation proof is recorded in the ignored deployment plan rather
+  than reusing archived task `008` proof.
+- Provisioning the validated new lab through the guarded CLI driver is next.
+  No model attempt has been made; the aggregate ceiling remains 160.
+
+### 2026-10-19 - Task 009 live deployment completed; comparisons started
+
+- Guarded CLI provisioning with native affinity disabled completed with exit
+  zero. The actual ARM deployment was observed `Running` with Developer APIM
+  `Activating` during provisioning, then completed successfully; no polling
+  timeout or partial output was relabeled as success.
+- Started the bounded comparison matrix against the exported, owned `sdk009`
+  target. It verifies actual off/on pool/policy, dedicated identity, model and
+  diagnostic configuration before the corresponding runs.
+- Planned reservations total at most 124 requests within the approved 160:
+  three off-mode comparisons (12 each), three on-mode healthy comparisons
+  (24 each), and two separately labeled stock-cookie comparisons (8 each).
+  Off-mode chains stop on expected real state errors; unused attempts are not
+  silently resubmitted. Stock-cookie policy failures are findings, not a
+  successful isolation result.
+- Every run must pass actual attempt accounting and an exact gateway/policy
+  trace join before the next model run. Results and cleanup are still pending;
+  no task-completion claim is made at this checkpoint.
+
+### 2026-10-19 - Task 009 off-mode proof passed for all three clients
+
+- Raw HTTP, Foundry SDK and Agent Framework each completed the bounded
+  affinity-off demonstration in eight actual HTTP attempts: four successful
+  first turns followed by four real cross-member different-resource state
+  failures. Each used the preceding successful response ID, with no history
+  replay, missing-cookie policy rejection, retry or forced backend selection.
+- All 24 attempts joined to actual workspace policy traces with matching
+  concrete host, session/member/status and no APIM body, credential/cookie
+  header or client-IP capture violations. These are current live results,
+  separate from the earlier local loopback evidence.
+- The affinity-only update and actual on-mode configuration check passed.
+  Healthy pinned comparisons and stock-cookie observations are still running;
+  no outcome is assumed before their evidence is complete.
+- Fresh category discovery matched all four parent diagnostic inventories and
+  owned settings. Workspace retention is 30 days, daily quota 1 GB, and local
+  auth is disabled. Additional inherited destinations were not queried or
+  changed; their privacy/retention remains outside this lab's control.
+
+### 2026-10-19 - Task 009 complete matrix and exact trace proof
+
+- The affinity-only update and actual pool/policy/UAMI/two-grant/model/privacy
+  reads passed without changing topology. Raw HTTP, Foundry SDK and Agent
+  Framework each completed all 24 affinity-on requests successfully with zero
+  affinity violations. Four interleaved three-turn chains stayed on A/B/A/B;
+  stateful and separately stateless distributions were each A=6/B=6 per mode.
+- Both `sdk-default` runs deliberately retained the stock transport. Each made
+  seven attempts: one two-turn chain succeeded, an unrelated first turn
+  received `UnexpectedAffinityCookie`, and four independent stateless calls
+  received `StatelessRoutingContextNotAllowed`. Each client exited 1; the
+  collector accepted that exact limitation, not successful session isolation.
+- `pwsh -NoProfile -File .\artifacts\009-matrix.ps1` exited zero after all
+  eight comparisons and their immediate workspace joins. Actual usage is
+  110 HTTP attempts against 124 reserved / 160 authorized, at most 2,048 output
+  tokens each with zero retries and no injected faults. No extra diagnostic
+  model call or resubmission was needed.
+- All 110 attempts matched actual policy traces by request/session/member/
+  status: 100 forwarded requests also matched concrete backend hosts; ten
+  stock-cookie rejections had error traces and no forwarding. Every run met
+  the ingestion deadline with zero APIM body, credential/cookie-header or
+  client-IP capture violations. No outbound cookie headers or raw request
+  bodies were logged; wire tests and pre-send guards remain complementary.
+- Updated README, walkthrough and harness reference to distinguish the current
+  live routing result from historical offline proof and the stock limitation.
+  Final aggregate evidence and task completion still require verified cleanup.
+
+### 2026-10-19 - Task 009 cleanup encountered APIM transition lock
+
+- Saved the exact runtime and ownership state under ignored cleanup artifacts
+  before guarded `Down -Driver Cli` against only `rg-responses-sdk009`.
+  The first deletion exited nonzero; it is not recorded as successful.
+- Fresh exact-group reads showed only the owned APIM remained. Its failed
+  activity records contained `ServiceLocked`: the API service was transitioning.
+  The workspace, both model accounts and dedicated identity were removed.
+- A subsequent actual APIM read reported current and target provisioning
+  state `Succeeded`. Retried the same guarded group deletion once; it again
+  exited nonzero with the same transition-lock activity evidence, and the
+  group still existed. A provisioning-state read alone did not establish that
+  the service's internal delete lock had cleared.
+- No identity workaround, force-unlock, permanent purge, topology change or
+  additional inference was attempted. Preserve the manifests and both failed
+  logs; reconcile the service transition before claiming scoped cleanup.
+
+### 2026-10-19 - Task 009 scoped cleanup verified after backoff
+
+- After a bounded ten-minute settling delay, repeated the identical guarded
+  `artifacts\009-invoke.ps1 -Action Down -Affinity true`. The third deletion
+  exited zero; the two preceding `ServiceLocked` exits remain recorded as
+  failed attempts. No force-unlock, resource adoption, code workaround or
+  permanent purge was used.
+- `pwsh -NoProfile -File .\artifacts\009-cleanup-verify.ps1` passed fresh exact
+  group absence, local retirement, runtime/output removal and no fault journal.
+  Exact recovery reads found one APIM, two Foundry and one workspace record.
+  Final model quota was 90 of 1,000; this snapshot is not a promise of immediate
+  quota release or an empty recovery inventory.
+- All task `009` live acceptance and cleanup criteria are now established
+  against the authorized target. Marked task `009` done with existing PR #12
+  and completed records; final documentation/evidence validation, push and
+  updating that same PR remain the publication handoff.
+- Changed only README, plan, backlog, progress, walkthrough, client reference
+  and a new sanitized live aggregate. Historical offline evidence, source,
+  package locks, infrastructure and policies remain unchanged.
+
+### 2026-10-19 - Task 009 final evidence and documentation checks passed
+
+- `python artifacts\009-build-evidence.py` passed strict eight-run budget,
+  attempt/response-chain/trace/configuration/privacy and cleanup assertions.
+  Generated only intentionally sanitized
+  [live evidence](../evidence/samples/task009-live-verification.json), including
+  the initial cleanup failures and successful backoff, with no private IDs,
+  hosts, response text, cookie values or credentials.
+- `python artifacts\009-live-checks.py` passed seven scoped UTF-8/LF files,
+  14 Markdown documents / 133 relative links and anchors, 13 immutable
+  baseline source citations and eight exact code excerpts, all ten task
+  statuses, append-only historical progress, unchanged offline evidence,
+  ignore/privacy fixtures and exact PR-template headings/comments/checklist.
+- `git diff --check` passed. Reviewed the complete affected README/client/
+  walkthrough/plan/backlog/progress changes and the aggregate's actual counts,
+  configuration, cleanup and limitation fields; an additional scan found no
+  raw UUIDs, response IDs, hosts or contact data in the new JSON.
+- README instructions, relative links, diagram source and evidence labels
+  were reviewed for accuracy. GitHub-rendered Markdown/Mermaid appearance
+  remains visually unverified. No code/infrastructure changed after the fresh
+  196-test / 11-contract / build/publish checks; formatting and code checks
+  were not needlessly rerun for this final documentation/evidence edit.
+- Remaining handoff: stage and check the exact seven files, commit/push this
+  branch, update the existing PR #12 title/template body, verify the remote
+  head and open/unmerged state, then record publication without merging.
 
 ## Update protocol
 

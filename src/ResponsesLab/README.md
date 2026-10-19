@@ -1,7 +1,9 @@
 # Conversation harness - HTTP, Foundry SDK and Agent Framework
 
-**Raw HTTP is live-verified; task `009` SDK/framework modes are offline-tested,
-with live proof pending.** This .NET 10 console application runs the same small
+**All three clients are live-verified with explicitly scoped cookies.**
+Task `009` separately recorded the stock SDK's shared-cookie limitation;
+default transport is not independent-session isolation.
+This .NET 10 console application runs the same small
 developer/architecture-expert script through the deployed gateway using one
 selected client/profile per invocation. No tools or model-driven loops are
 enabled. Task `006` adds the raw-only guarded endpoint-fault scenario below. No real inference,
@@ -10,6 +12,16 @@ Task `007` separately verified 24 healthy calls and an eight-attempt
 failure/restoration/recovery run per environment, with all 64 requests
 correlated to actual workspace policy traces. Both labs are now deleted.
 See [sanitized results](../../evidence/samples/task007-verification.json).
+On October 19, 2026, task `009` verified native affinity off/on for raw HTTP,
+Foundry SDK and Agent Framework: four genuine cross-member state failures and
+24 successful affinity-on calls per mode, with zero affinity violations.
+Each on-mode run observed both backends across independent chains and,
+separately, stateless calls. Both stock-cookie profiles instead exited 1:
+one chain continued, but an unrelated first turn and four stateless calls
+inherited its cookie and were rejected without forwarding. All 110 attempts
+matched actual workspace policy traces. See
+[sanitized live results](../../evidence/samples/task009-live-verification.json)
+and the [comparison table](../../README.md#live-comparison-results).
 
 ## Build and check without Azure
 
@@ -319,7 +331,7 @@ The final report identifies expected cross-backend failures explicitly.
 ## Controlled failure and recovery
 
 **Client support:** `http` / `manual` only. SDK/framework fault orchestration
-and new live verification are outside task `009`'s current authorization.
+is not implemented, and no new controlled fault was included in task `009`.
 
 **This changes a live backend and sends real inference. Code-only authorization
 does not permit running it.** Obtain separate approval for the exact existing
@@ -434,7 +446,12 @@ native pool behavior, actual model memory/answer quality, APIM policy runtime,
 or workspace ingestion. The gateway request UUID is a correlation identifier,
 not a full debug trace or proof of a workspace row. Task `007` ran this
 exact client and fault workflow against both deployed gateways and separately
-correlated actual policy traces. Generated model explanations can still be
+correlated actual policy traces. Task `009` separately matched every live
+off/on/default-profile attempt to actual workspace traces for the pinned
+three-client comparison; it did not repeat the controlled-fault experiment.
+Neither live collection recorded outbound cookie headers or request bodies;
+local wire tests and pre-send contract guards provide that complementary proof.
+Generated model explanations can still be
 inaccurate; a passing client is not a factual-quality evaluation of its answers.
 Offline fault tests are not a new live experiment.
 
