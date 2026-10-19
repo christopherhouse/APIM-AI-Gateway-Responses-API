@@ -13,7 +13,7 @@
 | Azure deployment | On 2026-10-19, `rg-responses-walk008` remains absent; all three saved environments are retired and have no runtime handoff |
 | Solution files | Raw HTTP baseline plus task `009` Foundry SDK/Agent Framework adapters, explicit cookie profiles, pinned packages/lock and real-SDK loopback tests |
 | Base branch | `main` at task `009` implementation merge `24754e8`; initial empty base `846a2cb` preserved |
-| Pull request | #1-#11 merged; live-target blocker follow-up not yet published |
+| Pull request | #1-#11 merged; live-target blocker follow-up published in open, unmerged PR #12 |
 
 ## Known prerequisites and open decisions
 
@@ -1750,6 +1750,23 @@
   inference, resource change, credential retrieval, fault or cleanup occurred.
 - Documentation validation and publication of this blocker follow-up are the
   remaining branch actions; full task `009` acceptance remains incomplete.
+
+### 2026-10-19 - Task 009 target blocker published in PR #12
+
+- `python .\artifacts\009-live-blocker-checks.py` passed: four scoped UTF-8/LF
+  documentation files, 14 Markdown files and 126 relative links/anchors,
+  task `000`-`008` done / `009` blocked, preserved historical progress,
+  private-data scan, ignore fixtures and exact PR template structure.
+- `git diff --check` and `git diff --cached --check` passed; inspected the
+  four-file README/plan/backlog/progress diff for scope and private data.
+  No application, infrastructure, policy or evidence files changed. No
+  build/test run was needed for this documentation-only follow-up.
+- Committed the blocker record as `63aa039` with required attribution trailers,
+  pushed `feature/009-sdk-live-verification`, and created template-based PR #12
+  against `main`. Leave it unmerged for the user; publishing this record does
+  not satisfy task `009` live acceptance or authorize provisioning.
+- Resume only after explicit replacement lifecycle approval or provision
+  of a compatible existing target. No inference or Azure mutation was performed.
 
 ## Update protocol
 
