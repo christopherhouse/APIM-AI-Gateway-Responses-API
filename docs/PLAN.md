@@ -14,12 +14,22 @@ Framework and Foundry SDK harness comparison on
 `feature/008-self-service-affinity-toggle` before merging PR #10.
 That planning follow-up is included in PR #10. After its merge, the user
 authorized building task `009` and requested a full README explanation of
-each scenario. Task `009` is in progress on
-`feature/009-sdk-framework-comparison`: code, dependencies, offline checks,
-documentation and PR publication only. New Azure reads, inference, resource
-changes, faults or cleanup still require separate exact-target authorization.
-The offline implementation and scenario documentation are published in open,
-unmerged PR #11; task `009` remains `in_progress` pending live acceptance.
+each scenario. The code, dependencies, offline checks and scenario documentation
+were delivered on `feature/009-sdk-framework-comparison` in PR #11, merged on
+2026-10-19 at `24754e8`. On that date, the user authorized live Azure testing.
+Live verification continued on `feature/009-sdk-live-verification`, the open PR #12
+dependency branch. Its initial missing-target blocker was resolved at 10:12 CDT
+on 2026-10-19 when the user explicitly approved the proposed `sdk009` /
+`rg-responses-sdk009` lifecycle in the unchanged active subscription / West US 3:
+existing design, provisioning, native affinity updates, workspace reads,
+at most 160 model attempts at 2,048 output tokens each with no retries/faults,
+and exact owned-group deletion without purge. Fresh validation and all eight
+live comparisons passed: 110 attempts have exact workspace policy-trace
+joins. The owned group is verified absent, runtime state retired, and recovery
+records retained without purge after an APIM transition-lock backoff.
+Task `009` is `done`; its final delivery continues on existing PR #12,
+left unmerged. See the
+[sanitized live evidence](../evidence/samples/task009-live-verification.json).
 Task `008` was authorized on 2026-10-16 after
 PR #9 merged. Work on `feature/008-self-service-affinity-toggle` excludes cost
 documentation at the user's request. Add a default-on native backend-pool
@@ -95,7 +105,7 @@ the required routing information.
 | Stateless traffic | Demonstrate distribution across both identical model deployments without conversation chaining. |
 | Stateful traffic | Multiple independent conversations, each chaining with `previous_response_id` and retaining affinity. |
 | Failure behavior | A conversation pinned to an unavailable backend fails explicitly; new conversations use a healthy backend once the breaker detects the failure. |
-| Harness | One .NET 10 console application: live-verified raw HTTP control plus task `009` offline-tested Foundry SDK/Agent Framework modes and explicit cookie profiles. No tools or model-driven loops; SDK live proof pending. |
+| Harness | One .NET 10 console application: live-verified raw HTTP, Foundry SDK and Agent Framework off/on comparisons with explicit cookie profiles. Stock SDK cookie sharing is a separately verified limitation. No tools or model-driven loops. |
 | Conversation script | A developer asks an Azure architecture expert about making APIM routing stateful for Responses. |
 | Console evidence | Model output plus session ID, backend identity, and trace/correlation identifiers for every turn. |
 | Summary evidence | Each session's backend set, turn counts, outcomes, affinity violations, and aggregate backend distribution. |
@@ -278,14 +288,21 @@ it does not authorize task `009`.
 
 ## SDK and Agent Framework comparison
 
-**Status: task `009` in progress; no SDK live verification yet.** The user
+**Status: task `009` complete; live proof and scoped cleanup verified.** The user
 authorized this writeup before merging PR #10, then separately approved SDK/
 framework implementation and scenario documentation after its merge on
-2026-10-16. Work is on `feature/009-sdk-framework-comparison` from `99cd7b0`.
+2026-10-16. Implementation used `feature/009-sdk-framework-comparison` from `99cd7b0`.
 The compatibility gates below are resolved for the pinned stack; adapters and
-focused real-SDK loopback tests are implemented. No new Azure operation or
-topology expansion is authorized. Live off/on/workspace acceptance remains pending.
-Code/offline delivery is published in PR #11, intentionally left unmerged.
+focused real-SDK loopback tests are implemented. Code/offline delivery in PR #11
+merged on 2026-10-19. Live testing and target/telemetry reads were authorized
+that day, but the former lab no longer exists. The continuation branch is
+`feature/009-sdk-live-verification`. The user subsequently explicitly approved
+the exact replacement lifecycle above. All three clients passed the live
+off/on comparison, both stock-cookie limitations were recorded separately,
+and all 110 attempts matched actual workspace policy traces. Guarded cleanup
+succeeded after two APIM transition-lock refusals and a settling backoff.
+The group is absent, local state retired, and recovery records remain without
+purge. Evidence and README delivery are in existing PR #12, left unmerged.
 
 ### One harness, three client modes
 
@@ -294,11 +311,11 @@ within the same .NET harness rather than three applications and reuse the prompt
 interleaved schedule, request bounds, evidence and outcome assertions.
 These are implemented command-line selectors; no option runs all modes at once:
 
-| Mode | Implemented conversation handling | Routing behavior to measure live |
+| Mode | Implemented conversation handling | Routing behavior verified live on 2026-10-19 |
 | --- | --- | --- |
 | `http` | Existing explicit response-ID chain and per-conversation cookie storage | Current manual `Cookie` header path remains the verified control |
-| `foundry-sdk` | `ProjectResponsesClient.CreateResponseAsync` from `Azure.AI.Extensions.OpenAI` | Compare default shared cookie capture/resend with explicitly configured automatic session-scoped transport |
-| `agent-framework` | `AsAIAgent` over that same Foundry client, independent reused `AgentSession`, service-managed Responses IDs | Same two cookie profiles; framework memory alone does not isolate HTTP cookies |
+| `foundry-sdk` | `ProjectResponsesClient.CreateResponseAsync` from `Azure.AI.Extensions.OpenAI` | Configured automatic per-conversation transport passed off/on; stock sharing contaminated unrelated first turns and stateless calls |
+| `agent-framework` | `AsAIAgent` over that same Foundry client, independent reused `AgentSession`, service-managed Responses IDs | Same verified configured isolation and stock-cookie limitation; framework memory alone does not isolate HTTP cookies |
 
 These are abstraction levels, not necessarily three independent transports.
 Record the actual framework/provider/SDK stack. The comparison must expose

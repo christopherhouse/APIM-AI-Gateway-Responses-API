@@ -22,9 +22,11 @@ unavailable.
 > values; the disposable lab is verified deleted without purge.
 >
 > **New: [compare raw HTTP, Foundry SDK, and Agent Framework](#-three-clients-the-same-state-and-routing-rules).**
-> All three client modes are implemented. SDK/framework transport behavior is
-> tested locally with genuine package calls; their live off/on and workspace
-> proof is still pending separate Azure authorization.
+> **All three passed the live off/on comparison on October 19, 2026.**
+> Configured per-conversation SDK transports kept chains isolated; unchanged
+> stock SDK cookies did not. All **110 attempts** matched actual gateway
+> policy traces, including the separately reported default-cookie rejections.
+> See [the observed results and limits](#live-comparison-results).
 
 ## 🚀 Start here
 
@@ -84,7 +86,8 @@ flowchart LR
 
 *Implemented components; task `007` verified both deployment lifecycles on
 October 15-16, 2026. Task `008` additionally verified native affinity off/on.*
-Those live runs used the raw HTTP client; task `009` adds offline-tested SDK modes.
+Those earlier runs used raw HTTP; task `009` additionally verified the same
+off/on routing through genuine SDK/framework calls on October 19, 2026.
 Solid arrows show requests; dotted arrows show diagnostics. The harness keeps
 routing context, Foundry owns response state, and APIM is not a
 conversation-history database. Native pinning
@@ -103,6 +106,7 @@ the off/on walkthrough is tracked separately from that earlier proof.
 | Tracing | Task `007`: 64/64 requests joined to actual policy `TraceRecords`; task `008`: another 42/42 joined, including off-mode failures |
 | Lifecycle | Task `007` reruns preserved all 12 original runtime values; both owned groups are absent with recovery records retained. Task `008` rerun preserved all 13 current values |
 | Native affinity switch | Off: four A-to-B chains broke with the exact different-resource error. On: four three-turn chains stayed pinned, and 12 stateless calls reached both members |
+| SDK/framework comparison | Task `009`: all three clients passed off/on; 110/110 attempts matched traces. Per-conversation transports passed isolation; both stock-cookie profiles exposed shared routing state |
 
 Details, exact versions, sources, verification date, budgets, and limitations
 are in the [platform evidence and design contract](docs/DESIGN.md). These
@@ -362,9 +366,9 @@ bounds, backend assertions and failure accounting remain shared. There is no
 | Mode / profile | Who advances the response chain? | Who carries the routing cookie? | Evidence status |
 | --- | --- | --- | --- |
 | `http` / `manual` | Harness saves each successful ID and sets `previous_response_id` | Harness explicitly selects/stores/sends one conversation's native cookie | Live off/on and fault/recovery baseline |
-| `foundry-sdk` / `session-scoped` | Genuine `ProjectResponsesClient.CreateResponseAsync`; harness supplies the previous successful ID | Configured automatic HTTP handler, one jar per conversation | Real SDK loopback tests; live pending |
-| `agent-framework` / `session-scoped` | Reused independent `AgentSession`; framework maps its service response ID to `previous_response_id` | The same explicitly configured per-conversation handler below the SDK | Real framework loopback tests; live pending |
-| Either SDK mode / `sdk-default` | Same SDK/framework state handling as above | Unchanged pinned SDK transport: **a shared cookie jar**, not a jar per session | Shared capture/resend observed locally; not isolation proof |
+| `foundry-sdk` / `session-scoped` | Genuine `ProjectResponsesClient.CreateResponseAsync`; harness supplies the previous successful ID | Configured automatic HTTP handler, one jar per conversation | Live off/on plus exact workspace joins; real SDK loopback tests |
+| `agent-framework` / `session-scoped` | Reused independent `AgentSession`; framework maps its service response ID to `previous_response_id` | The same explicitly configured per-conversation handler below the SDK | Live off/on plus exact workspace joins; real framework loopback tests |
+| Either SDK mode / `sdk-default` | Same SDK/framework state handling as above | Unchanged pinned SDK transport: **a shared cookie jar**, not a jar per session | Shared-cookie limitation observed locally and live; not isolation proof |
 
 The actual stack is **Agent Framework → Foundry `ProjectResponsesClient` →
 OpenAI Responses implementation → System.ClientModel HTTP pipeline**. The
@@ -438,6 +442,8 @@ The harness does **not** set that internal ID or inject previous assistant
 messages. Loopback requests establish that the next call contains the preceding
 response ID and only one new user message—not a local-history replay.
 There is no local chat-history provider or automatic function-invocation loop.
+The live run then verified the original chains staying on their concrete
+members; gateway request bodies remained uncaptured.
 
 An `AgentSession` solves **service continuation**, not HTTP cookie isolation.
 It still needs the correctly scoped transport:
@@ -468,10 +474,13 @@ For `sdk-default`, `Transport` is left unset. The pinned System.ClientModel
 `1.15.0` transport shares an HTTP client/cookie container across client instances.
 Local wire tests show one conversation continuing successfully, then the same
 cookie appearing on an unrelated first turn **and on a stateless request**.
-Those requests violate this lab's gateway contract and receive the synthetic
-test gateway's `UnexpectedAffinityCookie` error. A shared pin is not a successful
-multi-session demonstration; the harness reports the errors instead of removing
-the cookie, swapping transports, replaying history, or weakening assertions.
+The live gateway independently confirmed that limitation in **both** modes:
+the unrelated first turn received `UnexpectedAffinityCookie`, and four
+stateless calls received `StatelessRoutingContextNotAllowed`. Those ten
+rejections were correlated to actual policy error traces with no backend
+forwarding. A shared pin is not a successful multi-session demonstration;
+each stock-profile client exited **1** rather than removing the cookie,
+swapping transports, replaying history, or weakening assertions.
 
 To observe that profile deliberately, choose **one** SDK mode:
 
@@ -522,15 +531,58 @@ in the run header. Cookie fingerprints observe received/session-jar state;
 they are **not** proof of transport-injected outbound cookie headers.
 Gateway member evidence and workspace correlation remain the routing truth.
 
-**Observed locally, not in Azure:** real pinned SDK/framework calls passed
+**Complementary local proof:** real pinned SDK/framework calls passed
 cookie capture/resend, interleaving, service-ID continuation, stateless
 isolation, typed/error handling, cancellation, body/attempt bounds and redirect
 checks against a synthetic loopback server. No model was called and no Azure
-resource was read or changed. Live off/on proof and workspace joins for the
-SDK modes remain pending; task `009` stays `in_progress`. See the
+resource was read or changed by those tests. Their
 [sanitized offline result summary](evidence/samples/task009-offline-verification.json),
 [compatibility decisions and primary sources](docs/PLAN.md#compatibility-gates-before-adapter-implementation)
-and [harness reference](src/ResponsesLab/README.md#client-modes-and-cookie-profiles).
+and [harness reference](src/ResponsesLab/README.md#client-modes-and-cookie-profiles)
+remain separate from the live evidence below.
+
+### Live comparison results
+
+**Observed October 19, 2026**, against a newly authorized West US 3 lab using
+the unchanged Developer APIM, two identical model deployments and dedicated
+identity design. No new project, gateway route, role or backend topology was
+needed for either SDK mode.
+
+| Client / comparable profile | Native affinity off | Native affinity on | Exact policy-trace joins |
+| --- | --- | --- | --- |
+| `http` / `manual` | 8 attempts: 4 first-turn successes, 4 real cross-member HTTP 400 state failures | 24/24 successful; zero affinity violations | 32/32 |
+| `foundry-sdk` / `session-scoped` | 8 attempts: 4 first-turn successes, 4 real cross-member HTTP 400 state failures | 24/24 successful; zero affinity violations | 32/32 |
+| `agent-framework` / `session-scoped` | 8 attempts: 4 first-turn successes, 4 real cross-member HTTP 400 state failures | 24/24 successful; zero affinity violations | 32/32 |
+
+In **each** on-mode run, four independent three-turn chains stayed on
+A/B/A/B. Stateful requests observed A=6/B=6, and 12 separate stateless calls
+also observed A=6/B=6. These are measured counts, not a promised split.
+The off-mode failures used actual prior response IDs and the service's exact
+different-resource error—not missing-cookie policy errors or replayed history.
+
+**Default-cookie findings are separate:** each SDK/framework `sdk-default`
+run made 7 attempts: one two-turn chain succeeded, one unrelated first turn
+and four stateless calls were rejected because the shared cookie leaked
+routing state. Both exited nonzero as intended. Those 14 attempts also
+matched policy traces; they do **not** establish independent-session affinity.
+
+The full eight-run matrix used **110 actual HTTP attempts** against 124
+reserved and 160 authorized, at most 2,048 output tokens per attempt, zero
+retries and no injected faults. **100 requests reached a backend; 10 were
+rejected at the gateway.** All 110 matched request/session/member/status
+evidence within the ingestion deadline, with zero APIM body, credential/
+cookie-header or client-IP capture violations. Cookie-header contents were
+not logged; live routing evidence complements, rather than replaces, the
+local wire-level no-replay and transport tests.
+
+See the [sanitized live evidence](evidence/samples/task009-live-verification.json)
+for pinned versions, individual session outcomes, configuration and cleanup.
+The owned lab is verified deleted and runtime state retired. Two initial
+cleanup attempts met APIM's transition lock; the same guarded delete succeeded
+after backoff. Recovery records remain: one APIM, two Foundry and one workspace;
+no purge or immediate quota-release guarantee is implied.
+The Foundry package remains preview; these results apply to the pinned stack
+and observed lab, not every SDK release or a West US 3-only inference guarantee.
 
 ## 🛠️ Controlled failure and recovery
 

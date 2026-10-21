@@ -16,8 +16,16 @@ Earlier [task `007` results](../evidence/samples/task007-verification.json)
 remain the separate two-driver failure/recovery baseline.
 These commands use the default **raw HTTP control**. Task `009` adds
 [Foundry SDK and Agent Framework selectors](../README.md#-three-clients-the-same-state-and-routing-rules)
-with local wire-test results; their live off/on/workspace proof is not implied
-by this walkthrough and requires separate authorization.
+and separately verified their off/on behavior on October 19, 2026: four real
+cross-backend state failures and 24 successful affinity-on requests per mode,
+using explicitly configured per-conversation transports. Both stock-cookie
+profiles exposed shared-state contamination rather than session isolation.
+All 110 attempts, including the raw control and stock-profile rejections,
+matched actual gateway policy traces. See the
+[separate live evidence](../evidence/samples/task009-live-verification.json);
+it does not expand the earlier walkthrough's rerun or two-driver proof.
+Every new execution still requires its own target/action and aggregate-budget
+authorization; choosing another selector does not grant additional attempts.
 
 ## 1. Prepare a new lab
 

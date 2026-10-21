@@ -10,8 +10,11 @@ offline validation in merged PR #7. Task `006` is complete as code and offline
 validation in merged PR #8. Task `007` completed both authorized live
 lifecycles and cleanup on 2026-10-15/16 in merged PR #9;
 task `008` delivery and its documentation/planning follow-ups are complete in
-merged PR #10. Task `009` is in progress after separate code/offline-check/
-documentation authorization on 2026-10-16. No new Azure operations are authorized.
+merged PR #10. Task `009` code/offline-check/documentation delivery in PR #11
+merged on 2026-10-19. Live testing and the exact replacement `sdk009` lifecycle
+were authorized and all eight live comparisons passed. Task `009` is complete
+with verified owned-lab cleanup and sanitized live evidence in existing PR #12,
+left unmerged for user review.
 IDs are stable; do not renumber completed tasks or hide blocked work.
 
 ## Status and dependency rules
@@ -41,7 +44,7 @@ new platform evidence changes an assumption.
 | 006 | Implement controlled failure, breaker, and recovery scenarios | 004, 005 | done |
 | 007 | Verify end-to-end scenarios and diagnostic evidence in Azure | 006 | done |
 | 008 | Complete self-service documentation, affinity toggle, and clean-environment walkthrough | 007 | done |
-| 009 | Compare raw HTTP, Foundry SDK, and Agent Framework in the harness | 008; implementation approved, live-operation approval outstanding | in_progress |
+| 009 | Compare raw HTTP, Foundry SDK, and Agent Framework in the harness | 008 | done |
 
 The default execution order is ascending ID. Tasks `004` and `005` can proceed
 independently once `003` is available; parallel execution is not required.
@@ -369,27 +372,54 @@ Deliverables and acceptance:
 
 ## 009 - Compare raw HTTP, Foundry SDK, and Agent Framework
 
-**Authorization/status:** `in_progress`. On 2026-10-16 the user authorized writing
+**Authorization/status:** `done`. On 2026-10-16 the user authorized writing
 up this proposal on `feature/008-self-service-affinity-toggle` before merging
 PR #10. After that PR merged at `99cd7b0`, the user separately approved building
 the comparison and requested thorough README scenario walkthroughs. Work on
 `feature/009-sdk-framework-comparison` covers code, dependencies, offline
-checks, documentation and PR publication. Topology expansion and new Azure
-operations are not authorized. Live proof needs its own target/action and
-aggregate-budget approval; task `008` resources were deleted and are not
-reusable live targets.
+checks, documentation and PR publication. PR #11 merged on 2026-10-19, when
+the user also authorized live Azure testing. Read-only preparation on
+`feature/009-sdk-live-verification` confirmed task `008` resources remain
+deleted and all saved local environments were retired. At that preparation
+checkpoint, no current runtime target existed. Testing permission followed an
+explicitly no-infrastructure-change scope; it was not treated as replacement
+provisioning or deletion approval.
+An exact new-target lifecycle and aggregate budget were proposed, but the
+user was initially unavailable to confirm them. At 10:12 CDT on 2026-10-19,
+the user explicitly instructed execution of that proposed lifecycle:
+`sdk009` / `rg-responses-sdk009`, unchanged active subscription / West US 3,
+existing design, native affinity updates, at most 160 model attempts at 2,048
+output tokens, no retries or injected faults, workspace reads and exact
+owned-group deletion without purge. The earlier target blocker is resolved.
 
 **Scope:** One .NET harness with raw HTTP as the control and implemented
 `foundry-sdk` / `agent-framework` client modes, with `sdk-default` and
 `session-scoped` cookie profiles. The [compatibility gates](PLAN.md#sdk-and-agent-framework-comparison)
 are resolved for the pinned stack through source review and local wire tests;
 no project/gateway topology change was needed. Offline implementation is not
-live verification. Task `009` remains `in_progress` until the separately
-authorized live acceptance below is completed.
-Current [sanitized offline evidence](../evidence/samples/task009-offline-verification.json)
-records pinned versions, actual local check outcomes and the remaining live gates.
-Code/offline/scenario-documentation delivery is published in open PR #11,
-left unmerged for user review; the live acceptance below is still pending.
+live verification; the separately authorized runs have now established the
+live routing and workspace criteria below. Verified owned-group cleanup and
+the existing PR #12 complete the task's delivery requirements.
+Historical [sanitized offline evidence](../evidence/samples/task009-offline-verification.json)
+records pinned versions, local check outcomes and the then-unresolved live gates;
+it remains unchanged rather than being rewritten as live proof.
+Code/offline/scenario-documentation delivery is published in merged PR #11.
+
+**Live result:** Fresh CLI provisioning and actual off/on configuration passed.
+Each client observed four genuine cross-member state failures with affinity
+off and 24 successful requests with affinity on, zero affinity violations and
+both members across independent chains and separate stateless calls.
+Both stock-cookie profiles exposed shared-cookie contamination, recorded
+separately with nonzero exits rather than relabeled as isolation proof.
+All 110 attempts matched exact workspace policy traces with zero APIM capture
+violations. The first two guarded deletions encountered APIM `ServiceLocked`;
+the same guarded delete passed after backoff. The group is verified absent,
+local state retired, and one APIM/two Foundry/one workspace recovery record
+remain without purge. Final observed model quota is 90 of 1,000; no immediate
+release is promised. See the
+[sanitized live evidence](../evidence/samples/task009-live-verification.json).
+README, walkthrough and client reference now distinguish the live result,
+configured transport and stock limitation. PR #12 is left unmerged.
 
 Deliverables and acceptance:
 

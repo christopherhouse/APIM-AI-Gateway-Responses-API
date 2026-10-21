@@ -1,0 +1,1572 @@
+{
+  "task": "009",
+  "status": "done",
+  "verificationDate": "2026-10-19",
+  "pullRequest": 12,
+  "implementationPullRequest": 11,
+  "implementationCommit": "23c390540083c3df39ac3477f221cbd3846c34a7",
+  "newLiveAuthorizationGranted": true,
+  "azureOperationsPerformed": true,
+  "liveAcceptanceComplete": true,
+  "target": {
+    "environment": "sdk009",
+    "resourceGroup": "rg-responses-sdk009",
+    "region": "westus3",
+    "subscription": "unchanged active subscription; private identifier omitted",
+    "gatewaySku": "Developer",
+    "gatewayUnits": 1,
+    "model": "gpt-5.4-mini",
+    "version": "2026-03-17",
+    "deploymentSku": "GlobalStandard",
+    "modelCapacityPerAccount": 20,
+    "modelAccounts": 2,
+    "newProjectOrRouteOrRoleRequiredForSdk": false
+  },
+  "packages": {
+    "Azure.AI.Extensions.OpenAI": "3.0.0-beta.3",
+    "Microsoft.Agents.AI.OpenAI": "1.25.0",
+    "OpenAI": "2.14.0",
+    "System.ClientModel": "1.15.0",
+    "Microsoft.Extensions.AI.OpenAI": "10.10.1"
+  },
+  "localChecks": {
+    "bicepBuildLintAndNativeParameters": "passed",
+    "infrastructureContractsPassed": 11,
+    "harnessReleaseBuild": {
+      "result": "passed",
+      "warnings": 0,
+      "errors": 0
+    },
+    "harnessOfflineTestsPassed": 196,
+    "harnessReleasePublish": "passed",
+    "sourceChangesSinceThoseChecks": false,
+    "formattingNotRerun": "No source, project or infrastructure code changed in the live-proof follow-up."
+  },
+  "limits": {
+    "authorizedMaximumAttempts": 160,
+    "reservedPlannedAttempts": 124,
+    "actualModelHttpAttempts": 110,
+    "maxOutputTokensPerAttempt": 2048,
+    "transportRetries": 0,
+    "concurrency": 1,
+    "requestIntervalSeconds": 10,
+    "requestTimeoutSeconds": 60,
+    "runTimeoutSeconds": 600,
+    "faultInjectionPerformed": false
+  },
+  "configuration": {
+    "affinityOff": {
+      "modelsVerified": true,
+      "policyVerified": true,
+      "observedAt": "2026-10-19T15:52:28.1869960+00:00",
+      "attachedIdentityCount": 1,
+      "mode": "false",
+      "poolVerified": true,
+      "explicitPolicyClientIdMatches": true,
+      "identityType": "UserAssigned",
+      "diagnosticCaptureVerified": true,
+      "foundryScopedOpenAiUserGrants": 2
+    },
+    "affinityOn": {
+      "attachedIdentityCount": 1,
+      "modelsVerified": true,
+      "diagnosticCaptureVerified": true,
+      "poolVerified": true,
+      "policyVerified": true,
+      "observedAt": "2026-10-19T16:12:34.1185397+00:00",
+      "identityType": "UserAssigned",
+      "mode": "true",
+      "foundryScopedOpenAiUserGrants": 2,
+      "explicitPolicyClientIdMatches": true
+    }
+  },
+  "diagnostics": {
+    "inheritedExternalDestinationsQueriedOrModified": false,
+    "inventory": [
+      {
+        "resource": "apim",
+        "metrics": [
+          "AllMetrics"
+        ],
+        "destinationMatches": true,
+        "logs": [
+          "DeveloperPortalAuditLogs",
+          "GatewayLlmLogs",
+          "GatewayLogs",
+          "GatewayMCPLogs",
+          "WebSocketConnectionLogs"
+        ],
+        "additionalExternalDiagnosticDestinations": 0,
+        "allDiscoveredCategoriesEnabled": true
+      },
+      {
+        "resource": "foundry-a",
+        "metrics": [
+          "AllMetrics"
+        ],
+        "destinationMatches": true,
+        "logs": [
+          "Audit",
+          "AzureOpenAIRequestUsage",
+          "ManagedNetworkEvent",
+          "RequestResponse",
+          "Trace"
+        ],
+        "additionalExternalDiagnosticDestinations": 1,
+        "allDiscoveredCategoriesEnabled": true
+      },
+      {
+        "resource": "foundry-b",
+        "metrics": [
+          "AllMetrics"
+        ],
+        "destinationMatches": true,
+        "logs": [
+          "Audit",
+          "AzureOpenAIRequestUsage",
+          "ManagedNetworkEvent",
+          "RequestResponse",
+          "Trace"
+        ],
+        "additionalExternalDiagnosticDestinations": 1,
+        "allDiscoveredCategoriesEnabled": true
+      },
+      {
+        "resource": "workspace",
+        "metrics": [
+          "AllMetrics"
+        ],
+        "destinationMatches": true,
+        "logs": [
+          "Audit",
+          "Jobs",
+          "SummaryLogs"
+        ],
+        "additionalExternalDiagnosticDestinations": 0,
+        "allDiscoveredCategoriesEnabled": true
+      }
+    ],
+    "workspaceDailyQuotaGb": 1,
+    "workspaceRetentionDays": 30,
+    "workspaceLocalAuthDisabled": true,
+    "observedUtc": "2026-10-19T15:53:21.6553259+00:00"
+  },
+  "runs": [
+    {
+      "run": "off-http",
+      "observedUtc": "2026-10-19T15:54:47.054Z",
+      "client": "http",
+      "cookieProfile": "manual",
+      "nativeAffinityEnabled": false,
+      "result": "pass",
+      "clientExitCode": 0,
+      "plannedMaximum": 12,
+      "actualHttpAttempts": 8,
+      "successResponses": 4,
+      "httpErrors": 4,
+      "crossBackendStateFailures": 4,
+      "affinityViolations": 0,
+      "gatewayPolicyRejections": 0,
+      "statefulDistribution": {
+        "backend-a": 4,
+        "backend-b": 0
+      },
+      "statelessDistribution": {
+        "backend-a": 0,
+        "backend-b": 0
+      },
+      "responseChainsLinkedWithoutCrossSessionResponseIds": true,
+      "actualWireAttemptsEqualReportedTurns": true,
+      "sessions": [
+        {
+          "label": "stateful-1",
+          "scenario": "stateful",
+          "attempts": 2,
+          "successfulTurns": 1,
+          "linkedContinuations": 1,
+          "backends": [
+            "backend-a",
+            "backend-b"
+          ],
+          "expectedCrossBackendStateFailure": true,
+          "finalOutcome": "httpError",
+          "finalErrorCode": null,
+          "exactDifferentResourceError": true
+        },
+        {
+          "label": "stateful-2",
+          "scenario": "stateful",
+          "attempts": 2,
+          "successfulTurns": 1,
+          "linkedContinuations": 1,
+          "backends": [
+            "backend-a",
+            "backend-b"
+          ],
+          "expectedCrossBackendStateFailure": true,
+          "finalOutcome": "httpError",
+          "finalErrorCode": null,
+          "exactDifferentResourceError": true
+        },
+        {
+          "label": "stateful-3",
+          "scenario": "stateful",
+          "attempts": 2,
+          "successfulTurns": 1,
+          "linkedContinuations": 1,
+          "backends": [
+            "backend-a",
+            "backend-b"
+          ],
+          "expectedCrossBackendStateFailure": true,
+          "finalOutcome": "httpError",
+          "finalErrorCode": null,
+          "exactDifferentResourceError": true
+        },
+        {
+          "label": "stateful-4",
+          "scenario": "stateful",
+          "attempts": 2,
+          "successfulTurns": 1,
+          "linkedContinuations": 1,
+          "backends": [
+            "backend-a",
+            "backend-b"
+          ],
+          "expectedCrossBackendStateFailure": true,
+          "finalOutcome": "httpError",
+          "finalErrorCode": null,
+          "exactDifferentResourceError": true
+        }
+      ],
+      "workspace": {
+        "run": "off-http",
+        "collectedUtc": "2026-10-19T15:59:25.291Z",
+        "expectedRequests": 8,
+        "correlatedRequests": 8,
+        "actualPolicyTraceRows": 8,
+        "forwardedRequests": 8,
+        "gatewayRejectedRequests": 0,
+        "statuses": {
+          "200": 4,
+          "400": 4
+        },
+        "allForwardedConcreteBackendHostsMatch": true,
+        "exactOutboundOrRejectionTracesMatch": true,
+        "apimBodyCredentialCookieAndClientIpCaptureViolations": 0,
+        "allRowsIngestedWithinTenMinutesAfterScenario": true
+      }
+    },
+    {
+      "run": "off-foundry-sdk",
+      "observedUtc": "2026-10-19T16:01:30.695Z",
+      "client": "foundry-sdk",
+      "cookieProfile": "session-scoped",
+      "nativeAffinityEnabled": false,
+      "result": "pass",
+      "clientExitCode": 0,
+      "plannedMaximum": 12,
+      "actualHttpAttempts": 8,
+      "successResponses": 4,
+      "httpErrors": 4,
+      "crossBackendStateFailures": 4,
+      "affinityViolations": 0,
+      "gatewayPolicyRejections": 0,
+      "statefulDistribution": {
+        "backend-a": 4,
+        "backend-b": 0
+      },
+      "statelessDistribution": {
+        "backend-a": 0,
+        "backend-b": 0
+      },
+      "responseChainsLinkedWithoutCrossSessionResponseIds": true,
+      "actualWireAttemptsEqualReportedTurns": true,
+      "sessions": [
+        {
+          "label": "stateful-1",
+          "scenario": "stateful",
+          "attempts": 2,
+          "successfulTurns": 1,
+          "linkedContinuations": 1,
+          "backends": [
+            "backend-a",
+            "backend-b"
+          ],
+          "expectedCrossBackendStateFailure": true,
+          "finalOutcome": "httpError",
+          "finalErrorCode": null,
+          "exactDifferentResourceError": true
+        },
+        {
+          "label": "stateful-2",
+          "scenario": "stateful",
+          "attempts": 2,
+          "successfulTurns": 1,
+          "linkedContinuations": 1,
+          "backends": [
+            "backend-a",
+            "backend-b"
+          ],
+          "expectedCrossBackendStateFailure": true,
+          "finalOutcome": "httpError",
+          "finalErrorCode": null,
+          "exactDifferentResourceError": true
+        },
+        {
+          "label": "stateful-3",
+          "scenario": "stateful",
+          "attempts": 2,
+          "successfulTurns": 1,
+          "linkedContinuations": 1,
+          "backends": [
+            "backend-a",
+            "backend-b"
+          ],
+          "expectedCrossBackendStateFailure": true,
+          "finalOutcome": "httpError",
+          "finalErrorCode": null,
+          "exactDifferentResourceError": true
+        },
+        {
+          "label": "stateful-4",
+          "scenario": "stateful",
+          "attempts": 2,
+          "successfulTurns": 1,
+          "linkedContinuations": 1,
+          "backends": [
+            "backend-a",
+            "backend-b"
+          ],
+          "expectedCrossBackendStateFailure": true,
+          "finalOutcome": "httpError",
+          "finalErrorCode": null,
+          "exactDifferentResourceError": true
+        }
+      ],
+      "workspace": {
+        "run": "off-foundry-sdk",
+        "collectedUtc": "2026-10-19T16:03:56.083Z",
+        "expectedRequests": 8,
+        "correlatedRequests": 8,
+        "actualPolicyTraceRows": 8,
+        "forwardedRequests": 8,
+        "gatewayRejectedRequests": 0,
+        "statuses": {
+          "200": 4,
+          "400": 4
+        },
+        "allForwardedConcreteBackendHostsMatch": true,
+        "exactOutboundOrRejectionTracesMatch": true,
+        "apimBodyCredentialCookieAndClientIpCaptureViolations": 0,
+        "allRowsIngestedWithinTenMinutesAfterScenario": true
+      }
+    },
+    {
+      "run": "off-agent-framework",
+      "observedUtc": "2026-10-19T16:05:46.438Z",
+      "client": "agent-framework",
+      "cookieProfile": "session-scoped",
+      "nativeAffinityEnabled": false,
+      "result": "pass",
+      "clientExitCode": 0,
+      "plannedMaximum": 12,
+      "actualHttpAttempts": 8,
+      "successResponses": 4,
+      "httpErrors": 4,
+      "crossBackendStateFailures": 4,
+      "affinityViolations": 0,
+      "gatewayPolicyRejections": 0,
+      "statefulDistribution": {
+        "backend-a": 4,
+        "backend-b": 0
+      },
+      "statelessDistribution": {
+        "backend-a": 0,
+        "backend-b": 0
+      },
+      "responseChainsLinkedWithoutCrossSessionResponseIds": true,
+      "actualWireAttemptsEqualReportedTurns": true,
+      "sessions": [
+        {
+          "label": "stateful-1",
+          "scenario": "stateful",
+          "attempts": 2,
+          "successfulTurns": 1,
+          "linkedContinuations": 1,
+          "backends": [
+            "backend-a",
+            "backend-b"
+          ],
+          "expectedCrossBackendStateFailure": true,
+          "finalOutcome": "httpError",
+          "finalErrorCode": null,
+          "exactDifferentResourceError": true
+        },
+        {
+          "label": "stateful-2",
+          "scenario": "stateful",
+          "attempts": 2,
+          "successfulTurns": 1,
+          "linkedContinuations": 1,
+          "backends": [
+            "backend-a",
+            "backend-b"
+          ],
+          "expectedCrossBackendStateFailure": true,
+          "finalOutcome": "httpError",
+          "finalErrorCode": null,
+          "exactDifferentResourceError": true
+        },
+        {
+          "label": "stateful-3",
+          "scenario": "stateful",
+          "attempts": 2,
+          "successfulTurns": 1,
+          "linkedContinuations": 1,
+          "backends": [
+            "backend-a",
+            "backend-b"
+          ],
+          "expectedCrossBackendStateFailure": true,
+          "finalOutcome": "httpError",
+          "finalErrorCode": null,
+          "exactDifferentResourceError": true
+        },
+        {
+          "label": "stateful-4",
+          "scenario": "stateful",
+          "attempts": 2,
+          "successfulTurns": 1,
+          "linkedContinuations": 1,
+          "backends": [
+            "backend-a",
+            "backend-b"
+          ],
+          "expectedCrossBackendStateFailure": true,
+          "finalOutcome": "httpError",
+          "finalErrorCode": null,
+          "exactDifferentResourceError": true
+        }
+      ],
+      "workspace": {
+        "run": "off-agent-framework",
+        "collectedUtc": "2026-10-19T16:08:35.337Z",
+        "expectedRequests": 8,
+        "correlatedRequests": 8,
+        "actualPolicyTraceRows": 8,
+        "forwardedRequests": 8,
+        "gatewayRejectedRequests": 0,
+        "statuses": {
+          "200": 4,
+          "400": 4
+        },
+        "allForwardedConcreteBackendHostsMatch": true,
+        "exactOutboundOrRejectionTracesMatch": true,
+        "apimBodyCredentialCookieAndClientIpCaptureViolations": 0,
+        "allRowsIngestedWithinTenMinutesAfterScenario": true
+      }
+    },
+    {
+      "run": "on-http",
+      "observedUtc": "2026-10-19T16:18:04.005Z",
+      "client": "http",
+      "cookieProfile": "manual",
+      "nativeAffinityEnabled": true,
+      "result": "pass",
+      "clientExitCode": 0,
+      "plannedMaximum": 24,
+      "actualHttpAttempts": 24,
+      "successResponses": 24,
+      "httpErrors": 0,
+      "crossBackendStateFailures": 0,
+      "affinityViolations": 0,
+      "gatewayPolicyRejections": 0,
+      "statefulDistribution": {
+        "backend-a": 6,
+        "backend-b": 6
+      },
+      "statelessDistribution": {
+        "backend-a": 6,
+        "backend-b": 6
+      },
+      "responseChainsLinkedWithoutCrossSessionResponseIds": true,
+      "actualWireAttemptsEqualReportedTurns": true,
+      "sessions": [
+        {
+          "label": "stateful-1",
+          "scenario": "stateful",
+          "attempts": 3,
+          "successfulTurns": 3,
+          "linkedContinuations": 2,
+          "backends": [
+            "backend-a"
+          ],
+          "expectedCrossBackendStateFailure": false,
+          "finalOutcome": "success",
+          "finalErrorCode": null,
+          "exactDifferentResourceError": false
+        },
+        {
+          "label": "stateful-2",
+          "scenario": "stateful",
+          "attempts": 3,
+          "successfulTurns": 3,
+          "linkedContinuations": 2,
+          "backends": [
+            "backend-b"
+          ],
+          "expectedCrossBackendStateFailure": false,
+          "finalOutcome": "success",
+          "finalErrorCode": null,
+          "exactDifferentResourceError": false
+        },
+        {
+          "label": "stateful-3",
+          "scenario": "stateful",
+          "attempts": 3,
+          "successfulTurns": 3,
+          "linkedContinuations": 2,
+          "backends": [
+            "backend-a"
+          ],
+          "expectedCrossBackendStateFailure": false,
+          "finalOutcome": "success",
+          "finalErrorCode": null,
+          "exactDifferentResourceError": false
+        },
+        {
+          "label": "stateful-4",
+          "scenario": "stateful",
+          "attempts": 3,
+          "successfulTurns": 3,
+          "linkedContinuations": 2,
+          "backends": [
+            "backend-b"
+          ],
+          "expectedCrossBackendStateFailure": false,
+          "finalOutcome": "success",
+          "finalErrorCode": null,
+          "exactDifferentResourceError": false
+        },
+        {
+          "label": "stateless-1",
+          "scenario": "stateless",
+          "attempts": 1,
+          "successfulTurns": 1,
+          "linkedContinuations": 0,
+          "backends": [
+            "backend-a"
+          ],
+          "expectedCrossBackendStateFailure": false,
+          "finalOutcome": "success",
+          "finalErrorCode": null,
+          "exactDifferentResourceError": false
+        },
+        {
+          "label": "stateless-2",
+          "scenario": "stateless",
+          "attempts": 1,
+          "successfulTurns": 1,
+          "linkedContinuations": 0,
+          "backends": [
+            "backend-b"
+          ],
+          "expectedCrossBackendStateFailure": false,
+          "finalOutcome": "success",
+          "finalErrorCode": null,
+          "exactDifferentResourceError": false
+        },
+        {
+          "label": "stateless-3",
+          "scenario": "stateless",
+          "attempts": 1,
+          "successfulTurns": 1,
+          "linkedContinuations": 0,
+          "backends": [
+            "backend-a"
+          ],
+          "expectedCrossBackendStateFailure": false,
+          "finalOutcome": "success",
+          "finalErrorCode": null,
+          "exactDifferentResourceError": false
+        },
+        {
+          "label": "stateless-4",
+          "scenario": "stateless",
+          "attempts": 1,
+          "successfulTurns": 1,
+          "linkedContinuations": 0,
+          "backends": [
+            "backend-b"
+          ],
+          "expectedCrossBackendStateFailure": false,
+          "finalOutcome": "success",
+          "finalErrorCode": null,
+          "exactDifferentResourceError": false
+        },
+        {
+          "label": "stateless-5",
+          "scenario": "stateless",
+          "attempts": 1,
+          "successfulTurns": 1,
+          "linkedContinuations": 0,
+          "backends": [
+            "backend-a"
+          ],
+          "expectedCrossBackendStateFailure": false,
+          "finalOutcome": "success",
+          "finalErrorCode": null,
+          "exactDifferentResourceError": false
+        },
+        {
+          "label": "stateless-6",
+          "scenario": "stateless",
+          "attempts": 1,
+          "successfulTurns": 1,
+          "linkedContinuations": 0,
+          "backends": [
+            "backend-b"
+          ],
+          "expectedCrossBackendStateFailure": false,
+          "finalOutcome": "success",
+          "finalErrorCode": null,
+          "exactDifferentResourceError": false
+        },
+        {
+          "label": "stateless-7",
+          "scenario": "stateless",
+          "attempts": 1,
+          "successfulTurns": 1,
+          "linkedContinuations": 0,
+          "backends": [
+            "backend-a"
+          ],
+          "expectedCrossBackendStateFailure": false,
+          "finalOutcome": "success",
+          "finalErrorCode": null,
+          "exactDifferentResourceError": false
+        },
+        {
+          "label": "stateless-8",
+          "scenario": "stateless",
+          "attempts": 1,
+          "successfulTurns": 1,
+          "linkedContinuations": 0,
+          "backends": [
+            "backend-b"
+          ],
+          "expectedCrossBackendStateFailure": false,
+          "finalOutcome": "success",
+          "finalErrorCode": null,
+          "exactDifferentResourceError": false
+        },
+        {
+          "label": "stateless-9",
+          "scenario": "stateless",
+          "attempts": 1,
+          "successfulTurns": 1,
+          "linkedContinuations": 0,
+          "backends": [
+            "backend-a"
+          ],
+          "expectedCrossBackendStateFailure": false,
+          "finalOutcome": "success",
+          "finalErrorCode": null,
+          "exactDifferentResourceError": false
+        },
+        {
+          "label": "stateless-10",
+          "scenario": "stateless",
+          "attempts": 1,
+          "successfulTurns": 1,
+          "linkedContinuations": 0,
+          "backends": [
+            "backend-b"
+          ],
+          "expectedCrossBackendStateFailure": false,
+          "finalOutcome": "success",
+          "finalErrorCode": null,
+          "exactDifferentResourceError": false
+        },
+        {
+          "label": "stateless-11",
+          "scenario": "stateless",
+          "attempts": 1,
+          "successfulTurns": 1,
+          "linkedContinuations": 0,
+          "backends": [
+            "backend-a"
+          ],
+          "expectedCrossBackendStateFailure": false,
+          "finalOutcome": "success",
+          "finalErrorCode": null,
+          "exactDifferentResourceError": false
+        },
+        {
+          "label": "stateless-12",
+          "scenario": "stateless",
+          "attempts": 1,
+          "successfulTurns": 1,
+          "linkedContinuations": 0,
+          "backends": [
+            "backend-b"
+          ],
+          "expectedCrossBackendStateFailure": false,
+          "finalOutcome": "success",
+          "finalErrorCode": null,
+          "exactDifferentResourceError": false
+        }
+      ],
+      "workspace": {
+        "run": "on-http",
+        "collectedUtc": "2026-10-19T16:20:23.398Z",
+        "expectedRequests": 24,
+        "correlatedRequests": 24,
+        "actualPolicyTraceRows": 24,
+        "forwardedRequests": 24,
+        "gatewayRejectedRequests": 0,
+        "statuses": {
+          "200": 24
+        },
+        "allForwardedConcreteBackendHostsMatch": true,
+        "exactOutboundOrRejectionTracesMatch": true,
+        "apimBodyCredentialCookieAndClientIpCaptureViolations": 0,
+        "allRowsIngestedWithinTenMinutesAfterScenario": true
+      }
+    },
+    {
+      "run": "on-foundry-sdk",
+      "observedUtc": "2026-10-19T16:25:54.728Z",
+      "client": "foundry-sdk",
+      "cookieProfile": "session-scoped",
+      "nativeAffinityEnabled": true,
+      "result": "pass",
+      "clientExitCode": 0,
+      "plannedMaximum": 24,
+      "actualHttpAttempts": 24,
+      "successResponses": 24,
+      "httpErrors": 0,
+      "crossBackendStateFailures": 0,
+      "affinityViolations": 0,
+      "gatewayPolicyRejections": 0,
+      "statefulDistribution": {
+        "backend-a": 6,
+        "backend-b": 6
+      },
+      "statelessDistribution": {
+        "backend-a": 6,
+        "backend-b": 6
+      },
+      "responseChainsLinkedWithoutCrossSessionResponseIds": true,
+      "actualWireAttemptsEqualReportedTurns": true,
+      "sessions": [
+        {
+          "label": "stateful-1",
+          "scenario": "stateful",
+          "attempts": 3,
+          "successfulTurns": 3,
+          "linkedContinuations": 2,
+          "backends": [
+            "backend-a"
+          ],
+          "expectedCrossBackendStateFailure": false,
+          "finalOutcome": "success",
+          "finalErrorCode": null,
+          "exactDifferentResourceError": false
+        },
+        {
+          "label": "stateful-2",
+          "scenario": "stateful",
+          "attempts": 3,
+          "successfulTurns": 3,
+          "linkedContinuations": 2,
+          "backends": [
+            "backend-b"
+          ],
+          "expectedCrossBackendStateFailure": false,
+          "finalOutcome": "success",
+          "finalErrorCode": null,
+          "exactDifferentResourceError": false
+        },
+        {
+          "label": "stateful-3",
+          "scenario": "stateful",
+          "attempts": 3,
+          "successfulTurns": 3,
+          "linkedContinuations": 2,
+          "backends": [
+            "backend-a"
+          ],
+          "expectedCrossBackendStateFailure": false,
+          "finalOutcome": "success",
+          "finalErrorCode": null,
+          "exactDifferentResourceError": false
+        },
+        {
+          "label": "stateful-4",
+          "scenario": "stateful",
+          "attempts": 3,
+          "successfulTurns": 3,
+          "linkedContinuations": 2,
+          "backends": [
+            "backend-b"
+          ],
+          "expectedCrossBackendStateFailure": false,
+          "finalOutcome": "success",
+          "finalErrorCode": null,
+          "exactDifferentResourceError": false
+        },
+        {
+          "label": "stateless-1",
+          "scenario": "stateless",
+          "attempts": 1,
+          "successfulTurns": 1,
+          "linkedContinuations": 0,
+          "backends": [
+            "backend-a"
+          ],
+          "expectedCrossBackendStateFailure": false,
+          "finalOutcome": "success",
+          "finalErrorCode": null,
+          "exactDifferentResourceError": false
+        },
+        {
+          "label": "stateless-2",
+          "scenario": "stateless",
+          "attempts": 1,
+          "successfulTurns": 1,
+          "linkedContinuations": 0,
+          "backends": [
+            "backend-b"
+          ],
+          "expectedCrossBackendStateFailure": false,
+          "finalOutcome": "success",
+          "finalErrorCode": null,
+          "exactDifferentResourceError": false
+        },
+        {
+          "label": "stateless-3",
+          "scenario": "stateless",
+          "attempts": 1,
+          "successfulTurns": 1,
+          "linkedContinuations": 0,
+          "backends": [
+            "backend-a"
+          ],
+          "expectedCrossBackendStateFailure": false,
+          "finalOutcome": "success",
+          "finalErrorCode": null,
+          "exactDifferentResourceError": false
+        },
+        {
+          "label": "stateless-4",
+          "scenario": "stateless",
+          "attempts": 1,
+          "successfulTurns": 1,
+          "linkedContinuations": 0,
+          "backends": [
+            "backend-b"
+          ],
+          "expectedCrossBackendStateFailure": false,
+          "finalOutcome": "success",
+          "finalErrorCode": null,
+          "exactDifferentResourceError": false
+        },
+        {
+          "label": "stateless-5",
+          "scenario": "stateless",
+          "attempts": 1,
+          "successfulTurns": 1,
+          "linkedContinuations": 0,
+          "backends": [
+            "backend-a"
+          ],
+          "expectedCrossBackendStateFailure": false,
+          "finalOutcome": "success",
+          "finalErrorCode": null,
+          "exactDifferentResourceError": false
+        },
+        {
+          "label": "stateless-6",
+          "scenario": "stateless",
+          "attempts": 1,
+          "successfulTurns": 1,
+          "linkedContinuations": 0,
+          "backends": [
+            "backend-b"
+          ],
+          "expectedCrossBackendStateFailure": false,
+          "finalOutcome": "success",
+          "finalErrorCode": null,
+          "exactDifferentResourceError": false
+        },
+        {
+          "label": "stateless-7",
+          "scenario": "stateless",
+          "attempts": 1,
+          "successfulTurns": 1,
+          "linkedContinuations": 0,
+          "backends": [
+            "backend-a"
+          ],
+          "expectedCrossBackendStateFailure": false,
+          "finalOutcome": "success",
+          "finalErrorCode": null,
+          "exactDifferentResourceError": false
+        },
+        {
+          "label": "stateless-8",
+          "scenario": "stateless",
+          "attempts": 1,
+          "successfulTurns": 1,
+          "linkedContinuations": 0,
+          "backends": [
+            "backend-b"
+          ],
+          "expectedCrossBackendStateFailure": false,
+          "finalOutcome": "success",
+          "finalErrorCode": null,
+          "exactDifferentResourceError": false
+        },
+        {
+          "label": "stateless-9",
+          "scenario": "stateless",
+          "attempts": 1,
+          "successfulTurns": 1,
+          "linkedContinuations": 0,
+          "backends": [
+            "backend-a"
+          ],
+          "expectedCrossBackendStateFailure": false,
+          "finalOutcome": "success",
+          "finalErrorCode": null,
+          "exactDifferentResourceError": false
+        },
+        {
+          "label": "stateless-10",
+          "scenario": "stateless",
+          "attempts": 1,
+          "successfulTurns": 1,
+          "linkedContinuations": 0,
+          "backends": [
+            "backend-b"
+          ],
+          "expectedCrossBackendStateFailure": false,
+          "finalOutcome": "success",
+          "finalErrorCode": null,
+          "exactDifferentResourceError": false
+        },
+        {
+          "label": "stateless-11",
+          "scenario": "stateless",
+          "attempts": 1,
+          "successfulTurns": 1,
+          "linkedContinuations": 0,
+          "backends": [
+            "backend-a"
+          ],
+          "expectedCrossBackendStateFailure": false,
+          "finalOutcome": "success",
+          "finalErrorCode": null,
+          "exactDifferentResourceError": false
+        },
+        {
+          "label": "stateless-12",
+          "scenario": "stateless",
+          "attempts": 1,
+          "successfulTurns": 1,
+          "linkedContinuations": 0,
+          "backends": [
+            "backend-b"
+          ],
+          "expectedCrossBackendStateFailure": false,
+          "finalOutcome": "success",
+          "finalErrorCode": null,
+          "exactDifferentResourceError": false
+        }
+      ],
+      "workspace": {
+        "run": "on-foundry-sdk",
+        "collectedUtc": "2026-10-19T16:28:43.853Z",
+        "expectedRequests": 24,
+        "correlatedRequests": 24,
+        "actualPolicyTraceRows": 24,
+        "forwardedRequests": 24,
+        "gatewayRejectedRequests": 0,
+        "statuses": {
+          "200": 24
+        },
+        "allForwardedConcreteBackendHostsMatch": true,
+        "exactOutboundOrRejectionTracesMatch": true,
+        "apimBodyCredentialCookieAndClientIpCaptureViolations": 0,
+        "allRowsIngestedWithinTenMinutesAfterScenario": true
+      }
+    },
+    {
+      "run": "on-agent-framework",
+      "observedUtc": "2026-10-19T16:34:40.335Z",
+      "client": "agent-framework",
+      "cookieProfile": "session-scoped",
+      "nativeAffinityEnabled": true,
+      "result": "pass",
+      "clientExitCode": 0,
+      "plannedMaximum": 24,
+      "actualHttpAttempts": 24,
+      "successResponses": 24,
+      "httpErrors": 0,
+      "crossBackendStateFailures": 0,
+      "affinityViolations": 0,
+      "gatewayPolicyRejections": 0,
+      "statefulDistribution": {
+        "backend-a": 6,
+        "backend-b": 6
+      },
+      "statelessDistribution": {
+        "backend-a": 6,
+        "backend-b": 6
+      },
+      "responseChainsLinkedWithoutCrossSessionResponseIds": true,
+      "actualWireAttemptsEqualReportedTurns": true,
+      "sessions": [
+        {
+          "label": "stateful-1",
+          "scenario": "stateful",
+          "attempts": 3,
+          "successfulTurns": 3,
+          "linkedContinuations": 2,
+          "backends": [
+            "backend-a"
+          ],
+          "expectedCrossBackendStateFailure": false,
+          "finalOutcome": "success",
+          "finalErrorCode": null,
+          "exactDifferentResourceError": false
+        },
+        {
+          "label": "stateful-2",
+          "scenario": "stateful",
+          "attempts": 3,
+          "successfulTurns": 3,
+          "linkedContinuations": 2,
+          "backends": [
+            "backend-b"
+          ],
+          "expectedCrossBackendStateFailure": false,
+          "finalOutcome": "success",
+          "finalErrorCode": null,
+          "exactDifferentResourceError": false
+        },
+        {
+          "label": "stateful-3",
+          "scenario": "stateful",
+          "attempts": 3,
+          "successfulTurns": 3,
+          "linkedContinuations": 2,
+          "backends": [
+            "backend-a"
+          ],
+          "expectedCrossBackendStateFailure": false,
+          "finalOutcome": "success",
+          "finalErrorCode": null,
+          "exactDifferentResourceError": false
+        },
+        {
+          "label": "stateful-4",
+          "scenario": "stateful",
+          "attempts": 3,
+          "successfulTurns": 3,
+          "linkedContinuations": 2,
+          "backends": [
+            "backend-b"
+          ],
+          "expectedCrossBackendStateFailure": false,
+          "finalOutcome": "success",
+          "finalErrorCode": null,
+          "exactDifferentResourceError": false
+        },
+        {
+          "label": "stateless-1",
+          "scenario": "stateless",
+          "attempts": 1,
+          "successfulTurns": 1,
+          "linkedContinuations": 0,
+          "backends": [
+            "backend-a"
+          ],
+          "expectedCrossBackendStateFailure": false,
+          "finalOutcome": "success",
+          "finalErrorCode": null,
+          "exactDifferentResourceError": false
+        },
+        {
+          "label": "stateless-2",
+          "scenario": "stateless",
+          "attempts": 1,
+          "successfulTurns": 1,
+          "linkedContinuations": 0,
+          "backends": [
+            "backend-b"
+          ],
+          "expectedCrossBackendStateFailure": false,
+          "finalOutcome": "success",
+          "finalErrorCode": null,
+          "exactDifferentResourceError": false
+        },
+        {
+          "label": "stateless-3",
+          "scenario": "stateless",
+          "attempts": 1,
+          "successfulTurns": 1,
+          "linkedContinuations": 0,
+          "backends": [
+            "backend-a"
+          ],
+          "expectedCrossBackendStateFailure": false,
+          "finalOutcome": "success",
+          "finalErrorCode": null,
+          "exactDifferentResourceError": false
+        },
+        {
+          "label": "stateless-4",
+          "scenario": "stateless",
+          "attempts": 1,
+          "successfulTurns": 1,
+          "linkedContinuations": 0,
+          "backends": [
+            "backend-b"
+          ],
+          "expectedCrossBackendStateFailure": false,
+          "finalOutcome": "success",
+          "finalErrorCode": null,
+          "exactDifferentResourceError": false
+        },
+        {
+          "label": "stateless-5",
+          "scenario": "stateless",
+          "attempts": 1,
+          "successfulTurns": 1,
+          "linkedContinuations": 0,
+          "backends": [
+            "backend-a"
+          ],
+          "expectedCrossBackendStateFailure": false,
+          "finalOutcome": "success",
+          "finalErrorCode": null,
+          "exactDifferentResourceError": false
+        },
+        {
+          "label": "stateless-6",
+          "scenario": "stateless",
+          "attempts": 1,
+          "successfulTurns": 1,
+          "linkedContinuations": 0,
+          "backends": [
+            "backend-b"
+          ],
+          "expectedCrossBackendStateFailure": false,
+          "finalOutcome": "success",
+          "finalErrorCode": null,
+          "exactDifferentResourceError": false
+        },
+        {
+          "label": "stateless-7",
+          "scenario": "stateless",
+          "attempts": 1,
+          "successfulTurns": 1,
+          "linkedContinuations": 0,
+          "backends": [
+            "backend-a"
+          ],
+          "expectedCrossBackendStateFailure": false,
+          "finalOutcome": "success",
+          "finalErrorCode": null,
+          "exactDifferentResourceError": false
+        },
+        {
+          "label": "stateless-8",
+          "scenario": "stateless",
+          "attempts": 1,
+          "successfulTurns": 1,
+          "linkedContinuations": 0,
+          "backends": [
+            "backend-b"
+          ],
+          "expectedCrossBackendStateFailure": false,
+          "finalOutcome": "success",
+          "finalErrorCode": null,
+          "exactDifferentResourceError": false
+        },
+        {
+          "label": "stateless-9",
+          "scenario": "stateless",
+          "attempts": 1,
+          "successfulTurns": 1,
+          "linkedContinuations": 0,
+          "backends": [
+            "backend-a"
+          ],
+          "expectedCrossBackendStateFailure": false,
+          "finalOutcome": "success",
+          "finalErrorCode": null,
+          "exactDifferentResourceError": false
+        },
+        {
+          "label": "stateless-10",
+          "scenario": "stateless",
+          "attempts": 1,
+          "successfulTurns": 1,
+          "linkedContinuations": 0,
+          "backends": [
+            "backend-b"
+          ],
+          "expectedCrossBackendStateFailure": false,
+          "finalOutcome": "success",
+          "finalErrorCode": null,
+          "exactDifferentResourceError": false
+        },
+        {
+          "label": "stateless-11",
+          "scenario": "stateless",
+          "attempts": 1,
+          "successfulTurns": 1,
+          "linkedContinuations": 0,
+          "backends": [
+            "backend-a"
+          ],
+          "expectedCrossBackendStateFailure": false,
+          "finalOutcome": "success",
+          "finalErrorCode": null,
+          "exactDifferentResourceError": false
+        },
+        {
+          "label": "stateless-12",
+          "scenario": "stateless",
+          "attempts": 1,
+          "successfulTurns": 1,
+          "linkedContinuations": 0,
+          "backends": [
+            "backend-b"
+          ],
+          "expectedCrossBackendStateFailure": false,
+          "finalOutcome": "success",
+          "finalErrorCode": null,
+          "exactDifferentResourceError": false
+        }
+      ],
+      "workspace": {
+        "run": "on-agent-framework",
+        "collectedUtc": "2026-10-19T16:37:32.283Z",
+        "expectedRequests": 24,
+        "correlatedRequests": 24,
+        "actualPolicyTraceRows": 24,
+        "forwardedRequests": 24,
+        "gatewayRejectedRequests": 0,
+        "statuses": {
+          "200": 24
+        },
+        "allForwardedConcreteBackendHostsMatch": true,
+        "exactOutboundOrRejectionTracesMatch": true,
+        "apimBodyCredentialCookieAndClientIpCaptureViolations": 0,
+        "allRowsIngestedWithinTenMinutesAfterScenario": true
+      }
+    },
+    {
+      "run": "stock-foundry-sdk",
+      "observedUtc": "2026-10-19T16:39:06.428Z",
+      "client": "foundry-sdk",
+      "cookieProfile": "sdk-default",
+      "nativeAffinityEnabled": true,
+      "result": "stock-cookie-limitation",
+      "clientExitCode": 1,
+      "plannedMaximum": 8,
+      "actualHttpAttempts": 7,
+      "successResponses": 2,
+      "httpErrors": 5,
+      "crossBackendStateFailures": 0,
+      "affinityViolations": 0,
+      "gatewayPolicyRejections": 5,
+      "statefulDistribution": {
+        "backend-a": 2,
+        "backend-b": 0
+      },
+      "statelessDistribution": {
+        "backend-a": 0,
+        "backend-b": 0
+      },
+      "responseChainsLinkedWithoutCrossSessionResponseIds": true,
+      "actualWireAttemptsEqualReportedTurns": true,
+      "sessions": [
+        {
+          "label": "stateful-1",
+          "scenario": "stateful",
+          "attempts": 2,
+          "successfulTurns": 2,
+          "linkedContinuations": 1,
+          "backends": [
+            "backend-a"
+          ],
+          "expectedCrossBackendStateFailure": false,
+          "finalOutcome": "success",
+          "finalErrorCode": null,
+          "exactDifferentResourceError": false
+        },
+        {
+          "label": "stateful-2",
+          "scenario": "stateful",
+          "attempts": 1,
+          "successfulTurns": 0,
+          "linkedContinuations": 0,
+          "backends": [],
+          "expectedCrossBackendStateFailure": false,
+          "finalOutcome": "httpError",
+          "finalErrorCode": "UnexpectedAffinityCookie",
+          "exactDifferentResourceError": false
+        },
+        {
+          "label": "stateless-1",
+          "scenario": "stateless",
+          "attempts": 1,
+          "successfulTurns": 0,
+          "linkedContinuations": 0,
+          "backends": [],
+          "expectedCrossBackendStateFailure": false,
+          "finalOutcome": "httpError",
+          "finalErrorCode": "StatelessRoutingContextNotAllowed",
+          "exactDifferentResourceError": false
+        },
+        {
+          "label": "stateless-2",
+          "scenario": "stateless",
+          "attempts": 1,
+          "successfulTurns": 0,
+          "linkedContinuations": 0,
+          "backends": [],
+          "expectedCrossBackendStateFailure": false,
+          "finalOutcome": "httpError",
+          "finalErrorCode": "StatelessRoutingContextNotAllowed",
+          "exactDifferentResourceError": false
+        },
+        {
+          "label": "stateless-3",
+          "scenario": "stateless",
+          "attempts": 1,
+          "successfulTurns": 0,
+          "linkedContinuations": 0,
+          "backends": [],
+          "expectedCrossBackendStateFailure": false,
+          "finalOutcome": "httpError",
+          "finalErrorCode": "StatelessRoutingContextNotAllowed",
+          "exactDifferentResourceError": false
+        },
+        {
+          "label": "stateless-4",
+          "scenario": "stateless",
+          "attempts": 1,
+          "successfulTurns": 0,
+          "linkedContinuations": 0,
+          "backends": [],
+          "expectedCrossBackendStateFailure": false,
+          "finalOutcome": "httpError",
+          "finalErrorCode": "StatelessRoutingContextNotAllowed",
+          "exactDifferentResourceError": false
+        }
+      ],
+      "workspace": {
+        "run": "stock-foundry-sdk",
+        "collectedUtc": "2026-10-19T16:42:26.066Z",
+        "expectedRequests": 7,
+        "correlatedRequests": 7,
+        "actualPolicyTraceRows": 7,
+        "forwardedRequests": 2,
+        "gatewayRejectedRequests": 5,
+        "statuses": {
+          "200": 2,
+          "400": 5
+        },
+        "allForwardedConcreteBackendHostsMatch": true,
+        "exactOutboundOrRejectionTracesMatch": true,
+        "apimBodyCredentialCookieAndClientIpCaptureViolations": 0,
+        "allRowsIngestedWithinTenMinutesAfterScenario": true
+      }
+    },
+    {
+      "run": "stock-agent-framework",
+      "observedUtc": "2026-10-19T16:43:59.455Z",
+      "client": "agent-framework",
+      "cookieProfile": "sdk-default",
+      "nativeAffinityEnabled": true,
+      "result": "stock-cookie-limitation",
+      "clientExitCode": 1,
+      "plannedMaximum": 8,
+      "actualHttpAttempts": 7,
+      "successResponses": 2,
+      "httpErrors": 5,
+      "crossBackendStateFailures": 0,
+      "affinityViolations": 0,
+      "gatewayPolicyRejections": 5,
+      "statefulDistribution": {
+        "backend-a": 0,
+        "backend-b": 2
+      },
+      "statelessDistribution": {
+        "backend-a": 0,
+        "backend-b": 0
+      },
+      "responseChainsLinkedWithoutCrossSessionResponseIds": true,
+      "actualWireAttemptsEqualReportedTurns": true,
+      "sessions": [
+        {
+          "label": "stateful-1",
+          "scenario": "stateful",
+          "attempts": 2,
+          "successfulTurns": 2,
+          "linkedContinuations": 1,
+          "backends": [
+            "backend-b"
+          ],
+          "expectedCrossBackendStateFailure": false,
+          "finalOutcome": "success",
+          "finalErrorCode": null,
+          "exactDifferentResourceError": false
+        },
+        {
+          "label": "stateful-2",
+          "scenario": "stateful",
+          "attempts": 1,
+          "successfulTurns": 0,
+          "linkedContinuations": 0,
+          "backends": [],
+          "expectedCrossBackendStateFailure": false,
+          "finalOutcome": "httpError",
+          "finalErrorCode": "UnexpectedAffinityCookie",
+          "exactDifferentResourceError": false
+        },
+        {
+          "label": "stateless-1",
+          "scenario": "stateless",
+          "attempts": 1,
+          "successfulTurns": 0,
+          "linkedContinuations": 0,
+          "backends": [],
+          "expectedCrossBackendStateFailure": false,
+          "finalOutcome": "httpError",
+          "finalErrorCode": "StatelessRoutingContextNotAllowed",
+          "exactDifferentResourceError": false
+        },
+        {
+          "label": "stateless-2",
+          "scenario": "stateless",
+          "attempts": 1,
+          "successfulTurns": 0,
+          "linkedContinuations": 0,
+          "backends": [],
+          "expectedCrossBackendStateFailure": false,
+          "finalOutcome": "httpError",
+          "finalErrorCode": "StatelessRoutingContextNotAllowed",
+          "exactDifferentResourceError": false
+        },
+        {
+          "label": "stateless-3",
+          "scenario": "stateless",
+          "attempts": 1,
+          "successfulTurns": 0,
+          "linkedContinuations": 0,
+          "backends": [],
+          "expectedCrossBackendStateFailure": false,
+          "finalOutcome": "httpError",
+          "finalErrorCode": "StatelessRoutingContextNotAllowed",
+          "exactDifferentResourceError": false
+        },
+        {
+          "label": "stateless-4",
+          "scenario": "stateless",
+          "attempts": 1,
+          "successfulTurns": 0,
+          "linkedContinuations": 0,
+          "backends": [],
+          "expectedCrossBackendStateFailure": false,
+          "finalOutcome": "httpError",
+          "finalErrorCode": "StatelessRoutingContextNotAllowed",
+          "exactDifferentResourceError": false
+        }
+      ],
+      "workspace": {
+        "run": "stock-agent-framework",
+        "collectedUtc": "2026-10-19T16:45:18.122Z",
+        "expectedRequests": 7,
+        "correlatedRequests": 7,
+        "actualPolicyTraceRows": 7,
+        "forwardedRequests": 2,
+        "gatewayRejectedRequests": 5,
+        "statuses": {
+          "200": 2,
+          "400": 5
+        },
+        "allForwardedConcreteBackendHostsMatch": true,
+        "exactOutboundOrRejectionTracesMatch": true,
+        "apimBodyCredentialCookieAndClientIpCaptureViolations": 0,
+        "allRowsIngestedWithinTenMinutesAfterScenario": true
+      }
+    }
+  ],
+  "workspace": {
+    "modelAttempts": 110,
+    "correlatedRequests": 110,
+    "actualPolicyTraceRows": 110,
+    "forwardedRequests": 100,
+    "gatewayRejectedRequests": 10,
+    "apimBodyCredentialCookieAndClientIpCaptureViolations": 0,
+    "scope": "Only exact lab workspace and run request IDs; no inherited external destinations queried"
+  },
+  "cleanup": {
+    "groupAbsent": true,
+    "modelQuotaCurrent": 90.0,
+    "purgeRequested": false,
+    "workspaceRecoveryRecords": 1,
+    "apimRecoveryRecords": 1,
+    "localStateRetired": true,
+    "foundryRecoveryRecords": 2,
+    "recoveryJournalRemaining": false,
+    "modelQuotaLimit": 1000.0,
+    "verifiedUtc": "2026-10-19T17:18:18.0460825+00:00",
+    "runtimeAndOutputsRemoved": true,
+    "guardedDeleteAttempts": [
+      {
+        "attempt": 1,
+        "exitCode": 1,
+        "observedFailureCode": "ServiceLocked"
+      },
+      {
+        "attempt": 2,
+        "exitCode": 1,
+        "observedFailureCode": "ServiceLocked"
+      },
+      {
+        "attempt": 3,
+        "exitCode": 0,
+        "precedingBackoffSeconds": 600
+      }
+    ],
+    "executionNotes": [
+      "The first two guarded group deletions failed while APIM was internally transitioning; those exits were not relabeled as successful.",
+      "Current and target provisioningState Succeeded did not alone establish that the internal deletion lock had cleared.",
+      "After a ten-minute backoff, the same guarded owned-group deletion succeeded; fresh absence, retirement and exact recovery reads passed."
+    ]
+  },
+  "limitations": [
+    "Stock SDK cookie behavior is a recorded limitation, not successful per-conversation isolation.",
+    "Session-scoped automatic HTTP transports are explicit supported customization, not SDK defaults.",
+    "Workspace proves request/member/status and rejection traces, not hidden outbound cookie header contents.",
+    "Request-body capture stays disabled; response chaining and no replay additionally use client contract guards and offline wire tests.",
+    "Foundry client package remains preview; results apply to the exact pinned stack and observed deployment.",
+    "GlobalStandard inference is not a West US 3-only processing guarantee.",
+    "No new controlled fault, second-driver lifecycle proof or permanent purge was performed."
+  ],
+  "sanitization": {
+    "subscriptionTenantPrincipalAndCustomerIdsOmitted": true,
+    "resourceHostsAndResponseRequestSessionIdsOmitted": true,
+    "credentialsCookieValuesAndRawBodiesOmitted": true,
+    "rawLogsAndWorkspaceRowsRemainIgnored": true
+  }
+}
